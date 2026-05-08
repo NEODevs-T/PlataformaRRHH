@@ -1,0 +1,114 @@
+
+
+#cajaPadre {
+    width: 100%;
+    height: 100vh;
+    /* background-color: brown; */
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+#cajaContenido {
+    width: 50%;
+    height: 100vh;
+    /* background-color:aqua; */
+}
+
+#cajaImg {
+    width: 50%;
+    height: 70vh;
+    color: rgba(63, 47, 47, 0.979);
+    /* background-color:aquamarine; */
+}
+
+#logoindex{
+    width: 35%;
+    height: 50%;
+}
+
+#cajaLogo {
+    display: flex;
+    justify-content: flex-start;
+    margin: 10px;
+}
+
+#Layer_1 {
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+}
+
+#tituLogo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1em;
+    font-style: italic;
+    font-weight: 900 !important;
+}
+
+#cajaInformacion {
+    /* height: 87%; */
+    /* background-color: aquamarine; */
+    margin: 1%;
+}
+
+#Info {
+    margin-left: 10%;
+    text-align: justify;
+}
+
+#cajaImg {
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    margin-top: 5%;
+}
+
+#tituloInfo {
+    margin-left: 11%;
+    margin-top: 50px;
+    margin-bottom: 20px;
+    font-size: 2em;
+    font-weight: bold;
+    color: rgb(0, 120, 60) !important;
+}
+
+#Info li {
+    margin-bottom: 10px;
+}
+
+img {
+    width: 50%;
+}
+
+footer {
+    background-color: black;
+    /*height: 100vh;*/
+    border-radius: 5px;
+    padding: 20px;
+}
+
+#logofooter {
+    height: 15%;
+    width: 100%;
+}
+
+#creadoresfooter {
+    height: 15%;
+    width: 100%;
+    background-color: aqua;
+}
+
+#logoGrandefooter {
+    height: 70%;
+    width: 100%;
+    background-color: bisque;
+}
+.AbajoBoton{
+    display: flex;
+    justify-content:flex-start;
+    align-items: end;
+}

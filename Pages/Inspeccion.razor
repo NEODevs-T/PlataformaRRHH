@@ -1,0 +1,443 @@
+@page "/inspeccion/{idMaquina:int}"
+@using System.Linq
+@using System.Globalization
+@using Radzen
+@using Radzen.Blazor
+
+@inject IDataInspeccion DataInspeccion
+@inject IDataPregunta DataPregunta
+@inject IDataMaquina DataMaquina
+@inject NotificationService NotificationService
+@inject IEmailServices EmailServices
+
+<!-- === Indicadores de Ausentismo: KPI + Gráficas + Tablas === -->
+
+<!-- KPIs -->
+<div class="kpi-container">
+    <div class="kpi-card">
+        <div class="kpi-title">Ausentismo (Mes)</div>
+        <div class="kpi-value">@($"{AusentismoMes:P2}")</div>
+        <div class="kpi-sub">Periodo: @PeriodoMes</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-title">Ausentismo (YTD)</div>
+        <div class="kpi-value">@($"{AusentismoYtd:P2}")</div>
+        <div class="kpi-sub">Acumulado @PeriodoYtd</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-title">Días Perdidos (Mes)</div>
+        <div class="kpi-value">@DiasPerdidosMes</div>
+        <div class="kpi-sub">Colab. afectado(s): @ColaboradoresAfectadosMes</div>
+    </div>
+    <div class="kpi-card">
+        <div class="kpi-title">Tendencia vs Mes Anterior</div>
+        <div class="kpi-value @((DeltaMes >= 0 ? "neg" : "pos"))">
+            @($"{DeltaMes:+0.00%;-0.00%;0.00%}")
+        </div>
+        <div class="kpi-sub">Δ Ausentismo</div>
+    </div>
+</div>
+
+<!-- Gráficas principales -->
+<div class="charts-container">
+    <!-- Barras: Ausentismo % por semana del mes -->
+    <div class="chart-card">
+        <RadzenChart Style="height: 280px;">
+            <!-- COMPATIBLE: sin LabelsVisibility -->
+            <RadzenCategoryAxis Padding="20" />
+            <RadzenValueAxis FormatString="{0:P0}" />
+
+            <RadzenColumnSeries Data="@SemanasMes"
+                                CategoryProperty="Semana"
+                                ValueProperty="Porcentaje"
+                                Title="Ausentismo % (Semanas)">
+            </RadzenColumnSeries>
+        </RadzenChart>
+    </div>
+
+    <!-- Dona: Causas del ausentismo (mes) -->
+    <div class="chart-card">
+        <RadzenChart Style="height: 280px;">
+            <RadzenDonutSeries Data="@CausasMes"
+                               CategoryProperty="Causa"
+                               ValueProperty="Porcentaje"
+                               Title="Causas (Mes)"
+                               Radius="0.9"
+                               InnerRadius="0.55"
+                               ValueFormatString="{0:P1}">
+                <RadzenSeriesDataLabels Visible="true" />
+            </RadzenDonutSeries>
+        </RadzenChart>
+    </div>
+</div>
+
+<!-- Comparativo: Mes actual vs Meta y YTD (por semana) -->
+<div class="chart-card" style="margin-top:12px;">
+    <RadzenChart Style="height: 300px;">
+        <!-- COMPATIBLE: sin LabelsVisibility -->
+        <RadzenCategoryAxis Padding="20" />
+        <RadzenValueAxis FormatString="{0:P1}" />
+
+        <!-- Columnas: Mes actual por semana -->
+        <RadzenColumnSeries Data="@SemanasMes"
+                            CategoryProperty="Semana"
+                            ValueProperty="Porcentaje"
+                            Title="Ausentismo Mes (Semanas)">
+        </RadzenColumnSeries>
+
+        <!-- Línea: Meta mensual (constante) -->
+        <RadzenLineSeries Data="@MetaSemanal"
+                          CategoryProperty="Semana"
+                          ValueProperty="Valor"
+                          Title="Meta (Mes)"
+                          LineType="LineType.Dashed">
+            <RadzenMarkers Visible="true" />
+        </RadzenLineSeries>
+
+        <!-- Línea: YTD (constante) -->
+        <RadzenLineSeries Data="@YtdSemanal"
+                          CategoryProperty="Semana"
+                          ValueProperty="Valor"
+                          Title="YTD (Promedio)">
+            <RadzenMarkers Visible="true" />
+        </RadzenLineSeries>
+
+        <RadzenLegend Position="LegendPosition.Bottom" />
+    </RadzenChart>
+</div>
+
+<!-- Tabla: Top ausentismos (mes) -->
+<RadzenDataGrid Data="@TopAusentismosMes" TItem="ResumenAusentismoEmpleado" Style="margin-top: 12px;"
+                ShowPagingSummary="true" PageSize="10" AllowPaging="true" AllowSorting="true" AllowFiltering="true">
+    <Columns>
+        <RadzenDataGridColumn TItem="ResumenAusentismoEmpleado" Property="Ficha" Title="Ficha" Width="100px" />
+        <RadzenDataGridColumn TItem="ResumenAusentismoEmpleado" Property="Nombre" Title="Colaborador" />
+        <RadzenDataGridColumn TItem="ResumenAusentismoEmpleado" Property="Area" Title="Área" Width="160px" />
+        <RadzenDataGridColumn TItem="ResumenAusentismoEmpleado" Property="DiasPerdidos" Title="Días Perdidos" Width="130px" TextAlign="TextAlign.Center" />
+        <RadzenDataGridColumn TItem="ResumenAusentismoEmpleado" Property="Eventos" Title="Eventos" Width="100px" TextAlign="TextAlign.Center" />
+        <RadzenDataGridColumn TItem="ResumenAusentismoEmpleado" Title="% Ausentismo" Width="130px" TextAlign="TextAlign.Center"
+                              Filterable="false" Sortable="false">
+            <Template Context="e">@($"{e.PorcentajeAusentismo:P2}")</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ResumenAusentismoEmpleado" Property="CausaPrincipal" Title="Causa Principal" Width="180px" />
+    </Columns>
+</RadzenDataGrid>
+
+<!-- Resumen por Área (Mes vs Mes Anterior) -->
+<RadzenDataGrid Data="@ResumenAreas" TItem="ResumenAreaAusentismo" Style="margin-top: 12px;"
+                ShowPagingSummary="true" PageSize="10" AllowPaging="true" AllowSorting="true" AllowFiltering="true">
+    <Columns>
+        <RadzenDataGridColumn TItem="ResumenAreaAusentismo" Property="Area" Title="Área" Width="160px" />
+        <RadzenDataGridColumn TItem="ResumenAreaAusentismo" Title="% Mes" Width="110px" TextAlign="TextAlign.Center">
+            <Template Context="a">@($"{a.AusentismoMes:P2}")</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ResumenAreaAusentismo" Title="% Mes Ant." Width="120px" TextAlign="TextAlign.Center">
+            <Template Context="a">@($"{a.AusentismoAnterior:P2}")</Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ResumenAreaAusentismo" Title="Δ" Width="90px" TextAlign="TextAlign.Center">
+            <Template Context="a">
+                <span class="delta @(a.Delta >= 0 ? "neg" : "pos")">
+                    @($"{a.Delta:+0.00%;-0.00%;0.00%}")
+                </span>
+            </Template>
+        </RadzenDataGridColumn>
+        <RadzenDataGridColumn TItem="ResumenAreaAusentismo" Property="DiasPerdidos" Title="Días Perdidos" Width="130px" TextAlign="TextAlign.Center" />
+        <RadzenDataGridColumn TItem="ResumenAreaAusentismo" Property="Eventos" Title="Eventos" Width="110px" TextAlign="TextAlign.Center" />
+    </Columns>
+</RadzenDataGrid>
+
+<!-- Estilos mínimos para layout (puedes moverlos a tu .css) -->
+<style>
+    .kpi-container { display: grid; grid-template-columns: repeat(4, minmax(160px, 1fr)); gap: 12px; }
+    .kpi-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 12px 14px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); }
+    .kpi-title { font-size: .8rem; color: #6b7280; }
+    .kpi-value { font-size: 1.4rem; font-weight: 700; color: #111827; }
+    .kpi-value.pos { color: #059669; } /* mejora vs mes anterior */
+    .kpi-value.neg { color: #b91c1c; } /* empeora vs mes anterior */
+    .kpi-sub { font-size: .75rem; color: #6b7280; }
+    .charts-container { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; margin-top: 12px; }
+    .chart-card { background: #fff; border: 1px solid #e5e7eb; border-radius: 12px; padding: 8px; }
+    .delta.pos { color: #059669; font-weight: 600; } /* mejora vs mes anterior */
+    .delta.neg { color: #b91c1c; font-weight: 600; } /* empeora vs mes anterior */
+    @@media (max-width: 900px) {
+        .kpi-container { grid-template-columns: repeat(2, 1fr); }
+        .charts-container { grid-template-columns: 1fr; }
+    }
+</style>
+
+@code {
+    [Parameter]
+    public int idMaquina { get; set; }
+
+    // ===== Modelos base para dashboard =====
+    public class SemanaAusentismo
+    {
+        public string Semana { get; set; } = default!;
+        public double Porcentaje { get; set; } // 0..1
+    }
+
+    public class CausaAusentismo
+    {
+        public string Causa { get; set; } = default!;
+        public double Porcentaje { get; set; } // 0..1
+    }
+
+    public class ResumenAusentismoEmpleado
+    {
+        public string Ficha { get; set; } = default!;
+        public string Nombre { get; set; } = default!;
+        public string Area { get; set; } = default!;
+        public int DiasPerdidos { get; set; }
+        public int Eventos { get; set; }
+        public double PorcentajeAusentismo { get; set; } // 0..1
+        public string CausaPrincipal { get; set; } = default!;
+    }
+
+    public class PuntoSerie
+    {
+        public string Semana { get; set; } = default!;
+        public double Valor { get; set; }
+    }
+
+    public class ResumenAreaAusentismo
+    {
+        public string Area { get; set; } = default!;
+        public double AusentismoMes { get; set; }       // 0..1
+        public double AusentismoAnterior { get; set; }  // 0..1
+        public double Delta => AusentismoMes - AusentismoAnterior;
+        public int DiasPerdidos { get; set; }
+        public int Eventos { get; set; }
+    }
+
+    // ===== Estado (dashboard) =====
+    public string PeriodoMes { get; set; } = string.Empty;
+    public string PeriodoYtd { get; set; } = string.Empty;
+
+    public double AusentismoMes { get; set; }      // 0..1
+    public double AusentismoYtd { get; set; }      // 0..1
+    public double DeltaMes { get; set; }           // Mes actual vs mes anterior (diferencia)
+
+    public int DiasPerdidosMes { get; set; }
+    public int ColaboradoresAfectadosMes { get; set; }
+
+    public List<SemanaAusentismo> SemanasMes { get; set; } = new();
+    public List<CausaAusentismo> CausasMes { get; set; } = new();
+    public List<ResumenAusentismoEmpleado> TopAusentismosMes { get; set; } = new();
+
+    public double MetaAusentismoMes { get; set; } = 0.030; // 3.0% meta ejemplo
+    public List<PuntoSerie> MetaSemanal { get; set; } = new();
+    public List<PuntoSerie> YtdSemanal { get; set; } = new();
+
+    public List<ResumenAreaAusentismo> ResumenAreas { get; set; } = new();
+
+    // ===== Estado (lógica original de inspección) =====
+    public List<ImaqPre>? listPreguntas { get; set; }
+    public List<InspecDatum> listaDataInspeccion { get; set; } = new();
+    public Model.Inspeccion nuevaInspeccion { get; set; } = new();
+
+    public bool isCargado { get; set; } = false;
+
+    public List<string> listaTurno { get; set; } = new() { "1", "2" };
+    public List<string> listaGrupo { get; set; } = new() { "A", "B", "C", "D", "N" };
+    public IEnumerable<string> listaArea { get; set; } = new List<string> { "PPPD", "PT", "CS", "MOL", "LOG" };
+
+    protected override void OnInitialized()
+    {
+        // Defaults mínimos
+        nuevaInspeccion = new Model.Inspeccion
+        {
+            Igrupo = "A",
+            Iturno = "1",
+            Ifecha = DateTime.Today
+        };
+    }
+
+    protected override async Task OnParametersSetAsync()
+    {
+        isCargado = false;
+
+        // Reinicia valores base
+        nuevaInspeccion.Iarea = "";
+        nuevaInspeccion.Iequipo = "";
+        nuevaInspeccion.Ifecha = DateTime.Today;
+
+        // Sugerencias por máquina (si las necesitas)
+        if (idMaquina == 6)
+        {
+            nuevaInspeccion.Iequipo = "210116";
+        }
+        else if (idMaquina == 7)
+        {
+            nuevaInspeccion.Iequipo = "210040";
+        }
+        else if (idMaquina == 8)
+        {
+            nuevaInspeccion.Iequipo = "210343";
+        }
+
+        try
+        {
+            // Carga de preguntas base (tu lógica existente)
+            listPreguntas = await DataPregunta.ObtenerLasPreguntasPorMquina(idMaquina);
+
+            listaDataInspeccion.Clear();
+
+            if (listPreguntas is not null)
+            {
+                foreach (var p in listPreguntas)
+                {
+                    listaDataInspeccion.Add(new InspecDatum { IdMaqPreNavigation = p });
+                }
+            }
+        }
+        catch
+        {
+            // Puedes notificar si lo deseas
+            // NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = "Recargue la página" });
+        }
+
+        // Cargar dashboard ausentismo
+        await CargarResumenAusentismoAsync(DateTime.Today.Year, DateTime.Today.Month);
+
+        isCargado = true;
+    }
+
+    // ===== Carga base (mock) del dashboard de ausentismo =====
+    private async Task CargarResumenAusentismoAsync(int año, int mes)
+    {
+        await Task.Yield();
+
+        // Formato ES-VE para el periodo
+        var cultura = new CultureInfo("es-VE");
+        PeriodoMes = new DateTime(año, mes, 1).ToString("MMMM yyyy", cultura);
+        PeriodoYtd = $"{año} YTD";
+
+        // Valores ejemplo (reemplazar con tu servicio real)
+        AusentismoMes = 0.032;  // 3.2%
+        AusentismoYtd = 0.028;  // 2.8%
+        DeltaMes = AusentismoMes - 0.030; // vs mes anterior (ej.: 3.0%)
+
+        DiasPerdidosMes = 84;
+        ColaboradoresAfectadosMes = 27;
+
+        SemanasMes = new()
+        {
+            new SemanaAusentismo { Semana = "Sem 1", Porcentaje = 0.029 },
+            new SemanaAusentismo { Semana = "Sem 2", Porcentaje = 0.031 },
+            new SemanaAusentismo { Semana = "Sem 3", Porcentaje = 0.034 },
+            new SemanaAusentismo { Semana = "Sem 4", Porcentaje = 0.036 },
+        };
+
+        CausasMes = new()
+        {
+            new CausaAusentismo { Causa = "Enfermedad común", Porcentaje = 0.46 },
+            new CausaAusentismo { Causa = "Permisos",         Porcentaje = 0.22 },
+            new CausaAusentismo { Causa = "Inasistencia",     Porcentaje = 0.18 },
+            new CausaAusentismo { Causa = "Accidente",        Porcentaje = 0.08 },
+            new CausaAusentismo { Causa = "Otros",            Porcentaje = 0.06 },
+        };
+
+        TopAusentismosMes = new()
+        {
+            new ResumenAusentismoEmpleado { Ficha="001234", Nombre="María Pérez", Area="MOL", DiasPerdidos=6, Eventos=2, PorcentajeAusentismo=0.12, CausaPrincipal="Enfermedad común" },
+            new ResumenAusentismoEmpleado { Ficha="001567", Nombre="Juan Gómez", Area="PT",  DiasPerdidos=5, Eventos=1, PorcentajeAusentismo=0.10, CausaPrincipal="Permisos" },
+            new ResumenAusentismoEmpleado { Ficha="000998", Nombre="Ana Rivas",  Area="LOG", DiasPerdidos=4, Eventos=1, PorcentajeAusentismo=0.08, CausaPrincipal="Inasistencia" },
+            new ResumenAusentismoEmpleado { Ficha="001045", Nombre="Luis Díaz",  Area="CS",  DiasPerdidos=4, Eventos=1, PorcentajeAusentismo=0.07, CausaPrincipal="Accidente" },
+        };
+
+        // Replicar líneas constantes (Meta y YTD) por cada semana cargada
+        MetaSemanal = SemanasMes.Select(s => new PuntoSerie { Semana = s.Semana, Valor = MetaAusentismoMes }).ToList();
+        YtdSemanal  = SemanasMes.Select(s => new PuntoSerie { Semana = s.Semana, Valor = AusentismoYtd }).ToList();
+
+        // Resumen por Área (mock/base)
+        ResumenAreas = new()
+        {
+            new ResumenAreaAusentismo { Area="MOL", AusentismoMes=0.035, AusentismoAnterior=0.031, DiasPerdidos=22, Eventos=8 },
+            new ResumenAreaAusentismo { Area="PT",  AusentismoMes=0.028, AusentismoAnterior=0.030, DiasPerdidos=18, Eventos=6 },
+            new ResumenAreaAusentismo { Area="LOG", AusentismoMes=0.033, AusentismoAnterior=0.029, DiasPerdidos=20, Eventos=7 },
+            new ResumenAreaAusentismo { Area="CS",  AusentismoMes=0.025, AusentismoAnterior=0.027, DiasPerdidos=12, Eventos=4 },
+            new ResumenAreaAusentismo { Area="PPPD",AusentismoMes=0.030, AusentismoAnterior=0.032, DiasPerdidos=12, Eventos=2 },
+        };
+    }
+
+    // ===== Stubs (no usados en UI ahora, listos para conectar si los necesitas) =====
+    protected async Task Registrar()
+    {
+        try
+        {
+            if (nuevaInspeccion.Ifecha > DateTime.Today)
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Fecha inválida", Detail = "No puede seleccionar una fecha mayor al día actual." });
+                return;
+            }
+
+            if (listaDataInspeccion is null || listaDataInspeccion.Count == 0)
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Sin datos", Detail = "No hay datos de inspección para registrar." });
+                return;
+            }
+
+            var eq = nuevaInspeccion.Iequipo?.Trim();
+            if (string.IsNullOrWhiteSpace(eq) || eq.Length != 6)
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Equipo inválido", Detail = "Debe ingresar exactamente 6 dígitos para el equipo." });
+                return;
+            }
+
+            nuevaInspeccion.Iequipo = eq.Insert(3, "-");
+
+            var ok = await DataInspeccion.InsertarInspeccion(nuevaInspeccion, listaDataInspeccion);
+
+            if (ok)
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Success, Summary = "Éxito", Detail = "Cargado con éxito" });
+
+                // Reinicia para un nuevo registro
+                nuevaInspeccion = new Model.Inspeccion
+                {
+                    Igrupo = "A",
+                    Iturno = "1",
+                    Ifecha = DateTime.Today
+                };
+
+                listPreguntas = await DataPregunta.ObtenerLasPreguntasPorMquina(idMaquina);
+                listaDataInspeccion = new List<InspecDatum>(listPreguntas?.Count ?? 0);
+
+                if (listPreguntas is not null)
+                {
+                    foreach (var p in listPreguntas)
+                    {
+                        listaDataInspeccion.Add(new InspecDatum { IdMaqPreNavigation = p });
+                    }
+                }
+
+                // Restablece equipo sugerido por máquina
+                if (idMaquina == 6)
+                {
+                    nuevaInspeccion.Iequipo = "210116";
+                }
+                else if (idMaquina == 7)
+                {
+                    nuevaInspeccion.Iequipo = "210140";
+                }
+                else if (idMaquina == 8)
+                {
+                    nuevaInspeccion.Iequipo = "210343";
+                }
+            }
+            else
+            {
+                NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = "Hubo un error de inserción, por favor intente más tarde" });
+            }
+        }
+        catch
+        {
+            NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = "Recargue la página" });
+        }
+    }
+
+    protected void Invalido(FormInvalidSubmitEventArgs args)
+    {
+        NotificationService.Notify(new NotificationMessage { Severity = NotificationSeverity.Error, Summary = "Error", Detail = "Por favor verificar el formulario" });
+    }
+}

@@ -1,0 +1,101 @@
+@import url('open-iconic/font/css/open-iconic-bootstrap.min.css');
+
+/* --------- Base suave (no reset agresivo) --------- */
+html, body { height: 100%; }
+body {
+  margin: 0 !important;
+  background: #f3f6fb;              /* mismo fondo que el layout */
+  color: #1f2937;
+  font-family: "Inter", system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+}
+
+img, svg, video { max-width: 100%; height: auto; display: block; }
+
+/* Que los links sigan el tema/material por defecto */
+a, .btn-link { color: inherit; text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* --------- Utilidades y contenedores --------- */
+.content { padding-top: 1.1rem; }
+.card, .content-wrap {
+  background: #ffffff;
+  border: 1px solid #e3e8ef;
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: 0 8px 24px rgba(17,24,39,.08), 0 2px 8px rgba(17,24,39,.06);
+}
+
+/* --------- Tu bloque selecttt (lo mantengo) --------- */
+.selecttt div { height: 5px; }
+.selecttt span {
+  font-size: 0.9em !important;
+  font-family: "Inter", "Century Gothic", "Tahoma";
+}
+.selecttt span:first-letter { text-transform: uppercase; }
+/* Evita selector inválido :not(first-letter). Mantén capitalización por defecto. */
+
+/* --------- Textareas --------- */
+textarea { resize: none; }
+
+/* --------- Validaciones --------- */
+.valid.modified:not([type=checkbox]) { outline: 1px solid #26b050; }
+.invalid { outline: 1px solid red; }
+.validation-message { color: #e53935; }
+
+/* UI de errores Blazor */
+#blazor-error-ui {
+  background: lightyellow;
+  bottom: 0;
+  box-shadow: 0 -1px 2px rgba(0, 0, 0, 0.2);
+  display: none;
+  left: 0;
+  padding: 0.6rem 1.25rem 0.7rem 1.25rem;
+  position: fixed;
+  width: 100%;
+  z-index: 1000;
+}
+#blazor-error-ui .dismiss { cursor: pointer; position: absolute; right: 0.75rem; top: 0.5rem; }
+.blazor-error-boundary {
+  background: #b32121;
+  padding: 1rem 1rem 1rem 3.7rem;
+  color: white;
+}
+.blazor-error-boundary::after { content: "An error has occurred."; }
+
+/* --------- Cabeceras específicas tuyas (opcional) --------- */
+.cabeza {
+  display: flex; justify-content: space-between; align-items: center;
+  width: 80%; height: 100%;
+}
+.cabeza button, .cabeza input, .cabeza a {
+  background-color: #3cad49; color: white; border: 0;
+  height: 80%; width: 12%; font-weight: 900; text-align: center; text-decoration: none;
+}
+.cabeza button:hover, .cabeza input:hover, .cabeza a:hover { background-color: rgba(0, 0, 0, 0.8); }
+#zoom_controls { display: flex; justify-content: center; align-items: center; height: 50%; width: 40%; }
+#EncabezadoIzquierda img { max-width: 140px; height: auto; margin-right: 5%; } /* evita el logo gigante */
+
+/* --------- Notificaciones/Validaciones Radzen --------- */
+.rz-notification span { display: none !important; }
+
+.rz-invalid .rz-inputtext,
+.rz-invalid .rz-dropdown,
+.rz-invalid .rz-dropdown .rz-dropdown-label { border-color: #e53935 !important; }
+
+.rz-message {
+  color: #e53935 !important;
+  font-size: 12px !important;
+  margin-top: 2px !important;
+  background: transparent !important;
+  border: none !important;
+  padding: 0 !important;
+  display: block !important;
+  position: static !important;
+}
+
+.rz-form-field { margin-bottom: 1.0rem !important; flex-direction: column !important; align-items: flex-start !important; }
+.rz-form-field .rz-message {
+  position: static !important; display: block !important; margin-left: 0 !important; margin-right: 0 !important;
+  width: 100% !important; background: transparent !important; border: none !important; box-shadow: none !important; z-index: 1 !important;
+}
+.rz-form-field .rz-inputtext, .rz-form-field .rz-dropdown { box-sizing: border-box !important; }
