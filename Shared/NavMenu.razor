@@ -1,6 +1,6 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">Inspecciones</a>
+        <a class="navbar-brand" href="">NEO</a>
         <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
             <span class="navbar-toggler-icon"></span>
         </button>
@@ -8,45 +8,52 @@
 </div>
 
 <div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="flex-column">
-        <div class="nav-item px-3">
+    <nav class="nav-menu flex-column">
+        <div class="nav-item">
             <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                Home
+                <span class="icon">🏠</span><span>Home</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
+
+        <div class="nav-item">
             <NavLink class="nav-link" href="inspeccion/2">
-                Montacargas tipo Roll Clamp (Eléctrico)
+                <span class="icon">📊</span><span>Indicador mes y global</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
+
+        <div class="nav-item">
             <NavLink class="nav-link" href="inspeccion/3">
-                Montacargas tipo horquilla (Eléctrico)
+                <span class="icon">📅</span><span>Ausentismos</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
+
+        <div class="nav-item">
             <NavLink class="nav-link" href="inspeccion/4">
-                Montacargas tipo horquilla (Uña)
+                <span class="icon">👥</span><span>Head-count</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
+
+        <div class="nav-item">
             <NavLink class="nav-link" href="inspeccion/5">
-                Montacargas tipo Roll Clamp
+                <span class="icon">🩺</span><span>Reposos médicos</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
+
+        <div class="nav-item">
             <NavLink class="nav-link" href="inspeccion/6">
-                Maquinaria Pesada (PAYLOADER)
+                <span class="icon">📚</span><span>Histórico reposos médicos</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
+
+        <div class="nav-item">
             <NavLink class="nav-link" href="inspeccion/7">
-                Maquinaria Pesada (Jaiba)
+                <span class="icon">📄</span><span>Permisos contractuales</span>
             </NavLink>
         </div>
-        <div class="nav-item px-3">
+
+        <div class="nav-item">
             <NavLink class="nav-link" href="inspeccion/8">
-                Retroexcavadora
+                <span class="icon">✅</span><span>Validación de ausencias</span>
             </NavLink>
         </div>
     </nav>
@@ -54,7 +61,6 @@
 
 @code {
     private bool collapseNavMenu = true;
-
     private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
 
     private void ToggleNavMenu()

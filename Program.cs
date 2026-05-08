@@ -1,70 +1,60 @@
-using Microsoft.AspNetCore.Components;
-using Microsoft.AspNetCore.Components.Web;
-using Microsoft.AspNetCore.Components.Authorization;
+using Microsoft.AspNetCore.Builder;
 using Microsoft.Extensions.DependencyInjection;
-using Microsoft.AspNetCore.Components.WebAssembly.Hosting;
+using Microsoft.Extensions.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Blazored.LocalStorage;
+using Radzen;
+
 using Inspecciones.Data;
 using Inspecciones.Services;
 using Inspecciones.Model;
-using Radzen;
-
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddRazorComponents()
-    .AddInteractiveWebAssemblyComponents()
-    .AddInteractiveServerComponents();
-
-
-// Add services to the container.
+// Blazor Server clásico
 builder.Services.AddRazorPages();
 builder.Services.AddServerSideBlazor();
-builder.Services.AddScoped<Radzen.ThemeService>();
 
-builder.Services.AddScoped<IEmailServices,EmailServices>();
+// Radzen (servicios necesarios para componentes que usas)
+builder.Services.AddScoped<DialogService>();
+builder.Services.AddScoped<NotificationService>();
+builder.Services.AddScoped<TooltipService>();
+builder.Services.AddScoped<ContextMenuService>();
+// Ya NO usamos <RadzenTheme/>, por lo que no registramos Radzen.ThemeService.
+// Si en el futuro vuelves a usar <RadzenTheme>, agrega:
+// builder.Services.AddScoped<Radzen.ThemeService>();
 
+// Servicios propios
+builder.Services.AddScoped<IEmailServices, EmailServices>();
+builder.Services.AddScoped<IDataInspeccion, DataInspeccion>();
+builder.Services.AddScoped<IDataPregunta, DataPregunta>();
+builder.Services.AddScoped<IDataMaquina, DataMaquina>();
 
-builder.Services.AddBlazoredLocalStorage();
-
+// Utilidades
 builder.Services.AddHttpClient();
-builder.Services.AddControllersWithViews();
-builder.Services.AddOptions();  
+builder.Services.AddBlazoredLocalStorage();
+builder.Services.AddOptions();
 builder.Services.AddAuthorizationCore();
 
-
-
-builder.Services.AddScoped<NotificationService>();
-builder.Services.AddScoped<DialogService>();
-
+// DbContext
 builder.Services.AddDbContext<DbNeoContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionDbNeo")),ServiceLifetime.Transient
+    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionDbNeo")),
+    ServiceLifetime.Transient
 );
-
-builder.Services.AddScoped<IDataInspeccion,DataInspeccion>();
-builder.Services.AddScoped<IDataPregunta,DataPregunta>();
-builder.Services.AddScoped<IDataMaquina,DataMaquina>();
-
-
-
 
 var app = builder.Build();
 
-// Configure the HTTP request pipeline.
-if (!app.Environment.IsDevelopment())
+if (app.Environment.IsDevelopment())
+{
+    app.UseDeveloperExceptionPage(); // Detalle de excepción en navegador durante desarrollo
+}
+else
 {
     app.UseExceptionHandler("/Error");
-    // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
 
-// builder.Services.AddDbContext<DbNeoContext>(options =>
-//     options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionDbNeo")),ServiceLifetime.Transient
-// );
-
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 
 app.UseRouting();

@@ -1,71 +1,126 @@
+:root{
+  --neo-primary: #0c9d51;     /* verde principal */
+  --neo-primary-2: #6abf4b;   /* verde secundario (degradado) */
+  --neo-bg: #f3f6fb;          /* fondo del área principal */
+  --neo-surface: #ffffff;     /* tarjetas */
+  --neo-border: #e3e8ef;      /* borde suave */
+  --neo-text: #1f2937;        /* texto principal */
+  --neo-muted: #6b7280;       /* texto secundario */
+  --neo-shadow: 0 8px 24px rgba(17,24,39,.08), 0 2px 8px rgba(17,24,39,.06);
+}
+
+/* ===== Layout base ===== */
 .page {
-    position: relative;
-    display: flex;
-    flex-direction: column;
+  position: relative;
+  display: grid;
+  grid-template-columns: 260px 1fr;
+  min-height: 100vh;
+  background: var(--neo-bg);
 }
 
 main {
-    flex: 1;
-    background-color: white !important;
+  flex: 1;
+  background-color: transparent !important; /* lo maneja content-wrap */
+  display: flex;
+  flex-direction: column;
 }
 
+/* ===== Sidebar ===== */
 .sidebar {
-    background-image: linear-gradient(to right, #00A23B, #3CAD49, #79B943) !important;
+  background-image: linear-gradient(180deg, var(--neo-primary), var(--neo-primary-2)) !important;
+  color: #eafff4;
+  width: 260px;
+  height: 100vh;
+  position: sticky;
+  top: 0;
+  padding: 12px 10px;
+  overflow-y: auto;
+  box-shadow: inset -1px 0 0 rgba(0,0,0,.08);
 }
 
+/* ===== Top bar ===== */
 .top-row {
-    background-color: #f7f7f7;
-    border-bottom: 1px solid #d6d5d5;
-    justify-content: flex-end;
-    height: 3.5rem;
-    display: flex;
-    align-items: center;
+  background-color: var(--neo-surface);
+  border-bottom: 1px solid var(--neo-border);
+  justify-content: space-between;           /* derecha/izquierda */
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  padding-left: 1rem !important;
+  padding-right: 1rem !important;
 }
 
-    .top-row ::deep a, .top-row .btn-link {
-        white-space: nowrap;
-        margin-left: 1.5rem;
-    }
+/* enlaces de la top bar */
+.top-row ::deep a, .top-row .btn-link {
+  white-space: nowrap;
+  margin-left: 1rem;
+  text-decoration: none;
+  color: var(--neo-primary);
+  font-weight: 700;
+}
+.top-row a:first-child {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
-    .top-row a:first-child {
-        overflow: hidden;
-        text-overflow: ellipsis;
-    }
+/* Botón tipo pastilla (para “Impresiones”) */
+.top-row .btn-pill {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 999px;
+  font-weight: 700;
+  text-decoration: none;
+  border: 1px solid transparent;
+  background: #16a34a;
+  color: #fff;
+  transition: background .15s ease;
+}
+.top-row .btn-pill:hover { background: #15803d; }
 
+/* ===== Área de contenido ===== */
+article, .content {
+  padding-left: 1.25rem !important;
+  padding-right: 1.25rem !important;
+}
+
+/* Tarjeta contenedora (como en la captura) */
+.content-wrap {
+  background: var(--neo-surface);
+  border: 1px solid var(--neo-border);
+  border-radius: 12px;
+  padding: 14px;
+  box-shadow: var(--neo-shadow);
+}
+
+/* Tarjetas reutilizables */
+.card {
+  background: var(--neo-surface);
+  border: 1px solid var(--neo-border);
+  border-radius: 12px;
+  padding: 12px;
+  box-shadow: var(--neo-shadow);
+}
+
+/* ===== Responsivo ===== */
 @media (max-width: 640.98px) {
-    .top-row:not(.auth) {
-        display: none;
-    }
-
-    .top-row.auth {
-        justify-content: space-between;
-    }
-
-    .top-row a, .top-row .btn-link {
-        margin-left: 0;
-    }
+  .page { grid-template-columns: 1fr; }
+  .top-row:not(.auth) { display: flex; }
+  .top-row.auth { justify-content: space-between; }
+  .top-row a, .top-row .btn-link { margin-left: 0; }
+  .sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+  }
 }
 
 @media (min-width: 641px) {
-    .page {
-        flex-direction: row;
-    }
-
-    .sidebar {
-        width: 250px;
-        height: 100vh;
-        position: sticky;
-        top: 0;
-    }
-
-    .top-row {
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-
-    .top-row, article {
-        padding-left: 2rem !important;
-        padding-right: 1.5rem !important;
-    }
+  .page { grid-template-columns: 260px 1fr; }
+  .top-row, article {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
 }

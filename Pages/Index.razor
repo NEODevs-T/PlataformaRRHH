@@ -2,25 +2,63 @@
 
 <PageTitle>Home</PageTitle>
 
-<section id="cajaPadre">
-  <section id="cajaContenido">
-    <div id="cajaLogo">
-      <RadzenImage id="logoindex" Path="img/LogoGris.png" />
+<section class="home-hero">
+  <section class="home-content">
+    <div class="home-logo-wrap">
+      <RadzenImage class="home-logo" Path="img/LogoGris.png" />
     </div>
-    <div id="cajaInformacion">
-      <p id="tituloInfo">Información</p>
-      <ul id="Info">
-<li>
-    <strong>Neo Inspecciones</strong> es una plataforma diseñada para optimizar el mantenimiento de montacargas.  
-    Permite registrar fácilmente el estado de cada equipo, reportar observaciones y asegurar su correcto funcionamiento.  
-    Con este sistema, se puede ver si esta en óptimas condiciones o requiere atención,  
-    ayudando a prevenir fallos y mejorando la seguridad operativa de la empresa.
-</li>
 
+    <div class="home-info">
+      <h2 class="home-title">Información</h2>
+      <ul class="home-list">
+        <li>
+          <strong>Neo RRHH:</strong> es una plataforma centralizada que simplifica el registro de datos, garantiza la precisión
+          de los cálculos de forma inmediata y transforma la data en información estratégica para la toma de decisiones.
+        </li>
       </ul>
     </div>
   </section>
-  <section id="cajaImg">
-    <RadzenImage Path="img/Neo.png"/>
+
+  <section class="home-iso-wrap">
+    <RadzenImage class="home-iso" Path="img/Neo.png" />
   </section>
 </section>
+
+<style>
+  /* ===== Contenedor principal (dos columnas) ===== */
+  .home-hero {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr; /* más ancho a la izquierda */
+    gap: 16px;
+    align-items: start;
+    background: #ffffff;
+    border: 1px solid #e3e8ef;        /* igual que el layout */
+    border-radius: 12px;
+    padding: 16px;
+    box-shadow: 0 8px 24px rgba(17,24,39,.08), 0 2px 8px rgba(17,24,39,.06);
+  }
+
+  /* Columna izquierda */
+  .home-content { display: grid; grid-template-rows: auto 1fr; gap: 10px; }
+  .home-logo-wrap { padding: 4px 0; }
+  .home-logo { max-width: 180px; height: auto; }   /* ⬅️ controla el logo superior */
+
+  .home-info { padding: 6px 2px; }
+  .home-title {
+    margin: 0 0 8px 0;
+    color: #0c9d51;                  /* verde corporativo */
+    font-weight: 800;
+    letter-spacing: .3px;
+  }
+  .home-list { margin: 0; padding-left: 18px; line-height: 1.6; color: #374151; }
+
+  /* Columna derecha (isotipo grande) */
+  .home-iso-wrap { display: flex; align-items: center; justify-content: center; }
+  .home-iso { max-width: 320px; width: 100%; height: auto; }  /* ⬅️ controla isotipo */
+
+  /* Responsivo: OJO usar @@media en Razor */
+  @@media (max-width: 900px) {
+    .home-hero { grid-template-columns: 1fr; }
+    .home-iso { max-width: 260px; }
+  }
+</style>
