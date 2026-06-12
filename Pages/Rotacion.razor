@@ -1,0 +1,229 @@
+@page "/rotacion"
+
+@using NeoRH.DTOs
+@inject IRRHHApiService Api
+
+<link href="./css/site.css" rel="stylesheet" />
+
+<h2 class="page-title">Rotación de Personal</h2>
+
+@if (empleados == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="rotacion-layout">
+
+        <!-- ✅ PANEL IZQUIERDO -->
+        <div class="rotacion-sidebar">
+
+            <h4>Movimientos por Departamento</h4>
+
+            @foreach (var dep in movimientosDept)
+            {
+                <div class="movimiento-row @dep.Nivel">
+
+                    <span class="dep-nombre">@dep.Departamento</span>
+
+                    <!-- 🔼 INGRESOS -->
+                    <div class="icono up">
+
+                        ↑ (@dep.Ingresos.Count)
+
+                        <div class="tooltip">
+
+                            @foreach (var p in dep.Ingresos)
+                            {
+                                <div class="tooltip-item">
+                                    @($"{p.Nombre} {p.Apellido} | {p.Cargo} → {p.CargoNuevo}")
+                                </div>
+                            }
+
+                        </div>
+
+                    </div>
+
+                    <!-- 🔽 RETIROS -->
+                    <div class="icono down">
+
+                        ↓ (@dep.Retiros.Count)
+
+                        <div class="tooltip">
+
+                            @foreach (var p in dep.Retiros)
+                            {
+                                <div class="tooltip-item">
+                                    @($"{p.Nombre} {p.Apellido} | {p.Cargo}")
+                                </div>
+                            }
+
+                        </div>
+
+                    </div>
+
+                </div>
+            }
+
+        </div>
+
+        <!-- ✅ PANEL DERECHO -->
+        <div class="rotacion-main">
+
+            <!-- ✅ KPI -->
+            <div class="headcount-cards">
+
+                <div class="headcount-card">
+                    <h5>Total Empleados</h5>
+                    <span>@total</span>
+                </div>
+
+                <div class="headcount-card">
+                    <h5>Ingresos</h5>
+                    <span>@ingresos</span>
+                </div>
+
+                <div class="headcount-card">
+                    <h5>Retiros</h5>
+                    <span>@retiros</span>
+                </div>
+
+                <div class="headcount-card">
+                    <h5>Rotación (%)</h5>
+                    <span>@rotacionPorcentaje.ToString("0.0")%</span>
+                </div>
+
+            </div>
+
+            <!-- ✅ GRAFICO -->
+            <div class="grafico-container">
+
+                @foreach (var item in headcountPorDepartamento)
+                {
+                    <div class="barra-container">
+                        <div class="barra"
+                             style="height:@(item.Cantidad * 5)px">
+                        </div>
+
+                        <span>@item.Departamento</span>
+                        <small>@item.Cantidad</small>
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+    </div>
+}
+
+@code {
+
+    List<MaestroTrabajadorDTO> empleados = new();
+
+    int total = 0;
+    int ingresos = 0;
+    int retiros = 0;
+
+    double rotacionPorcentaje = 0;
+
+    List<HeadCountViewModel> headcountPorDepartamento = new();
+    List<MovimientoDepartamento> movimientosDept = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        empleados = await Api.GetMaestroTrabajadores();
+
+        CalcularKPIs();
+        GenerarGrafico();
+        GenerarMovimientos();
+    }
+
+    void CalcularKPIs()
+    {
+        total = empleados.Count;
+        ingresos = empleados.Count(e => e.Fecing != null);
+        retiros = empleados.Count(e => e.Fecret != null);
+
+        if (total > 0)
+        {
+            rotacionPorcentaje = (double)retiros / total * 100;
+        }
+    }
+
+    void GenerarGrafico()
+    {
+        headcountPorDepartamento = empleados
+            .GroupBy(e => e.Dptfic)
+            .Select(g => new HeadCountViewModel
+            {
+                Departamento = g.Key ?? "Sin Dep",
+                Cantidad = g.Count()
+            })
+            .OrderByDescending(x => x.Cantidad)
+            .ToList();
+    }
+
+    void GenerarMovimientos()
+    {
+        movimientosDept = empleados
+            .GroupBy(e => e.Dptfic)
+            .Select(g =>
+            {
+                var ingresos = g.Where(x => x.Fecing != null).ToList();
+                var retiros = g.Where(x => x.Fecret != null).ToList();
+
+                var totalMov = ingresos.Count + retiros.Count;
+
+                return new MovimientoDepartamento
+                {
+                    Departamento = g.Key ?? "Sin Departamento",
+
+                    Ingresos = ingresos.Select(x => new PersonaMovimiento
+                    {
+                        Nombre = x.Nomfi1 ?? "",
+                        Apellido = x.Apefi1 ?? "",
+                        Cargo = x.Cgofic ?? "",
+                        CargoNuevo = x.Cgofic ?? "" // listo para futuro backend
+                    }).ToList(),
+
+                    Retiros = retiros.Select(x => new PersonaMovimiento
+                    {
+                        Nombre = x.Nomfi1 ?? "",
+                        Apellido = x.Apefi1 ?? "",
+                        Cargo = x.Cgofic ?? ""
+                    }).ToList(),
+
+                    Nivel = totalMov > 20 ? "alto"
+                        : totalMov > 10 ? "medio"
+                        : "bajo"
+                };
+            })
+            .OrderByDescending(x => x.Ingresos.Count + x.Retiros.Count)
+            .ToList();
+    }
+
+    // ✅ MODELOS
+
+    public class HeadCountViewModel
+    {
+        public string Departamento { get; set; } = "";
+        public int Cantidad { get; set; }
+    }
+
+    public class MovimientoDepartamento
+    {
+        public string Departamento { get; set; } = "";
+        public List<PersonaMovimiento> Ingresos { get; set; } = new();
+        public List<PersonaMovimiento> Retiros { get; set; } = new();
+        public string Nivel { get; set; } = "";
+    }
+
+    public class PersonaMovimiento
+    {
+        public string Nombre { get; set; } = "";
+        public string Apellido { get; set; } = "";
+        public string Cargo { get; set; } = "";
+        public string CargoNuevo { get; set; } = "";
+    }
+}
