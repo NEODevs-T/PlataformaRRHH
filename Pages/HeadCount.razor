@@ -1,0 +1,264 @@
+@page "/headcount"
+
+@using NeoRH.DTOs
+
+@inject IRRHHApiService Api
+
+<link href="./css/site.css" rel="stylesheet" />
+
+<h2 class="page-title">HeadCount</h2>
+
+@if (empleados == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="headcount-container">
+
+        <!-- ✅ FILTROS -->
+        <div class="filtro-container headcount-filtros">
+
+            <input placeholder="Buscar empleado..."
+                @bind="filtroTexto" class="input" />
+
+            <select @bind="departamentoFiltro" class="input">
+                <option value="">Todos los departamentos</option>
+                @foreach (var dep in listaDepartamentos)
+                {
+                    <option value="@dep">@dep</option>
+                }
+            </select>
+
+            <select @bind="cargoFiltro" class="input">
+                <option value="">Todos los cargos</option>
+                @foreach (var c in listaCargos)
+                {
+                    <option value="@c">@c</option>
+                }
+            </select>
+
+            <select @bind="tipoPeriodo" class="input">
+                <option value="mensual">Nómina Mensual</option>
+                <option value="diaria">Nómina Diaria</option>
+            </select>
+
+            <input type="date" @bind="fechaSeleccionada" class="input" />
+
+            <button class="btn" @onclick="AplicarFiltro">
+                Filtrar
+            </button>
+
+        </div>
+
+        <!-- ✅ KPI -->
+        <div class="headcount-cards">
+
+            <div class="headcount-card">
+                <h5>Total Empleados</h5>
+                <span>@total</span>
+            </div>
+
+            <div class="headcount-card">
+                <h5>Ingresos del Periodo</h5>
+                <span>@ingresosPeriodo</span>
+            </div>
+
+        </div>
+
+        <!-- ✅ GRAFICO -->
+        <h4 style="margin-top:20px;">Headcount por Departamento</h4>
+
+        <div class="grafico-container">
+
+            @foreach (var item in headcountPorDepartamento)
+            {
+                <div class="barra-container">
+
+                    <div class="barra"
+                         style="height:@(item.Cantidad * 5)px">
+                    </div>
+
+                    <span>@item.Departamento</span>
+                    <small>@item.Cantidad</small>
+
+                </div>
+            }
+
+        </div>
+
+        <!-- ✅ TABLA -->
+        <table class="table-custom headcount-table">
+
+            <thead>
+                <tr>
+                    <th>Departamento</th>
+                    <th>Cantidad</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in resumen)
+                {
+                    <tr>
+                        <td>@item.Departamento</td>
+                        <td>@item.Cantidad</td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+
+        <div class="headcount-total">
+            Total: @total
+        </div>
+
+    </div>
+}
+
+@code {
+
+    List<MaestroTrabajadorDTO> empleados = new();
+    List<MaestroTrabajadorDTO> empleadosFiltrados = new();
+
+    string filtroTexto = "";
+    string departamentoFiltro = "";
+    string cargoFiltro = "";
+
+    string tipoPeriodo = "mensual";
+    DateTime? fechaSeleccionada;
+
+    List<string?> listaDepartamentos = new();
+    List<string?> listaCargos = new();
+
+    List<HeadCountViewModel> resumen = new();
+    List<HeadCountViewModel> headcountPorDepartamento = new();
+
+    int total = 0;
+    int ingresosPeriodo = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        empleados = await Api.GetMaestroTrabajadores();
+
+        empleadosFiltrados = empleados;
+
+        listaDepartamentos = empleados
+            .Select(x => x.Dptfic)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+
+        listaCargos = empleados
+            .Select(x => x.Cgofic)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .ToList();
+
+        AgruparDatos();
+        CalcularIndicadores();
+    }
+
+    void AplicarFiltro()
+    {
+        var query = empleados.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(filtroTexto))
+        {
+            query = query.Where(e =>
+                (e.Codfic != null && e.Codfic.Contains(filtroTexto)) ||
+                (e.Nomfi1 != null && e.Nomfi1.Contains(filtroTexto)) ||
+                (e.Apefi1 != null && e.Apefi1.Contains(filtroTexto))
+            );
+        }
+
+        if (!string.IsNullOrWhiteSpace(departamentoFiltro))
+            query = query.Where(e => e.Dptfic == departamentoFiltro);
+
+        if (!string.IsNullOrWhiteSpace(cargoFiltro))
+            query = query.Where(e => e.Cgofic == cargoFiltro);
+
+        // ✅ FILTRO FECHA
+        if (fechaSeleccionada.HasValue)
+        {
+            if (tipoPeriodo == "diaria")
+            {
+                query = query.Where(e =>
+                {
+                    var f = ConvertirFecha(e.Fecing);
+                    return f.HasValue && f.Value.Date == fechaSeleccionada.Value.Date;
+                });
+            }
+            else
+            {
+                query = query.Where(e =>
+                {
+                    var f = ConvertirFecha(e.Fecing);
+                    return f.HasValue &&
+                        f.Value.Month == fechaSeleccionada.Value.Month &&
+                        f.Value.Year == fechaSeleccionada.Value.Year;
+                });
+            }
+        }
+
+        empleadosFiltrados = query.ToList();
+
+        AgruparDatos();
+        CalcularIndicadores();
+    }
+
+    void AgruparDatos()
+    {
+        headcountPorDepartamento = empleadosFiltrados
+            .GroupBy(e => e.Dptfic)
+            .Select(g => new HeadCountViewModel
+            {
+                Departamento = g.Key ?? "Sin Departamento",
+                Cantidad = g.Count()
+            })
+            .OrderByDescending(x => x.Cantidad)
+            .ToList();
+
+        resumen = headcountPorDepartamento;
+
+        total = empleadosFiltrados.Count;
+    }
+
+    void CalcularIndicadores()
+    {
+        ingresosPeriodo = empleadosFiltrados.Count(e =>
+        {
+            var f = ConvertirFecha(e.Fecing);
+
+            if (!f.HasValue || !fechaSeleccionada.HasValue)
+                return false;
+
+            if (tipoPeriodo == "diaria")
+                return f.Value.Date == fechaSeleccionada.Value.Date;
+
+            return f.Value.Month == fechaSeleccionada.Value.Month &&
+                f.Value.Year == fechaSeleccionada.Value.Year;
+        });
+    }
+
+    DateTime? ConvertirFecha(int? fecha)
+    {
+        if (!fecha.HasValue) return null;
+
+        var s = fecha.Value.ToString();
+
+        if (s.Length != 8) return null;
+
+        return new DateTime(
+            int.Parse(s.Substring(0, 4)),
+            int.Parse(s.Substring(4, 2)),
+            int.Parse(s.Substring(6, 2))
+        );
+    }
+
+    public class HeadCountViewModel
+    {
+        public string Departamento { get; set; } = "";
+        public int Cantidad { get; set; }
+    }
+}
