@@ -1,0 +1,161 @@
+@page "/historico"
+
+@using NeoRH.DTOs
+@using NeoRH.ViewModels
+
+@inject IRRHHApiService Api
+
+<h2 class="page-title">Histórico de Ausencias</h2>
+
+@if (ausenciasFiltradas == null)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <div class="headcount-container">
+
+        <!-- ✅ FILTROS -->
+        <div class="filtro-container">
+
+            <input type="number"
+                placeholder="Año"
+                @bind="filtroAnio"
+                class="input" />
+
+            <input placeholder="Ficha..."
+                @bind="filtroFicha"
+                class="input" />
+
+            <select @bind="filtroTipo" class="input">
+                <option value="">Todos</option>
+                <option value="P">Permiso</option>
+                <option value="R">Reposo</option>
+            </select>
+
+            <button class="btn" @onclick="AplicarFiltros">
+                Filtrar
+            </button>
+
+        </div>
+
+        <!-- ✅ TABLA -->
+        <table class="table-custom">
+
+            <thead>
+                <tr>
+                    <th>Ficha</th>
+                    <th>Nombre</th>
+                    <th>Departamento</th>
+                    <th>Cargo</th>
+                    <th>Tipo</th>
+                    <th>Año</th>
+                    <th>Fecha</th>
+                </tr>
+            </thead>
+
+            <tbody>
+                @foreach (var item in ausenciasFiltradas)
+                {
+                    <tr>
+                        <td>@item.Ficha</td>
+                        <td>@item.Nombre</td>
+                        <td>@item.Departamento</td>
+                        <td>@item.Cargo</td>
+                        <td>@item.Tipo</td>
+                        <td>@item.Año</td>
+                        <td>@FormatearFecha(item.Fecha)</td>
+                    </tr>
+                }
+            </tbody>
+
+        </table>
+
+    </div>
+}
+
+@code {
+
+    List<AusenciaVDTO> ausencias = new();
+    List<MaestroTrabajadorDTO> empleados = new();
+    List<AusenciaViewModel> ausenciasCombinadas = new();
+
+    List<AusenciaViewModel> ausenciasFiltradas = new();
+
+    int? filtroAnio;
+    string filtroFicha = "";
+    string filtroTipo = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        // ✅ AHORA SÍ TRAEMOS EMPLEADOS
+        ausencias = await Api.GetAusencias();
+        empleados = await Api.GetMaestroTrabajadores();
+
+        CombinarDatos();
+
+        ausenciasFiltradas = ausenciasCombinadas;
+    }
+
+    void CombinarDatos()
+    {
+        ausenciasCombinadas = (
+            from a in ausencias
+            join e in empleados
+            on a.Ciadnh equals e.Codfic into temp
+            from e in temp.DefaultIfEmpty()
+            select new AusenciaViewModel
+            {
+                Ficha = a.Ciadnh,
+                Tipo = a.Tpndnh,
+                Año = a.Añodnh,
+                Fecha = a.Ficdnh,
+
+                Nombre = e != null
+                    ? string.Join(" ", new[]
+                    {
+                        e.Nomfi1,
+                        e.Nomfi2,
+                        e.Apefi1,
+                        e.Apefi2
+                    }.Where(x => !string.IsNullOrWhiteSpace(x)))
+                    : "N/A",
+
+                Departamento = e?.Dptfic ?? "N/A",
+                Cargo = e?.Cgofic ?? "N/A"
+            }
+        ).ToList();
+    }
+
+    void AplicarFiltros()
+    {
+        var query = ausenciasCombinadas.AsEnumerable();
+
+        if (filtroAnio.HasValue)
+        {
+            query = query.Where(x => x.Año == filtroAnio);
+        }
+
+        if (!string.IsNullOrWhiteSpace(filtroFicha))
+        {
+            query = query.Where(x =>
+                x.Ficha != null &&
+                x.Ficha.Contains(filtroFicha));
+        }
+
+        if (!string.IsNullOrWhiteSpace(filtroTipo))
+        {
+            query = query.Where(x => x.Tipo == filtroTipo);
+        }
+
+        ausenciasFiltradas = query.ToList();
+    }
+
+    string FormatearFecha(string? fecha)
+    {
+        if (DateTime.TryParse(fecha, out var f))
+            return f.ToString("dd/MM/yyyy");
+
+        return "";
+    }
+}
