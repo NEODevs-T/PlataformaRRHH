@@ -1,0 +1,272 @@
+@page "/dashboard"
+@using Microsoft.AspNetCore.Authorization
+@using NeoRH.DTOs
+@attribute [Authorize(Roles = "Admin,SuperAdmin,RRHH_Admin")]
+@inject IRRHHApiService Api
+@inject IJSRuntime JS
+
+<link href="./css/site.css" rel="stylesheet" />
+
+<div class="dashboard-container">
+
+    <div class="dashboard-header">Dashboard RRHH</div>
+
+    <!-- 🔹 FILTROS PRINCIPALES (KPIs + GRÁFICO) -->
+    <div class="dashboard-card filtros">
+
+        <select @bind="tipoNomina">
+            <option value="Diaria">Nómina Diaria</option>
+            <option value="Total">Total General</option>
+        </select>
+
+        <select @bind="mesSeleccionado">
+            <option value="0">Todos los meses</option>
+            @for (int i = 1; i <= 12; i++)
+            {
+                <option value="@i">Mes @i</option>
+            }
+        </select>
+
+        <select @bind="anioSeleccionado">
+            @for (int y = 2024; y <= DateTime.Now.Year; y++)
+            {
+                <option value="@y">@y</option>
+            }
+        </select>
+
+        <input type="date" @bind="fechaDesde" />
+        <input type="date" @bind="fechaHasta" />
+
+        <button class="btn-filtrar" @onclick="AplicarFiltros">Filtrar</button>
+    </div>
+
+    <!-- KPI -->
+    <div class="dashboard-grid">
+        <div class="stat-card"><h3>Trabajadores</h3><p>@totalEmpleados</p></div>
+        <div class="stat-card"><h3>Ausencias</h3><p>@totalAusencias</p></div>
+        <div class="stat-card"><h3>Permisos</h3><p>@totalPermisos</p></div>
+        <div class="stat-card"><h3>Reposos</h3><p>@totalReposos</p></div>
+    </div>
+
+    <!-- GRÁFICO -->
+    <div class="dashboard-info-card">
+        <h3>Tendencia y Predicción</h3>
+
+        <div class="grafico-barras">
+            <div class="barra actual" style="height:@(mesActualValor*5)px"></div>
+            <div class="barra anterior" style="height:@(mesAnteriorValor*5)px"></div>
+            <div class="barra prediccion" style="height:@(prediccionValor*5)px"></div>
+        </div>
+
+        <div class="labels">
+            <span>@labelMesActual (@mesActualValor.ToString("0.00")%)</span>
+            <span>@labelMesAnterior (@mesAnteriorValor.ToString("0.00")%)</span>
+            <span>Predicción (@prediccionValor.ToString("0.00")%)</span>
+        </div>
+    </div>
+
+    <!-- 🔹 FILTROS DE TABLAS (INDEPENDIENTES) -->
+    <div class="dashboard-card filtros">
+        <select @bind="anioRegistro">
+            @for (int y = 2024; y <= DateTime.Now.Year; y++)
+            {
+                <option value="@y">@y</option>
+            }
+        </select>
+
+        <select @bind="mesDesdeRegistro">
+            @for (int m = 1; m <= 12; m++)
+            {
+                <option value="@m">Desde @m</option>
+            }
+        </select>
+
+        <select @bind="mesHastaRegistro">
+            @for (int m = 1; m <= 12; m++)
+            {
+                <option value="@m">Hasta @m</option>
+            }
+        </select>
+
+        <button class="btn-filtrar" @onclick="FiltrarRegistros">Aplicar</button>
+    </div>
+
+    <!-- 🔹 TABLAS -->
+    @foreach (var grupo in resumenRegistros.GroupBy(x => x.Anio).OrderByDescending(x => x.Key))
+    {
+        <div class="anio-separador" style="display:flex; justify-content:space-between;">
+            <h2>@grupo.Key</h2>
+
+            <button class="btn-filtrar"
+                    @onclick="() => ExportarAnio(grupo.Key)">
+                Exportar Excel 📊
+            </button>
+        </div>
+
+        @foreach (var bloque in grupo.OrderByDescending(x => x.Mes))
+        {
+            <div class="dashboard-info-card">
+
+                <div class="excel-header">
+                    AUSENTISMO MES @bloque.Mes - @bloque.Anio
+                </div>
+
+                <div class="excel-grid">
+
+                    <div class="excel-row header">
+                        <div>TIPO</div><div>TRAB</div><div>PERM</div><div>AUS</div>
+                        <div>REP</div><div>HRS AUS</div><div>HRS PROG</div><div>%</div>
+                    </div>
+
+                    @foreach (var r in bloque.Data)
+                    {
+                        <div class="excel-row @(r.Tipo.Contains("AMBAS") ? "total" : "")">
+                            <div>@r.Tipo</div>
+                            <div>@r.Trabajadores</div>
+                            <div>@r.Permisos</div>
+                            <div>@r.Ausencias</div>
+                            <div>@r.Reposos</div>
+                            <div>@r.HorasAusentismo</div>
+                            <div>@r.HorasProgramadas</div>
+                            <div>@r.Indice.ToString("0.00")</div>
+                        </div>
+                    }
+                </div>
+            </div>
+        }
+    }
+
+</div>
+
+@code {
+
+    List<PermisosNomDiariaVDTO> nomina = new();
+    List<RepososVDTO> reposos = new();
+
+    List<ResumenMensual> resumenMeses = new();
+    List<ResumenMensual> resumenRegistros = new();
+
+    int totalEmpleados, totalAusencias, totalPermisos, totalReposos;
+
+    int mesSeleccionado = 0;
+    int anioSeleccionado = DateTime.Now.Year;
+
+    string tipoNomina = "Diaria";
+
+    int anioRegistro = DateTime.Now.Year;
+    int mesDesdeRegistro = DateTime.Now.Month;
+    int mesHastaRegistro = DateTime.Now.Month;
+
+    DateTime? fechaDesde;
+    DateTime? fechaHasta;
+
+    double mesActualValor, mesAnteriorValor, prediccionValor;
+    string labelMesActual = "", labelMesAnterior = "";
+
+    protected override async Task OnInitializedAsync()
+    {
+        nomina = await Api.GetPermisosNomDiaria();
+        reposos = await Api.GetReposos();
+
+        CalcularKPIs();
+    }
+
+    void AplicarFiltros()
+    {
+        CalcularKPIs();
+    }
+
+    void FiltrarRegistros()
+    {
+        GenerarRegistros();
+    }
+
+    void CalcularKPIs()
+    {
+        totalEmpleados = totalAusencias = totalPermisos = totalReposos = 0;
+
+        GenerarResumenMensual();
+        GenerarRegistros();
+        CalcularPrediccion();
+    }
+
+    void GenerarRegistros()
+    {
+        var lista = resumenMeses
+            .OrderByDescending(x => x.Anio)
+            .ThenByDescending(x => x.Mes)
+            .ToList();
+
+        if (mesDesdeRegistro == mesHastaRegistro)
+        {
+            resumenRegistros = lista.Take(3).ToList();
+            return;
+        }
+
+        resumenRegistros = lista
+            .Where(x => x.Anio == anioRegistro &&
+                        x.Mes >= mesDesdeRegistro &&
+                        x.Mes <= mesHastaRegistro)
+            .ToList();
+    }
+
+    void CalcularPrediccion()
+    {
+        if (resumenMeses.Count > 1)
+        {
+            mesActualValor = resumenMeses[0].Data[1].Indice;
+            mesAnteriorValor = resumenMeses[1].Data[1].Indice;
+
+            prediccionValor = mesActualValor + (mesActualValor - mesAnteriorValor);
+
+            labelMesActual = $"Mes {resumenMeses[0].Mes}";
+            labelMesAnterior = $"Mes {resumenMeses[1].Mes}";
+        }
+    }
+
+    void GenerarResumenMensual()
+    {
+        resumenMeses.Clear();
+
+        for (int i = 0; i < 12; i++)
+        {
+            var fecha = DateTime.Now.AddMonths(-i);
+
+            resumenMeses.Add(new ResumenMensual
+            {
+                Mes = fecha.Month,
+                Anio = fecha.Year,
+                Data = new()
+                {
+                    new ResumenNomina { Tipo = "TOTAL NOM. MENSUAL" },
+                    new ResumenNomina { Tipo = "TOTAL NOM. DIARIA" },
+                    new ResumenNomina { Tipo = "TOTAL AMBAS NOMINAS" }
+                }
+            });
+        }
+    }
+
+    async Task ExportarAnio(int anio)
+    {
+        await JS.InvokeVoidAsync("console.log", $"Exportando {anio}");
+    }
+
+    public class ResumenMensual
+    {
+        public int Mes { get; set; }
+        public int Anio { get; set; }
+        public List<ResumenNomina> Data { get; set; } = new();
+    }
+
+    public class ResumenNomina
+    {
+        public string Tipo { get; set; } = "";
+        public int Trabajadores { get; set; }
+        public int Permisos { get; set; }
+        public int Ausencias { get; set; }
+        public int Reposos { get; set; }
+        public double HorasAusentismo { get; set; }
+        public double HorasProgramadas { get; set; }
+        public double Indice { get; set; }
+    }
+}
