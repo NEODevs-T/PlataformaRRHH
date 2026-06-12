@@ -1,0 +1,112 @@
+@page "/login"
+@layout NeoRH.Shared.EmptyLayout
+
+@using NeoRH.DTOs
+@using NeoRH.Services
+
+@inject HttpClient Http
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
+<link href="./css/site.css" rel="stylesheet" />
+
+<div class="login-wrapper">
+
+    <div class="login-card">
+
+        <img src="/img/Neo.png"
+            class="login-logo" />
+
+        <h1>Neo RH</h1>
+
+        <div class="login-form">
+
+            <input placeholder="Usuario"
+                @bind="user.UserName" />
+
+            <input type="password"
+                placeholder="Contraseña"
+                @bind="user.Password" />
+
+            <button type="button"
+                    @onclick="HandleLogin">
+
+                Iniciar Sesión
+
+            </button>
+
+        </div>
+
+        <p>@mensaje</p>
+
+    </div>
+
+</div>
+
+@code {
+
+    UserLoginDto user = new();
+
+    string mensaje = "";
+
+        async Task HandleLogin()
+    {
+        try
+        {
+            if (string.IsNullOrWhiteSpace(user.UserName))
+            {
+                mensaje = "Debe ingresar el usuario";
+                return;
+            }
+
+            if (string.IsNullOrWhiteSpace(user.Password))
+            {
+                mensaje = "Debe ingresar la contraseña";
+                return;
+            }
+
+            mensaje = "Validando...";
+
+            user.Proyecto = "PlatafomaRH";
+
+            var result = await Http.PostAsJsonAsync(
+                "http://operaciones.papeleslatinos.com/Authentication/api/Auth/Login",
+                user);
+
+            var token =
+                (await result.Content.ReadAsStringAsync())
+                .Replace("\"","");
+
+            if (token == "WrongPassword")
+            {
+                mensaje = "Contraseña incorrecta";
+                return;
+            }
+
+            if (token == "NotFoundUser")
+            {
+                mensaje = "Usuario no encontrado";
+                return;
+            }
+
+            if (token == "null")
+            {
+                mensaje = "Usuario sin permisos";
+                return;
+            }
+
+            await ((CustomAuthStateProvider)AuthStateProvider)
+                .Login(token);
+
+            mensaje = "Acceso válido";
+
+            await Task.Delay(300);
+
+            Nav.NavigateTo("/");
+        }
+        catch (Exception ex)
+        {
+            mensaje = ex.Message;
+        }
+    }
+}
