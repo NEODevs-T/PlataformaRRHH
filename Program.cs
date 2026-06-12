@@ -1,65 +1,60 @@
-using Microsoft.AspNetCore.Builder;
-using Microsoft.Extensions.DependencyInjection;
-using Microsoft.Extensions.Hosting;
-using Microsoft.EntityFrameworkCore;
 using Blazored.LocalStorage;
-using Radzen;
+using Microsoft.AspNetCore.Components.Authorization;
 
-using Inspecciones.Data;
-using Inspecciones.Services;
-using Inspecciones.Model;
+using NeoRH;
+using NeoRH.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Blazor Server clásico
+// ✅ BLAZOR SERVER
 builder.Services.AddRazorPages();
+
 builder.Services.AddServerSideBlazor();
 
-// Radzen (servicios necesarios para componentes que usas)
-builder.Services.AddScoped<DialogService>();
-builder.Services.AddScoped<NotificationService>();
-builder.Services.AddScoped<TooltipService>();
-builder.Services.AddScoped<ContextMenuService>();
-// Ya NO usamos <RadzenTheme/>, por lo que no registramos Radzen.ThemeService.
-// Si en el futuro vuelves a usar <RadzenTheme>, agrega:
-// builder.Services.AddScoped<Radzen.ThemeService>();
-
-// Servicios propios
-builder.Services.AddScoped<IEmailServices, EmailServices>();
-builder.Services.AddScoped<IDataInspeccion, DataInspeccion>();
-builder.Services.AddScoped<IDataPregunta, DataPregunta>();
-builder.Services.AddScoped<IDataMaquina, DataMaquina>();
-
-// Utilidades
-builder.Services.AddHttpClient();
+// ✅ LOCAL STORAGE
 builder.Services.AddBlazoredLocalStorage();
-builder.Services.AddOptions();
+
+// ✅ AUTH BLAZOR
 builder.Services.AddAuthorizationCore();
 
-// DbContext
-builder.Services.AddDbContext<DbNeoContext>(options =>
-    options.UseSqlServer(builder.Configuration.GetConnectionString("ConnectionDbNeo")),
-    ServiceLifetime.Transient
-);
+// ✅ CUSTOM AUTH PROVIDER
+builder.Services.AddScoped<CustomAuthStateProvider>();
+
+builder.Services.AddScoped<
+    AuthenticationStateProvider,
+    CustomAuthStateProvider>();
+
+// ✅ HTTP CLIENT
+var apiBaseUrl =
+    builder.Configuration["ApiSettings:BaseUrl"];
+
+builder.Services.AddScoped(sp =>
+    new HttpClient
+    {
+        BaseAddress = new Uri(apiBaseUrl!)
+    });
+
+// ✅ API SERVICE
+builder.Services.AddScoped<
+    IRRHHApiService,
+    RRHHApiService>();
 
 var app = builder.Build();
 
-if (app.Environment.IsDevelopment())
-{
-    app.UseDeveloperExceptionPage(); // Detalle de excepción en navegador durante desarrollo
-}
-else
+if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Error");
-    app.UseHsts();
 }
 
-app.UseHttpsRedirection();
+// ✅ STATIC FILES
 app.UseStaticFiles();
 
+// ✅ ROUTING
 app.UseRouting();
 
+// ✅ BLAZOR HUB
 app.MapBlazorHub();
+
 app.MapFallbackToPage("/_Host");
 
 app.Run();

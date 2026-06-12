@@ -1,64 +1,75 @@
 ﻿@page "/"
 
-<PageTitle>Home</PageTitle>
+@using Microsoft.AspNetCore.Authorization
+@attribute [Authorize]
 
-<section class="home-hero">
-  <section class="home-content">
-    <div class="home-logo-wrap">
-      <RadzenImage class="home-logo" Path="img/LogoGris.png" />
+@inject NavigationManager Nav
+@inject AuthenticationStateProvider AuthStateProvider
+
+
+<link href="./css/site.css" rel="stylesheet" />
+
+<PageTitle>Inicio</PageTitle>
+
+
+<div class="dashboard-container">
+
+    <!-- HEADER -->
+    <div class="dashboard-header">
+        NEO RRHH
     </div>
 
-    <div class="home-info">
-      <h2 class="home-title">Información</h2>
-      <ul class="home-list">
-        <li>
-          <strong>Neo RRHH:</strong> es una plataforma centralizada que simplifica el registro de datos, garantiza la precisión
-          de los cálculos de forma inmediata y transforma la data en información estratégica para la toma de decisiones.
-        </li>
-      </ul>
+    
+    <!-- CARD INFORMACIÓN -->
+    <div class="dashboard-info-card">
+
+        <div class="dashboard-title">
+            Gestión Inteligente de Recursos Humanos
+        </div>
+
+        <p class="dashboard-subtitle">
+            Plataforma centralizada para la gestión de personal, control de ausencias y análisis de información estratégica.
+        </p>
+
     </div>
-  </section>
 
-  <section class="home-iso-wrap">
-    <RadzenImage class="home-iso" Path="img/Neo.png" />
-  </section>
-</section>
+    <!-- CARD PRINCIPAL -->
+    <div class="dashboard-card">
 
-<style>
-  /* ===== Contenedor principal (dos columnas) ===== */
-  .home-hero {
-    display: grid;
-    grid-template-columns: 1.25fr 1fr; /* más ancho a la izquierda */
-    gap: 16px;
-    align-items: start;
-    background: #ffffff;
-    border: 1px solid #e3e8ef;        /* igual que el layout */
-    border-radius: 12px;
-    padding: 16px;
-    box-shadow: 0 8px 24px rgba(17,24,39,.08), 0 2px 8px rgba(17,24,39,.06);
-  }
+        <div class="dashboard-section">
 
-  /* Columna izquierda */
-  .home-content { display: grid; grid-template-rows: auto 1fr; gap: 10px; }
-  .home-logo-wrap { padding: 4px 0; }
-  .home-logo { max-width: 180px; height: auto; }   /* ⬅️ controla el logo superior */
+            <!-- MISIÓN -->
+            <div class="dashboard-box">
+                <h3>Neo RRHH:</h3>
+                <p>
+                    Simplificar la gestión del talento humano mediante una plataforma eficiente
+                    que permita registrar, procesar y analizar información crítica de manera confiable,
+                    apoyando la toma de decisiones y optimizando los procesos organizacionales.
+                </p>
+            </div>
 
-  .home-info { padding: 6px 2px; }
-  .home-title {
-    margin: 0 0 8px 0;
-    color: #0c9d51;                  /* verde corporativo */
-    font-weight: 800;
-    letter-spacing: .3px;
-  }
-  .home-list { margin: 0; padding-left: 18px; line-height: 1.6; color: #374151; }
+        </div>
 
-  /* Columna derecha (isotipo grande) */
-  .home-iso-wrap { display: flex; align-items: center; justify-content: center; }
-  .home-iso { max-width: 320px; width: 100%; height: auto; }  /* ⬅️ controla isotipo */
+    </div>
 
-  /* Responsivo: OJO usar @@media en Razor */
-  @@media (max-width: 900px) {
-    .home-hero { grid-template-columns: 1fr; }
-    .home-iso { max-width: 260px; }
-  }
-</style>
+</div>
+
+@code {
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            var auth =
+                await AuthStateProvider
+                    .GetAuthenticationStateAsync();
+
+            var user = auth.User;
+
+            if (!user.Identity?.IsAuthenticated ?? true)
+            {
+                Nav.NavigateTo("/login");
+            }
+        }
+    }
+}

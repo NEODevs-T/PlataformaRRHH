@@ -1,114 +1,85 @@
-
-
-#cajaPadre {
+.home-container {
     width: 100%;
     height: 100vh;
-    /* background-color: brown; */
     display: flex;
     justify-content: center;
     align-items: center;
 }
 
-#cajaContenido {
+.home-content {
     width: 50%;
     height: 100vh;
-    /* background-color:aqua; */
 }
 
-#cajaImg {
+.home-image-wrapper {
     width: 50%;
     height: 70vh;
-    color: rgba(63, 47, 47, 0.979);
-    /* background-color:aquamarine; */
-}
-
-#logoindex{
-    width: 35%;
-    height: 50%;
-}
-
-#cajaLogo {
-    display: flex;
-    justify-content: flex-start;
-    margin: 10px;
-}
-
-#Layer_1 {
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start;
-}
-
-#tituLogo {
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    font-size: 1em;
-    font-style: italic;
-    font-weight: 900 !important;
-}
-
-#cajaInformacion {
-    /* height: 87%; */
-    /* background-color: aquamarine; */
-    margin: 1%;
-}
-
-#Info {
-    margin-left: 10%;
-    text-align: justify;
-}
-
-#cajaImg {
     display: flex;
     justify-content: center;
     align-items: flex-start;
     margin-top: 5%;
 }
 
-#tituloInfo {
+.home-logo {
+    width: 35%;
+    height: auto;
+}
+
+.home-logo-container {
+    display: flex;
+    justify-content: flex-start;
+    margin: 10px;
+}
+
+.home-title-logo {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1em;
+    font-style: italic;
+    font-weight: 900;
+}
+
+.home-info-container {
+    margin: 1%;
+}
+
+.home-info-title {
     margin-left: 11%;
     margin-top: 50px;
     margin-bottom: 20px;
     font-size: 2em;
     font-weight: bold;
-    color: rgb(0, 120, 60) !important;
+    color: rgb(0, 120, 60);
 }
 
-#Info li {
+.home-info-list {
+    margin-left: 10%;
+    text-align: justify;
+}
+
+.home-info-list li {
     margin-bottom: 10px;
 }
 
-img {
+.home-image {
     width: 50%;
 }
 
-footer {
+/* FOOTER */
+.footer {
     background-color: black;
-    /*height: 100vh;*/
     border-radius: 5px;
     padding: 20px;
 }
 
-#logofooter {
+.footer-logo {
     height: 15%;
     width: 100%;
 }
 
-#creadoresfooter {
-    height: 15%;
-    width: 100%;
-    background-color: aqua;
-}
-
-#logoGrandefooter {
-    height: 70%;
-    width: 100%;
-    background-color: bisque;
-}
-.AbajoBoton{
+.footer-bottom {
     display: flex;
-    justify-content:flex-start;
-    align-items: end;
+    justify-content: flex-start;
+    align-items: flex-end;
 }

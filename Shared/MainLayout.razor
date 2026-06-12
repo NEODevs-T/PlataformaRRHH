@@ -1,34 +1,83 @@
-﻿@inherits LayoutComponentBase
-@using Radzen
+﻿@namespace NeoRH.Shared
+@inherits LayoutComponentBase
 
-<PageTitle>NEO RRHH</PageTitle>
+@using NeoRH.Services
+@using Microsoft.AspNetCore.Components.Authorization
+@using System.Security.Claims
 
-<div class="page">
-    <!-- Sidebar -->
+@inject CustomAuthStateProvider AuthProvider
+@inject AuthenticationStateProvider AuthStateProvider
+@inject NavigationManager Nav
+
+<div class="layout-container">
+
+    <!-- SIDEBAR -->
     <aside class="sidebar">
-        <div class="brand">
-            <img src="img/neo-logo-mini.png" alt="NEO" />
-            <small>NEO RRHH</small>
-        </div>
-
-        <nav class="nav-container">
-            <NavMenu />
-        </nav>
+        <NavMenu />
     </aside>
 
-    <!-- Área principal -->
-    <main class="main">
-        <header class="top-row">
-            <div></div>
-            <div></div>
-        </header>
+    <!-- MAIN -->
+    <div class="main-wrapper">
 
-        <section class="content">
-            <div class="content-wrap">
-                @Body
-            </div>
-        </section>
-    </main>
+        <!-- TOPBAR -->
+        <div class="topbar">
 
-    <RadzenNotification />
+            <span class="title">
+                Neo RH
+            </span>
+
+            <!-- ✅ USER INFO -->
+            <AuthorizeView>
+                <Authorized Context="auth">
+
+                    <div class="user-info">
+
+                        <span class="user-name">
+                            👤 @GetNombre(auth.User)
+                        </span>
+
+                        <span class="user-role">
+                            🔐 @GetRol(auth.User)
+                        </span>
+
+                        <button class="btn-logout"
+                                @onclick="CerrarSesion">
+                            Cerrar sesión
+                        </button>
+
+                    </div>
+
+                </Authorized>
+            </AuthorizeView>
+
+        </div>
+
+        <!-- CONTENT -->
+        <main class="main-content">
+            @Body
+        </main>
+
+    </div>
+
 </div>
+
+@code {
+
+    async Task CerrarSesion()
+    {
+        await AuthProvider.Logout();
+
+        Nav.NavigateTo("/login");
+    }
+
+    // ✅ HELPERS LIMPIOS
+    string GetNombre(ClaimsPrincipal user)
+    {
+        return CustomAuthStateProvider.GetUserName(user);
+    }
+
+    string GetRol(ClaimsPrincipal user)
+    {
+        return CustomAuthStateProvider.GetUserRole(user);
+    }
+}

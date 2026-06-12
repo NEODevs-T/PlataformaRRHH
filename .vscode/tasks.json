@@ -7,7 +7,7 @@
             "type": "process",
             "args": [
                 "build",
-                "${workspaceFolder}/Inspecciones.sln",
+                "${workspaceFolder}/RRHH.sln",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary"
             ],
@@ -33,7 +33,7 @@
                 "watch",
                 "run",
                 "--project",
-                "${workspaceFolder}/Inspecciones.sln"
+                "${workspaceFolder}/RRHH.sln"
             ],
             "problemMatcher": "$msCompile"
         }

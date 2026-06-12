@@ -1,70 +1,71 @@
-﻿<div class="top-row ps-3 navbar navbar-dark">
-    <div class="container-fluid">
-        <a class="navbar-brand" href="">NEO</a>
-        <button title="Navigation menu" class="navbar-toggler" @onclick="ToggleNavMenu">
-            <span class="navbar-toggler-icon"></span>
-        </button>
+﻿@namespace NeoRH.Shared
+
+@using Microsoft.AspNetCore.Components.Routing
+@using Microsoft.AspNetCore.Components.Authorization
+
+<div class="sidebar-menu">
+
+    <!-- HEADER -->
+    <div class="sidebar-header">
+
+        <img src="/img/Neo.png"
+            class="sidebar-logo" />
+
+        <span class="sidebar-title">
+            Neo RRHH
+        </span>
+
     </div>
+
+    <!-- MENU -->
+    <div class="menu">
+
+        <!-- TODOS -->
+        <NavLink href="/"
+                class="nav-item"
+                Match="NavLinkMatch.All">
+
+            <i class="oi oi-home"></i>
+            <span>Inicio</span>
+
+        </NavLink>
+
+        <!-- ADMIN / RRHH -->
+        <AuthorizeView Roles="Admin,SuperAdmin,RRHH_Admin">
+            <NavLink href="/dashboard" class="nav-item">
+                <i class="oi oi-graph"></i>
+                <span>Dashboard</span>
+            </NavLink>
+
+            <NavLink href="/ausencias" class="nav-item">
+                <i class="oi oi-calendar"></i>
+                <span>Ausencias</span>
+            </NavLink>
+
+            <NavLink href="/historico" class="nav-item">
+                <i class="oi oi-clock"></i>
+                <span>Histórico</span>
+            </NavLink>
+
+            <NavLink href="/headcount" class="nav-item">
+                <i class="oi oi-people"></i>
+                <span>HeadCount</span>
+            </NavLink>
+
+            <NavLink href="/permisos" class="nav-item">
+                <i class="oi oi-key"></i>
+                <span>Permisos</span>
+            </NavLink>
+        </AuthorizeView>
+
+        <!-- SALUD -->
+        <AuthorizeView Roles="Salud_Admin">
+            <NavLink href="/reposos" class="nav-item">
+                <i class="oi oi-heart"></i>
+                <span>Reposos</span>
+            </NavLink>
+        </AuthorizeView>
+
+    </div>
+
 </div>
-
-<div class="@NavMenuCssClass" @onclick="ToggleNavMenu">
-    <nav class="nav-menu flex-column">
-        <div class="nav-item">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="icon">🏠</span><span>Home</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item">
-            <NavLink class="nav-link" href="inspeccion/2">
-                <span class="icon">📊</span><span>Indicador mes y global</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item">
-            <NavLink class="nav-link" href="inspeccion/3">
-                <span class="icon">📅</span><span>Ausentismos</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item">
-            <NavLink class="nav-link" href="inspeccion/4">
-                <span class="icon">👥</span><span>Head-count</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item">
-            <NavLink class="nav-link" href="inspeccion/5">
-                <span class="icon">🩺</span><span>Reposos médicos</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item">
-            <NavLink class="nav-link" href="inspeccion/6">
-                <span class="icon">📚</span><span>Histórico reposos médicos</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item">
-            <NavLink class="nav-link" href="inspeccion/7">
-                <span class="icon">📄</span><span>Permisos contractuales</span>
-            </NavLink>
-        </div>
-
-        <div class="nav-item">
-            <NavLink class="nav-link" href="inspeccion/8">
-                <span class="icon">✅</span><span>Validación de ausencias</span>
-            </NavLink>
-        </div>
-    </nav>
-</div>
-
-@code {
-    private bool collapseNavMenu = true;
-    private string? NavMenuCssClass => collapseNavMenu ? "collapse" : null;
-
-    private void ToggleNavMenu()
-    {
-        collapseNavMenu = !collapseNavMenu;
-    }
-}
