@@ -1,0 +1,306 @@
+@page "/permisos"
+
+@using Microsoft.AspNetCore.Authorization
+@using NeoRH.DTOs
+@using System.Text
+
+@attribute [Authorize]
+
+@inject IRRHHApiService Api
+@inject IJSRuntime JS
+
+<link href="./css/site.css" rel="stylesheet" />
+
+<h2>Gestión de Ausencias</h2>
+
+<!-- ✅ TABS -->
+<div class="tabs">
+
+    <button class="@GetTabClass("reposos")"
+            @onclick="@(() => CambiarTab("reposos"))">
+        Reposos
+    </button>
+
+    <button class="@GetTabClass("permisos")"
+            @onclick="@(() => CambiarTab("permisos"))">
+        Permisos
+    </button>
+
+</div>
+
+@if (cargando)
+{
+    <p>Cargando...</p>
+}
+else
+{
+    <!-- ✅ FILTROS -->
+    <div class="filtro-container">
+
+        <input placeholder="Ficha..."
+            @bind="filtroFicha" class="input" />
+
+        <!-- ✅ NUEVO FILTRO -->
+        <select @bind="departamentoFiltro" class="input">
+            <option value="">Todos los departamentos</option>
+
+            @foreach (var dep in departamentos)
+            {
+                <option value="@dep">@dep</option>
+            }
+        </select>
+
+        <input type="date"
+            @bind="fechaDesde" class="input" />
+
+        <input type="date"
+            @bind="fechaHasta" class="input" />
+
+        <button class="btn" @onclick="AplicarFiltro">
+            Filtrar
+        </button>
+
+        <button class="btn-success" @onclick="ExportarExcel">
+            Exportar Excel
+        </button>
+
+    </div>
+
+    <!-- ✅ TABLA -->
+    <table class="table-custom">
+
+        <thead>
+            @if (tab == "reposos")
+            {
+                <tr>
+                    <th>Ficha</th>
+                    <th>Nombre</th>
+                    <th>Departamento</th>
+                    <th>Desde</th>
+                    <th>Hasta</th>
+                </tr>
+            }
+            else
+            {
+                <tr>
+                    <th>Ficha</th>
+                    <th>Tipo</th>
+                    <th>Fecha</th>
+                </tr>
+            }
+
+        </thead>
+
+        <tbody>
+            @if (tab == "reposos")
+            {
+                @foreach (var item in repososFiltrado)
+                {
+                    <tr>
+                        <td>@item.Ficha</td>
+                        <td>@($"{item.Nombre ?? ""} {item.Apellido ?? ""}")</td>
+                        <td>@item.Departamento</td>
+                        <td>@FormatearFecha(item.FechaDesde)</td>
+                        <td>@FormatearFecha(item.FechaHasta)</td>
+                    </tr>
+                }
+            }
+            else
+            {
+                @foreach (var item in permisosFiltrado)
+                {
+                    <tr>
+                        <td>@item.Ciadnh</td>
+                        <td>@item.Tpndnh</td>
+                        <td>@FormatearFecha(item.Ficdnh)</td>
+                    </tr>
+                }
+            }
+
+        </tbody>
+
+    </table>
+}
+
+@code {
+
+    string tab = "reposos";
+    bool cargando = true;
+
+    string filtroFicha = "";
+    string departamentoFiltro = "";
+
+    DateTime? fechaDesde;
+    DateTime? fechaHasta;
+
+    List<string?> departamentos = new();
+
+    List<RepososVDTO> reposos = new();
+    List<RepososVDTO> repososFiltrado = new();
+
+    List<AusenciaVDTO> permisos = new();
+    List<AusenciaVDTO> permisosFiltrado = new();
+
+    protected override async Task OnInitializedAsync()
+    {
+        // ✅ REPOSOS
+        var rep = await Api.GetReposos();
+
+        if (rep != null)
+        {
+            reposos = rep;
+
+            // ✅ llenar departamentos
+            departamentos = reposos
+                .Select(x => x.Departamento)
+                .Where(x => !string.IsNullOrWhiteSpace(x))
+                .Distinct()
+                .ToList();
+        }
+
+        // ✅ PERMISOS
+        var all = await Api.GetAusencias();
+
+        if (all != null)
+        {
+            permisos = all
+                .Where(x => x.Tpndnh == "P")
+                .ToList();
+        }
+
+        repososFiltrado = reposos;
+        permisosFiltrado = permisos;
+
+        cargando = false;
+    }
+
+    void CambiarTab(string nuevo)
+    {
+        tab = nuevo;
+        AplicarFiltro();
+    }
+
+    void AplicarFiltro()
+    {
+        if (tab == "reposos")
+        {
+            var query = reposos.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(filtroFicha))
+            {
+                query = query.Where(x =>
+                    x.Ficha != null &&
+                    x.Ficha.Contains(filtroFicha));
+            }
+
+            if (!string.IsNullOrWhiteSpace(departamentoFiltro))
+            {
+                query = query.Where(x =>
+                    x.Departamento == departamentoFiltro);
+            }
+
+            if (fechaDesde.HasValue)
+            {
+                query = query.Where(x =>
+                    x.FechaDesde.HasValue &&
+                    x.FechaDesde.Value.ToDateTime(TimeOnly.MinValue) >= fechaDesde.Value);
+            }
+
+            if (fechaHasta.HasValue)
+            {
+                query = query.Where(x =>
+                    x.FechaDesde.HasValue &&
+                    x.FechaDesde.Value.ToDateTime(TimeOnly.MinValue) <= fechaHasta.Value);
+            }
+
+            repososFiltrado = query.ToList();
+        }
+        else
+        {
+            var query = permisos.AsEnumerable();
+
+            if (!string.IsNullOrWhiteSpace(filtroFicha))
+            {
+                query = query.Where(x =>
+                    x.Ciadnh != null &&
+                    x.Ciadnh.Contains(filtroFicha));
+            }
+
+            if (fechaDesde.HasValue)
+            {
+                query = query.Where(x =>
+                {
+                    if (DateTime.TryParse(x.Ficdnh, out var f))
+                        return f >= fechaDesde.Value;
+                    return false;
+                });
+            }
+
+            if (fechaHasta.HasValue)
+            {
+                query = query.Where(x =>
+                {
+                    if (DateTime.TryParse(x.Ficdnh, out var f))
+                        return f <= fechaHasta.Value;
+                    return false;
+                });
+            }
+
+            permisosFiltrado = query.ToList();
+        }
+    }
+
+    // ✅ EXPORTAR POR TAB
+    async Task ExportarExcel()
+    {
+        var sb = new StringBuilder();
+
+        if (tab == "reposos")
+        {
+            sb.AppendLine("Ficha,Nombre,Departamento,Desde,Hasta");
+
+            foreach (var x in repososFiltrado)
+            {
+                sb.AppendLine($"{x.Ficha}," +
+                            $"{x.Nombre} {x.Apellido}," +
+                            $"{x.Departamento}," +
+                            $"{FormatearFecha(x.FechaDesde)}," +
+                            $"{FormatearFecha(x.FechaHasta)}");
+            }
+        }
+        else
+        {
+            sb.AppendLine("Ficha,Tipo,Fecha");
+
+            foreach (var x in permisosFiltrado)
+            {
+                sb.AppendLine($"{x.Ciadnh},{x.Tpndnh},{FormatearFecha(x.Ficdnh)}");
+            }
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+
+        await JS.InvokeVoidAsync("downloadFile", "ausencias.csv", base64);
+    }
+
+    string FormatearFecha(DateOnly? fecha)
+    {
+        return fecha.HasValue
+            ? fecha.Value.ToString("dd/MM/yyyy")
+            : "";
+    }
+
+    string FormatearFecha(string? fecha)
+    {
+        if (DateTime.TryParse(fecha, out var f))
+            return f.ToString("dd/MM/yyyy");
+
+        return "";
+    }
+
+    string GetTabClass(string nombre)
+    {
+        return tab == nombre ? "tab-active" : "tab";
+    }
+}

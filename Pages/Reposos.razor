@@ -1,0 +1,252 @@
+@page "/reposos"
+@using Microsoft.AspNetCore.Authorization
+@using NeoRH.DTOs
+@using System.Text
+
+@inject IRRHHApiService Api
+@inject IJSRuntime JS
+
+@attribute [Authorize(Roles = "Salud_Admin")]
+
+<link href="./css/site.css" rel="stylesheet" />
+
+<h2 class="page-title">Reposos</h2>
+
+@if (cargando)
+{
+    <p>Cargando información...</p>
+}
+else
+{
+    <!-- ✅ RESUMEN -->
+    <div class="cards-container">
+
+        <div class="card">
+            <h4>Total Reposos</h4>
+            <span>@data.Count</span>
+        </div>
+
+        <div class="card">
+            <h4>Reposos Hoy</h4>
+            <span>@repososHoy</span>
+        </div>
+
+    </div>
+
+    <!-- ✅ FILTROS -->
+    <div class="filtro-container">
+
+        <input placeholder="Buscar ficha..."
+            @bind="filtroFicha" class="input" />
+
+        <select @bind="departamentoFiltro" class="input">
+            <option value="">Todos</option>
+            @foreach (var dep in departamentos)
+            {
+                <option value="@dep">@dep</option>
+            }
+        </select>
+
+        <input type="date" @bind="fechaDesde" class="input" />
+        <input type="date" @bind="fechaHasta" class="input" />
+
+        <select @bind="causaFiltro" class="input">
+            <option value="">Todas las causas</option>
+            @foreach (var c in causas)
+            {
+                <option value="@c">@c</option>
+            }
+        </select>
+
+        <select @bind="nominaFiltro" class="input">
+            <option value="">Todas</option>
+            @foreach (var n in nominas)
+            {
+                <option value="@n">@n</option>
+            }
+        </select>
+
+        <button class="btn" @onclick="AplicarFiltro">
+            Filtrar
+        </button>
+
+        <button class="btn-success" @onclick="ExportarCSV">
+            Exportar
+        </button>
+
+    </div>
+
+    <!-- ✅ TABLA -->
+    <table class="table-custom">
+
+        <thead>
+            <tr>
+                <th>Ficha</th>
+                <th>Nombre</th>
+                <th>Departamento</th>
+                <th>Desde</th>
+                <th>Hasta</th>
+                <th>Días</th>
+                <th>Causa</th>
+                <th>Nómina</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @foreach (var item in dataFiltrada)
+            {
+                <tr @ondblclick="@(() => VerDetalle(item))">
+                    <td>@item.Ficha</td>
+                    <td>@item.Nombre @item.Apellido</td>
+                    <td>@item.Departamento</td>
+                    <td>@FormatearFecha(item.FechaDesde)</td>
+                    <td>@FormatearFecha(item.FechaHasta)</td>
+                    <td>@item.CanDiasReposo</td>
+                    <td>@item.DescripcionCausa</td>
+                    <td>@item.TipoNomina</td>
+                </tr>
+            }
+        </tbody>
+
+    </table>
+
+    <!-- ✅ MODAL -->
+    @if (mostrarModal)
+    {
+        <div class="modal-overlay" @onclick="CerrarModal">
+            <div class="modal-content" @onclick:stopPropagation="true">
+
+                <h3>Detalle</h3>
+
+                <p><b>Ficha:</b> @detalle?.Ficha</p>
+                <p><b>Nombre:</b> @detalle?.Nombre @detalle?.Apellido</p>
+                <p><b>Departamento:</b> @detalle?.Departamento</p>
+                <p><b>Desde:</b> @FormatearFecha(detalle?.FechaDesde)</p>
+                <p><b>Hasta:</b> @FormatearFecha(detalle?.FechaHasta)</p>
+                <p><b>Días:</b> @detalle?.CanDiasReposo</p>
+                <p><b>Causa:</b> @detalle?.DescripcionCausa</p>
+
+                <button class="btn-danger" @onclick="CerrarModal">
+                    Cerrar
+                </button>
+
+            </div>
+        </div>
+    }
+}
+
+@code {
+
+    List<RepososVDTO> data = new();
+    List<RepososVDTO> dataFiltrada = new();
+
+    bool cargando = true;
+
+    string filtroFicha = "";
+    string departamentoFiltro = "";
+    string causaFiltro = "";
+    string nominaFiltro = "";
+
+    DateTime? fechaDesde;
+    DateTime? fechaHasta;
+
+    int repososHoy = 0;
+
+    List<string?> departamentos = new();
+    List<string?> causas = new();
+    List<string?> nominas = new();
+
+    bool mostrarModal = false;
+    RepososVDTO? detalle;
+
+    protected override async Task OnInitializedAsync()
+    {
+        var all = await Api.GetReposos();
+
+        if (all != null)
+        {
+            data = all;
+        }
+
+        dataFiltrada = data;
+
+        departamentos = data.Select(x => x.Departamento).Distinct().ToList();
+        causas = data.Select(x => x.DescripcionCausa).Distinct().ToList();
+        nominas = data.Select(x => x.TipoNomina).Distinct().ToList();
+
+        CalcularHoy();
+
+        cargando = false;
+    }
+
+    void AplicarFiltro()
+    {
+        var query = data.AsEnumerable();
+
+        if (!string.IsNullOrWhiteSpace(filtroFicha))
+            query = query.Where(x => x.Ficha != null &&
+                                    x.Ficha.Contains(filtroFicha));
+
+        if (!string.IsNullOrWhiteSpace(departamentoFiltro))
+            query = query.Where(x => x.Departamento == departamentoFiltro);
+
+        if (!string.IsNullOrWhiteSpace(causaFiltro))
+            query = query.Where(x => x.DescripcionCausa == causaFiltro);
+
+        if (!string.IsNullOrWhiteSpace(nominaFiltro))
+            query = query.Where(x => x.TipoNomina == nominaFiltro);
+
+        if (fechaDesde.HasValue)
+            query = query.Where(x =>
+                x.FechaDesde.HasValue &&
+                x.FechaDesde.Value.ToDateTime(TimeOnly.MinValue) >= fechaDesde);
+
+        if (fechaHasta.HasValue)
+            query = query.Where(x =>
+                x.FechaDesde.HasValue &&
+                x.FechaDesde.Value.ToDateTime(TimeOnly.MinValue) <= fechaHasta);
+
+        dataFiltrada = query.ToList();
+    }
+
+    void CalcularHoy()
+    {
+        var hoy = DateOnly.FromDateTime(DateTime.Now);
+
+        repososHoy = data.Count(x =>
+            x.FechaDesde.HasValue &&
+            x.FechaDesde.Value == hoy);
+    }
+
+    string FormatearFecha(DateOnly? fecha)
+    {
+        return fecha.HasValue
+            ? fecha.Value.ToString("dd/MM/yyyy")
+            : "";
+    }
+
+    void VerDetalle(RepososVDTO item)
+    {
+        detalle = item;
+        mostrarModal = true;
+    }
+
+    void CerrarModal() => mostrarModal = false;
+
+    async Task ExportarCSV()
+    {
+        var sb = new StringBuilder();
+
+        sb.AppendLine("Ficha,Nombre,Departamento,Desde,Hasta,Dias,Causa,Nomina");
+
+        foreach (var x in dataFiltrada)
+        {
+            sb.AppendLine($"{x.Ficha},{x.Nombre} {x.Apellido},{x.Departamento},{FormatearFecha(x.FechaDesde)},{FormatearFecha(x.FechaHasta)},{x.CanDiasReposo},{x.DescripcionCausa},{x.TipoNomina}");
+        }
+
+        var bytes = Encoding.UTF8.GetBytes(sb.ToString());
+        var base64 = Convert.ToBase64String(bytes);
+
+        await JS.InvokeVoidAsync("downloadFile", "reposos.csv", base64);
+    }
+}
