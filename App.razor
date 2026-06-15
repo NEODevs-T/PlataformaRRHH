@@ -4,7 +4,6 @@
 @using NeoRH.Shared
 
 <CascadingAuthenticationState>
-
     <Router AppAssembly="@typeof(App).Assembly">
 
         <Found Context="routeData">
@@ -12,18 +11,26 @@
             <AuthorizeRouteView RouteData="@routeData"
                                 DefaultLayout="@typeof(MainLayout)">
 
-                <NotAuthorized>
-                    <RedirectToLogin />
+                <NotAuthorized Context="authContext">
+
+                    @if (!authContext.User.Identity?.IsAuthenticated ?? true)
+                    {
+                        <NavigateToLogin />
+                    }
+                    else
+                    {
+                        <p>No tienes permisos para acceder a esta página.</p>
+                    }
+
                 </NotAuthorized>
+
+                <Authorizing>
+                    <p>Validando sesión...</p>
+                </Authorizing>
 
             </AuthorizeRouteView>
 
         </Found>
 
-        <NotFound>
-            <p>Página no encontrada.</p>
-        </NotFound>
-
     </Router>
-
 </CascadingAuthenticationState>

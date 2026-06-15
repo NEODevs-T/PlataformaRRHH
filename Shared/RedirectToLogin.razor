@@ -1,11 +1,11 @@
-@namespace NeoRH.Shared
-
 @inject NavigationManager Nav
 
 @code {
-
-    protected override void OnInitialized()
+    protected override void OnAfterRender(bool firstRender)
     {
-        Nav.NavigateTo("/login", true);
+        if (firstRender)
+        {
+            Nav.NavigateTo("/login", true);
+        }
     }
 }

@@ -20,7 +20,7 @@ html, body {
     width: 100%;
     margin: 0;
     padding: 0;
-    overflow: hidden;
+    overflow: auto;
 }
 
 body {
@@ -35,7 +35,7 @@ body {
     display: flex;
     height: 100vh;
     width: 100vw;
-    overflow: hidden;
+    overflow: auto;
 }
 
 /* ======================
@@ -287,7 +287,7 @@ body {
     border-collapse: collapse;
     background: white;
     border-radius: 10px;
-    overflow: hidden;
+    overflow: auto;
 }
 
 .table-custom thead {
@@ -335,26 +335,103 @@ body {
 /* ======================
     LOGIN (MANTENIDO)
 ====================== */
+/* ======================
+    LOGIN CORRECTO RESTAURADO
+====================== */
+
 .login-wrapper {
     position: fixed;
     inset: 0;
+
     display: flex;
     justify-content: center;
     align-items: center;
+
     background:
         linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.65)),
         url('/img/fondologin.jpg');
+
     background-size: cover;
+    background-position: center;
 }
 
+/* TARJETA */
 .login-card {
-    width: 400px;
-    padding: 40px;
-    border-radius: 20px;
+    width: 360px;
+    padding: 35px 30px;
+
+    border-radius: 18px;
+
     background: rgba(255,255,255,0.12);
-    backdrop-filter: blur(15px);
-    border: 1px solid rgba(255,255,255,0.15);
+    backdrop-filter: blur(14px);
+
+    border: 1px solid rgba(255,255,255,0.2);
+
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+
+    text-align: center;
 }
+
+/* LOGO */
+.login-logo {
+    width: 80px;
+    margin-bottom: 10px;
+}
+
+/* TITULO */
+.login-card h1 {
+    color: white;
+    margin-bottom: 20px;
+}
+
+/* FORM */
+.login-form {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+/* INPUTS */
+.login-form input {
+    width: 100%;
+    padding: 10px;
+
+    border-radius: 6px;
+    border: none;
+    outline: none;
+
+    font-size: 14px;
+}
+
+/* BOTON */
+.login-form button {
+    width: 100%;
+    background: #007853;
+    color: white;
+
+    padding: 10px;
+
+    border-radius: 6px;
+    border: none;
+
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.login-form button:hover {
+    background: #009a6c;
+}
+
+/* MENSAJE */
+.login-card p {
+    margin-top: 10px;
+    color: white;
+    font-size: 13px;
+}
+
 /* ======================
     RESPONSIVE GLOBAL
 ====================== */
@@ -857,4 +934,171 @@ body {
 
 .table-custom td:nth-child(5):contains("R") {
     color: #007bff;
+}
+
+/* FOOTER LOGIN */
+.login-footer {
+    margin-top: 25px; /* ✅ más abajo */
+
+    font-size: 14px;
+
+    color: rgba(255,255,255,0.85); /* ✅ más claro */
+
+    text-align: center;
+
+    letter-spacing: 1px; /* opcional más elegante */
+}
+
+
+/* INPUT CON CONTENEDOR */
+.input-container {
+    position: relative;
+    width: 100%;
+}
+
+/* INPUT OK */
+.input-ok input {
+    border: 2px solid #28a745;
+}
+
+/* CHECK */
+.check {
+    position: absolute;
+    right: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+
+    color: #28a745;
+    font-weight: bold;
+}
+
+/* TEXTO OK */
+.text-ok {
+    color: #28a745;
+    font-size: 12px;
+    display: block;
+    margin-top: 3px;
+    margin-bottom: 6px;
+}
+
+/* ======================
+   DASHBOARD PRO (INDEX)
+====================== */
+
+/* CONTENEDOR GENERAL */
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+/* HEADER */
+.dashboard-header {
+    font-size: 28px;
+    font-weight: 700;
+    margin-bottom: 20px;
+    color: #1f2937;
+}
+
+/* INFO CARD SUPERIOR */
+.dashboard-info-card {
+    background: linear-gradient(135deg, #007853, #00a86b);
+    color: white;
+    padding: 20px;
+    border-radius: 14px;
+    margin-bottom: 25px;
+
+    box-shadow: 0 6px 15px rgba(0,0,0,0.15);
+}
+
+/* TITULO PRINCIPAL */
+.dashboard-title {
+    font-size: 20px;
+    font-weight: 600;
+    margin-bottom: 8px;
+}
+
+/* SUBTITULO */
+.dashboard-subtitle {
+    font-size: 14px;
+    opacity: 0.9;
+}
+
+/* CARD PRINCIPAL */
+.dashboard-card {
+    background: white;
+    border-radius: 16px;
+    padding: 20px;
+
+    box-shadow: 0 6px 18px rgba(0,0,0,0.08);
+
+    margin-top: 10px;
+}
+
+/* SECCIÓN INTERNA */
+.dashboard-section {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+}
+
+/* BLOQUE DE TEXTO */
+.dashboard-box {
+    flex: 1;
+    min-width: 280px;
+}
+
+.dashboard-box h3 {
+    margin-bottom: 10px;
+    color: #007853;
+}
+
+.dashboard-box p {
+    line-height: 1.6;
+    color: #444;
+}
+
+/* ======================
+   KPI CARDS (MEJORADAS)
+====================== */
+
+.cards-container {
+    display: flex;
+    gap: 20px;
+    flex-wrap: wrap;
+    margin-bottom: 25px;
+}
+
+.card {
+    flex: 1;
+    min-width: 220px;
+
+    background: white;
+    padding: 18px;
+
+    border-radius: 14px;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+
+    transition: 0.25s ease;
+}
+
+/* EFECTO HOVER MÁS PRO */
+.card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 10px 20px rgba(0,0,0,0.15);
+}
+
+/* TITULO KPI */
+.card h5 {
+    font-size: 14px;
+    color: #666;
+    margin-bottom: 5px;
+}
+
+/* VALOR KPI */
+.card span {
+    font-size: 28px;
+    font-weight: bold;
+    color: #007853;
 }

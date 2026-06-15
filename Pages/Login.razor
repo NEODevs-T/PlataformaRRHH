@@ -3,10 +3,13 @@
 
 @using NeoRH.DTOs
 @using NeoRH.Services
+@using Blazored.LocalStorage
 
 @inject HttpClient Http
 @inject AuthenticationStateProvider AuthStateProvider
 @inject NavigationManager Nav
+
+@attribute [AllowAnonymous]
 
 <link href="./css/site.css" rel="stylesheet" />
 
@@ -14,33 +17,54 @@
 
     <div class="login-card">
 
-        <img src="/img/Neo.png"
-            class="login-logo" />
+        <img src="/img/Neo.png" class="login-logo" />
 
         <h1>Neo RH</h1>
 
         <div class="login-form">
 
-            <input placeholder="Usuario"
-                @bind="user.UserName" />
+            <!-- USUARIO -->
+            <div class="input-container @(usuarioValido ? "input-ok" : "")">
+                <input placeholder="Usuario" @bind="user.UserName" />
 
-            <input type="password"
-                placeholder="Contraseña"
-                @bind="user.Password" />
+                @if (usuarioValido)
+                {
+                    <span class="check">✔</span>
+                }
+            </div>
 
-            <button type="button"
-                    @onclick="HandleLogin">
+            @if (usuarioValido)
+            {
+                <small class="text-ok">Correcto.</small>
+            }
 
+            <!-- PASSWORD -->
+            <div class="input-container @(claveValida ? "input-ok" : "")">
+                <input type="password" placeholder="Contraseña" @bind="user.Password" />
+
+                @if (claveValida)
+                {
+                    <span class="check">✔</span>
+                }
+            </div>
+
+            @if (claveValida)
+            {
+                <small class="text-ok">Correcto.</small>
+            }
+
+            <button type="button" @onclick="HandleLogin">
                 Iniciar Sesión
-
             </button>
+        </div>
 
+        <div class="login-footer">
+            Neo @DateTime.Now.Year
         </div>
 
         <p>@mensaje</p>
 
     </div>
-
 </div>
 
 @code {
@@ -49,10 +73,17 @@
 
     string mensaje = "";
 
-        async Task HandleLogin()
+    bool usuarioValido = false;
+    bool claveValida = false;
+
+    async Task HandleLogin()
     {
         try
         {
+            usuarioValido = false;
+            claveValida = false;
+            mensaje = "";
+
             if (string.IsNullOrWhiteSpace(user.UserName))
             {
                 mensaje = "Debe ingresar el usuario";
@@ -67,15 +98,29 @@
 
             mensaje = "Validando...";
 
-            user.Proyecto = "PlatafomaRH";
+            // 🚫 YA NO USAMOS PROYECTO
+            // user.Proyecto = "PlataformaRH";
 
             var result = await Http.PostAsJsonAsync(
-                "http://operaciones.papeleslatinos.com/Authentication/api/Auth/Login",
+                "http://neo.paveca.com.ve/Authentication/api/Auth/Login",
                 user);
 
-            var token =
-                (await result.Content.ReadAsStringAsync())
-                .Replace("\"","");
+            var response = await result.Content.ReadAsStringAsync();
+
+            if (string.IsNullOrWhiteSpace(response))
+            {
+                mensaje = "Servidor sin respuesta";
+                return;
+            }
+
+            var token = response.Trim('"');
+
+            // ✅ ERRORES
+            if (token == "NotFoundUser")
+            {
+                mensaje = "Usuario no encontrado";
+                return;
+            }
 
             if (token == "WrongPassword")
             {
@@ -83,30 +128,26 @@
                 return;
             }
 
-            if (token == "NotFoundUser")
+            if (token == "UserInactive")
             {
-                mensaje = "Usuario no encontrado";
+                mensaje = "Usuario inactivo";
                 return;
             }
 
-            if (token == "null")
-            {
-                mensaje = "Usuario sin permisos";
-                return;
-            }
-
-            await ((CustomAuthStateProvider)AuthStateProvider)
-                .Login(token);
+            // ✅ LOGIN OK
+            usuarioValido = true;
+            claveValida = true;
 
             mensaje = "Acceso válido";
 
-            await Task.Delay(300);
+            // ✅ USAR TU PROVIDER (CORRECTO)
+            await ((CustomAuthStateProvider)AuthStateProvider).Login(token);
 
-            Nav.NavigateTo("/");
+            Nav.NavigateTo("/", true);
         }
         catch (Exception ex)
         {
-            mensaje = ex.Message;
+            mensaje = "Error: " + ex.Message;
         }
     }
 }

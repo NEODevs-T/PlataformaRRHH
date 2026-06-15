@@ -1,0 +1,87 @@
+is_global = true
+build_property.TargetFramework = net8.0
+build_property.TargetPlatformMinVersion = 
+build_property.UsingMicrosoftNETSdkWeb = true
+build_property.ProjectTypeGuids = 
+build_property.InvariantGlobalization = 
+build_property.PlatformNeutralAssembly = 
+build_property.EnforceExtendedAnalyzerRules = 
+build_property._SupportedPlatformList = Linux,macOS,Windows
+build_property.RootNamespace = RRHH
+build_property.RootNamespace = RRHH
+build_property.ProjectDir = C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\
+build_property.EnableComHosting = 
+build_property.EnableGeneratedComInterfaceComImportInterop = 
+build_property.RazorLangVersion = 8.0
+build_property.SupportLocalizedComponentNames = 
+build_property.GenerateRazorMetadataSourceChecksumAttributes = 
+build_property.MSBuildProjectDirectory = C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH
+build_property._RazorSourceGeneratorDebug = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/App.razor]
+build_metadata.AdditionalFiles.TargetPath = QXBwLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Ausencias.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcQXVzZW5jaWFzLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Dashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcRGFzaGJvYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/HeadCount.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSGVhZENvdW50LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Historico.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSGlzdG9yaWNvLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Index.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Login.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcTG9naW4ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Permisos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUGVybWlzb3MucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Reposos.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUmVwb3Nvcy5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Rotacion.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcUm90YWNpb24ucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Shared/EmptyLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXEVtcHR5TGF5b3V0LnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Shared/MainLayout.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE1haW5MYXlvdXQucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Shared/NavigateToLogin.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdmlnYXRlVG9Mb2dpbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Shared/NavMenu.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXE5hdk1lbnUucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Shared/RedirectToLogin.razor]
+build_metadata.AdditionalFiles.TargetPath = U2hhcmVkXFJlZGlyZWN0VG9Mb2dpbi5yYXpvcg==
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/_Imports.razor]
+build_metadata.AdditionalFiles.TargetPath = X0ltcG9ydHMucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/_Host.cshtml]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcX0hvc3QuY3NodG1s
+build_metadata.AdditionalFiles.CssScope = 

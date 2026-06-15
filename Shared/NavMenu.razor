@@ -7,64 +7,49 @@
 
     <!-- HEADER -->
     <div class="sidebar-header">
-
-        <img src="/img/Neo.png"
-            class="sidebar-logo" />
-
-        <span class="sidebar-title">
-            Neo RRHH
-        </span>
-
+        <img src="/img/Neo.png" class="sidebar-logo" />
+        <span class="sidebar-title">Neo RRHH</span>
     </div>
 
     <!-- MENU -->
     <div class="menu">
 
-        <!-- TODOS -->
-        <NavLink href="/"
-                class="nav-item"
-                Match="NavLinkMatch.All">
-
+        <!-- INICIO -->
+        <NavLink href="/" class="nav-item" Match="NavLinkMatch.All">
             <i class="oi oi-home"></i>
             <span>Inicio</span>
-
         </NavLink>
 
-        <!-- ADMIN / RRHH -->
-        <AuthorizeView Roles="Admin,SuperAdmin,RRHH_Admin">
-            <NavLink href="/dashboard" class="nav-item">
-                <i class="oi oi-graph"></i>
-                <span>Dashboard</span>
-            </NavLink>
+        <!-- SECCIÓN PRINCIPAL -->
+        <NavLink href="/dashboard" class="nav-item">
+            <i class="oi oi-graph"></i>
+            <span>Dashboard</span>
+        </NavLink>
 
-            <NavLink href="/ausencias" class="nav-item">
-                <i class="oi oi-calendar"></i>
-                <span>Ausencias</span>
-            </NavLink>
+        <NavLink href="/ausencias" class="nav-item">
+            <i class="oi oi-calendar"></i>
+            <span>Ausencias</span>
+        </NavLink>
 
-            <NavLink href="/historico" class="nav-item">
-                <i class="oi oi-clock"></i>
-                <span>Histórico</span>
-            </NavLink>
+        <NavLink href="/historico" class="nav-item">
+            <i class="oi oi-clock"></i>
+            <span>Histórico</span>
+        </NavLink>
 
-            <NavLink href="/headcount" class="nav-item">
-                <i class="oi oi-people"></i>
-                <span>HeadCount</span>
-            </NavLink>
+        <NavLink href="/headcount" class="nav-item">
+            <i class="oi oi-people"></i>
+            <span>HeadCount</span>
+        </NavLink>
 
-            <NavLink href="/permisos" class="nav-item">
-                <i class="oi oi-key"></i>
-                <span>Permisos</span>
-            </NavLink>
-        </AuthorizeView>
+        <NavLink href="/permisos" class="nav-item">
+            <i class="oi oi-key"></i>
+            <span>Permisos</span>
+        </NavLink>
 
-        <!-- SALUD -->
-        <AuthorizeView Roles="Salud_Admin">
-            <NavLink href="/reposos" class="nav-item">
-                <i class="oi oi-heart"></i>
-                <span>Reposos</span>
-            </NavLink>
-        </AuthorizeView>
+        <NavLink href="/reposos" class="nav-item">
+            <i class="oi oi-heart"></i>
+            <span>Reposos</span>
+        </NavLink>
 
     </div>
 

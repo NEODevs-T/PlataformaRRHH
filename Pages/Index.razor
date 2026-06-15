@@ -1,16 +1,9 @@
 ﻿@page "/"
 
-@using Microsoft.AspNetCore.Authorization
-@attribute [Authorize]
-
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthStateProvider
 
-
-<link href="./css/site.css" rel="stylesheet" />
-
 <PageTitle>Inicio</PageTitle>
-
 
 <div class="dashboard-container">
 
@@ -19,8 +12,27 @@
         NEO RRHH
     </div>
 
-    
-    <!-- CARD INFORMACIÓN -->
+    <!-- KPI CARDS -->
+    <div class="cards-container">
+
+        <div class="card">
+            <h5>Total Empleados</h5>
+            <span>128</span>
+        </div>
+
+        <div class="card">
+            <h5>Ausencias Hoy</h5>
+            <span>12</span>
+        </div>
+
+        <div class="card">
+            <h5>Departamentos</h5>
+            <span>8</span>
+        </div>
+
+    </div>
+
+    <!-- CARD INFO -->
     <div class="dashboard-info-card">
 
         <div class="dashboard-title">
@@ -38,9 +50,8 @@
 
         <div class="dashboard-section">
 
-            <!-- MISIÓN -->
             <div class="dashboard-box">
-                <h3>Neo RRHH:</h3>
+                <h3>Neo RRHH</h3>
                 <p>
                     Simplificar la gestión del talento humano mediante una plataforma eficiente
                     que permita registrar, procesar y analizar información crítica de manera confiable,
@@ -55,21 +66,14 @@
 </div>
 
 @code {
-
-    protected override async Task OnAfterRenderAsync(bool firstRender)
+    protected override async Task OnInitializedAsync()
     {
-        if (firstRender)
+        var auth = await AuthStateProvider.GetAuthenticationStateAsync();
+
+        if (!auth.User.Identity?.IsAuthenticated ?? true)
         {
-            var auth =
-                await AuthStateProvider
-                    .GetAuthenticationStateAsync();
-
-            var user = auth.User;
-
-            if (!user.Identity?.IsAuthenticated ?? true)
-            {
-                Nav.NavigateTo("/login");
-            }
+            Nav.NavigateTo("/login", true);
+            return;
         }
     }
 }

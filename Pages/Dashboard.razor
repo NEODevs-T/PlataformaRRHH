@@ -1,9 +1,9 @@
 @page "/dashboard"
 @using Microsoft.AspNetCore.Authorization
 @using NeoRH.DTOs
-@attribute [Authorize(Roles = "Admin,SuperAdmin,RRHH_Admin")]
 @inject IRRHHApiService Api
 @inject IJSRuntime JS
+
 
 <link href="./css/site.css" rel="stylesheet" />
 
