@@ -19,62 +19,49 @@ namespace NeoRH.Services
             _http = http;
         }
 
-        // ✅ ESTADO GLOBAL
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            try
+            // ✅ TOKEN CORRECTO
+            var token = await _localStorage.GetItemAsStringAsync("PlataformaRHToken") ?? "";
+
+            var identity = new ClaimsIdentity();
+            _http.DefaultRequestHeaders.Authorization = null;
+
+            if (!string.IsNullOrEmpty(token))
             {
-                var token = await _localStorage.GetItemAsStringAsync("NeoRHToken");
+                // ✅ LIMPIEZA MÍNIMA (NO ROMPE NADA)
+                token = token
+                    .Replace("\"", "")
+                    .Replace("\n", "")
+                    .Replace("\r", "")
+                    .Trim();
 
-                // ✅ LIMPIEZA SEGURA DEL TOKEN
-                token = token?.Replace("\"", "");
+                identity = new ClaimsIdentity(ParseClaimsFromJwt(token), "jwt");
 
-                if (string.IsNullOrWhiteSpace(token))
-                {
-                    // ❌ NO AUTENTICADO
-                    _http.DefaultRequestHeaders.Authorization = null;
-
-                    return new AuthenticationState(
-                        new ClaimsPrincipal(new ClaimsIdentity()));
-                }
-
-                var claims = ParseClaimsFromJwt(token).ToList();
-
-                // ✅ ASEGURAR ROLE
-                if (!claims.Any(c => c.Type == ClaimTypes.Role))
-                {
-                    claims.Add(new Claim(ClaimTypes.Role, "User"));
-                }
-
-                var identity = new ClaimsIdentity(claims, "jwt");
-                var user = new ClaimsPrincipal(identity);
-
-                // ✅ HEADERS HTTP
                 _http.DefaultRequestHeaders.Authorization =
                     new AuthenticationHeaderValue("Bearer", token);
-
-                return new AuthenticationState(user);
             }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Auth error: {ex.Message}");
 
-                _http.DefaultRequestHeaders.Authorization = null;
+            var user = new ClaimsPrincipal(identity);
+            var state = new AuthenticationState(user);
 
-                return new AuthenticationState(
-                    new ClaimsPrincipal(new ClaimsIdentity()));
-            }
+            NotifyAuthenticationStateChanged(Task.FromResult(state));
+            return state;
         }
 
-        // ✅ LOGIN
         public async Task Login(string token)
         {
             if (string.IsNullOrWhiteSpace(token))
                 return;
 
-            token = token.Replace("\"", "");
+            token = token
+                .Replace("\"", "")
+                .Replace("\n", "")
+                .Replace("\r", "")
+                .Trim();
 
-            await _localStorage.SetItemAsync("NeoRHToken", token);
+            // ✅ AQUÍ EL CAMBIO IMPORTANTE
+            await _localStorage.SetItemAsync("PlataformaRHToken", token);
 
             _http.DefaultRequestHeaders.Authorization =
                 new AuthenticationHeaderValue("Bearer", token);
@@ -82,55 +69,36 @@ namespace NeoRH.Services
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
 
-        // ✅ LOGOUT
         public async Task Logout()
         {
-            await _localStorage.RemoveItemAsync("NeoRHToken");
+            await _localStorage.RemoveItemAsync("PlataformaRHToken");
 
             _http.DefaultRequestHeaders.Authorization = null;
 
             NotifyAuthenticationStateChanged(GetAuthenticationStateAsync());
         }
 
-        // ✅ NOMBRE USUARIO
-        public static string GetUserName(ClaimsPrincipal user)
-        {
-            return user.FindFirst(ClaimTypes.Name)?.Value
-                ?? "Usuario";
-        }
-
-        // ✅ ROL
-        public static string GetUserRole(ClaimsPrincipal user)
-        {
-            return user.FindFirst(ClaimTypes.Role)?.Value
-                ?? "User";
-        }
-
-        // ✅ PARSE JWT ROBUSTO
         public static IEnumerable<Claim> ParseClaimsFromJwt(string jwt)
         {
-            try
-            {
-                var parts = jwt.Split('.');
+            var payload = jwt.Split('.')[1];
 
-                if (parts.Length != 3)
-                    return Enumerable.Empty<Claim>();
+            var jsonBytes = ParseBase64WithoutPadding(payload);
 
-                var payload = parts[1];
+            var keyValuePairs =
+                JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes);
 
-                var jsonBytes = ParseBase64WithoutPadding(payload);
+            return (keyValuePairs ?? new Dictionary<string, object>())
+                .Select(kvp => new Claim(kvp.Key, kvp.Value?.ToString() ?? ""));
+        }
 
-                var keyValuePairs =
-                    JsonSerializer.Deserialize<Dictionary<string, object>>(jsonBytes)
-                    ?? new Dictionary<string, object>();
+        public static string GetUserName(ClaimsPrincipal user)
+        {
+            return user?.Identity?.Name ?? "Usuario";
+        }
 
-                return keyValuePairs.Select(kvp =>
-                    new Claim(kvp.Key, kvp.Value?.ToString() ?? ""));
-            }
-            catch
-            {
-                return Enumerable.Empty<Claim>();
-            }
+        public static string GetUserRole(ClaimsPrincipal user)
+        {
+            return user.Claims.FirstOrDefault(c => c.Type.Contains("role"))?.Value ?? "User";
         }
 
         private static byte[] ParseBase64WithoutPadding(string base64)

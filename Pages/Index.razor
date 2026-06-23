@@ -9,30 +9,64 @@
 
     <!-- HEADER -->
     <div class="dashboard-header">
-        NEO RRHH
+
+        <span class="header-icon">
+            📊
+        </span>
+
+        <div>
+            <div class="header-title">
+                Indicadores del Día
+            </div>
+        </div>
+
     </div>
 
-    <!-- KPI CARDS -->
+    <!-- KPI -->
     <div class="cards-container">
 
         <div class="card">
-            <h5>Total Empleados</h5>
-            <span>128</span>
+
+            <div class="kpi-header">
+                <div class="kpi-icon">👥</div>
+                <h3>Personal Activo</h3>
+            </div>
+
+            <div class="kpi-number">
+                N/A
+            </div>
+
         </div>
 
         <div class="card">
-            <h5>Ausencias Hoy</h5>
-            <span>12</span>
+
+            <div class="kpi-header">
+                <div class="kpi-icon">📅</div>
+                <h3>Ausencias del Día</h3>
+            </div>
+
+            <div class="kpi-number">
+                12
+            </div>
+
         </div>
 
         <div class="card">
-            <h5>Departamentos</h5>
-            <span>8</span>
+
+            <div class="kpi-header">
+                <div class="kpi-icon">🏢</div>
+                <h3>Departamentos</h3>
+            </div>
+
+            <div class="kpi-number">
+                N/A
+            </div>
+
         </div>
 
     </div>
 
-    <!-- CARD INFO -->
+    <!-- BIENVENIDA -->
     <div class="dashboard-info-card">
 
         <div class="dashboard-title">
@@ -40,23 +74,103 @@
         </div>
 
         <p class="dashboard-subtitle">
-            Plataforma centralizada para la gestión de personal, control de ausencias y análisis de información estratégica.
+            Plataforma centralizada para la administración del talento humano,
+            seguimiento de ausencias, permisos, reposos médicos, headcount
+            y análisis estratégico para apoyar la toma de decisiones.
         </p>
 
     </div>
 
-    <!-- CARD PRINCIPAL -->
+    <!-- MISIÓN -->
     <div class="dashboard-card">
 
-        <div class="dashboard-section">
+        <div class="dashboard-box">
 
-            <div class="dashboard-box">
-                <h3>Neo RRHH</h3>
+            <h3>Neo RRHH</h3>
+
+            <p>
+                Solución diseñada para centralizar la información de Recursos Humanos,
+                automatizar procesos operativos y proporcionar indicadores confiables
+                que permitan una gestión más eficiente y orientada a resultados.
+            </p>
+
+        </div>
+
+    </div>
+
+    <!-- MODULOS -->
+    <div class="dashboard-card">
+
+        <h2 class="modulo-title">
+            Módulos Disponibles
+        </h2>
+
+        <div class="modulos-grid">
+
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("/dashboard")'>
+
+                <h4>📊 Dashboard</h4>
+
                 <p>
-                    Simplificar la gestión del talento humano mediante una plataforma eficiente
-                    que permita registrar, procesar y analizar información crítica de manera confiable,
-                    apoyando la toma de decisiones y optimizando los procesos organizacionales.
+                    Indicadores, tendencias y métricas clave de RRHH.
                 </p>
+
+            </div>
+
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("/ausencias")'>
+
+                <h4>📅 Ausencias</h4>
+
+                <p>
+                    Consulta y seguimiento detallado de ausencias.
+                </p>
+
+            </div>
+
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("/historico")'>
+
+                <h4>🕘 Histórico</h4>
+
+                <p>
+                    Análisis y consulta de información histórica.
+                </p>
+
+            </div>
+
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("/headcount")'>
+
+                <h4>👥 HeadCount</h4>
+
+                <p>
+                    Control de personal activo y estructura organizacional.
+                </p>
+
+            </div>
+
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("/permisos")'>
+
+                <h4>📋 Permisos</h4>
+
+                <p>
+                    Gestión y seguimiento de permisos laborales.
+                </p>
+
+            </div>
+
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("/reposos")'>
+
+                <h4>❤️ Reposos</h4>
+
+                <p>
+                    Control y monitoreo de reposos médicos.
+                </p>
+
             </div>
 
         </div>
@@ -66,6 +180,7 @@
 </div>
 
 @code {
+
     protected override async Task OnInitializedAsync()
     {
         var auth = await AuthStateProvider.GetAuthenticationStateAsync();
@@ -76,4 +191,5 @@
             return;
         }
     }
+
 }

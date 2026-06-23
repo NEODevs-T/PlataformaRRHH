@@ -1,21 +1,26 @@
 @page "/login"
-@layout NeoRH.Shared.EmptyLayout
 
 @using NeoRH.DTOs
 @using NeoRH.Services
-@using Blazored.LocalStorage
+@using System.Globalization
 
 @inject HttpClient Http
-@inject AuthenticationStateProvider AuthStateProvider
+@inject CustomAuthStateProvider AuthProvider
 @inject NavigationManager Nav
 
 @attribute [AllowAnonymous]
 
-<link href="./css/site.css" rel="stylesheet" />
-
 <div class="login-wrapper">
 
-    <div class="login-card">
+    <!-- 🌐 IDIOMA EN ESQUINA -->
+    <div class="idioma-box">
+        <select @bind="idioma">
+            <option value="es">ES</option>
+            <option value="en">EN</option>
+        </select>
+    </div>
+
+    <div class="login-card fade-in">
 
         <img src="/img/Neo.png" class="login-logo" />
 
@@ -23,131 +28,168 @@
 
         <div class="login-form">
 
-            <!-- USUARIO -->
-            <div class="input-container @(usuarioValido ? "input-ok" : "")">
-                <input placeholder="Usuario" @bind="user.UserName" />
-
-                @if (usuarioValido)
-                {
-                    <span class="check">✔</span>
-                }
+            <!-- USER -->
+            <div class="input-container">
+                <input placeholder="Usuario"
+                    @bind="user.UserName" />
             </div>
-
-            @if (usuarioValido)
-            {
-                <small class="text-ok">Correcto.</small>
-            }
 
             <!-- PASSWORD -->
-            <div class="input-container @(claveValida ? "input-ok" : "")">
-                <input type="password" placeholder="Contraseña" @bind="user.Password" />
-
-                @if (claveValida)
-                {
-                    <span class="check">✔</span>
-                }
+            <div class="input-container">
+                <input type="password"
+                    placeholder="Contraseña"
+                    @bind="user.Password" />
             </div>
 
-            @if (claveValida)
-            {
-                <small class="text-ok">Correcto.</small>
-            }
-
-            <button type="button" @onclick="HandleLogin">
-                Iniciar Sesión
+            <!-- BUTTON -->
+            <button @onclick="HandleLogin" disabled="@loading">
+                @(loading ? Texto("loading") : Texto("login"))
             </button>
+
         </div>
+
+        <p class="login-message">@_message</p>
 
         <div class="login-footer">
             Neo @DateTime.Now.Year
         </div>
-
-        <p>@mensaje</p>
 
     </div>
 </div>
 
 @code {
 
+    private string _message = "";
+    private bool loading = false;
+    private string idioma = "es";
+
     UserLoginDto user = new();
-
-    string mensaje = "";
-
-    bool usuarioValido = false;
-    bool claveValida = false;
 
     async Task HandleLogin()
     {
         try
         {
-            usuarioValido = false;
-            claveValida = false;
-            mensaje = "";
+            _message = "";
+            loading = true;
 
-            if (string.IsNullOrWhiteSpace(user.UserName))
+            // ✅ CULTURA
+            var culture = new CultureInfo(idioma);
+            CultureInfo.DefaultThreadCurrentCulture = culture;
+            CultureInfo.DefaultThreadCurrentUICulture = culture;
+
+            // ✅ VALIDACIÓN CAMPOS
+            if (string.IsNullOrWhiteSpace(user.UserName) ||
+                string.IsNullOrWhiteSpace(user.Password))
             {
-                mensaje = "Debe ingresar el usuario";
+                _message = Texto("invalid");
                 return;
             }
 
-            if (string.IsNullOrWhiteSpace(user.Password))
-            {
-                mensaje = "Debe ingresar la contraseña";
-                return;
-            }
-
-            mensaje = "Validando...";
-
-            // 🚫 YA NO USAMOS PROYECTO
-            // user.Proyecto = "PlataformaRH";
+            // ✅ PROYECTO CORRECTO (NO TOCAR)
+            user.Proyecto = "PlataformaRH";
 
             var result = await Http.PostAsJsonAsync(
-                "http://neo.paveca.com.ve/Authentication/api/Auth/Login",
+                "http://operaciones.papeleslatinos.com/AuthenticationP/api/Auth/Login",
                 user);
+
+            // ✅ VALIDACIÓN HTTP
+            if (!result.IsSuccessStatusCode)
+            {
+                _message = "Error en servidor";
+                return;
+            }
+
+            Console.WriteLine($"STATUS: {result.StatusCode}");
 
             var response = await result.Content.ReadAsStringAsync();
 
+            Console.WriteLine($"API RAW: {response}");
+
             if (string.IsNullOrWhiteSpace(response))
             {
-                mensaje = "Servidor sin respuesta";
+                _message = Texto("noresponse");
                 return;
             }
 
-            var token = response.Trim('"');
+            // ✅ LIMPIEZA SEGURA
+            var token = response.Trim().Replace("\"", "");
 
-            // ✅ ERRORES
+            Console.WriteLine($"TOKEN LIMPIO: {token}");
+
+            // ✅ VALIDACIONES BACKEND
             if (token == "NotFoundUser")
             {
-                mensaje = "Usuario no encontrado";
+                _message = Texto("usernotfound");
                 return;
             }
 
             if (token == "WrongPassword")
             {
-                mensaje = "Contraseña incorrecta";
+                _message = Texto("wrongpassword");
                 return;
             }
 
-            if (token == "UserInactive")
+            if (token.Equals("null", StringComparison.OrdinalIgnoreCase))
             {
-                mensaje = "Usuario inactivo";
+                _message = Texto("noaccess");
+                return;
+            }
+
+            // ✅ VALIDACIÓN JWT
+            if (!token.Contains("."))
+            {
+                _message = Texto("invalid");
                 return;
             }
 
             // ✅ LOGIN OK
-            usuarioValido = true;
-            claveValida = true;
+            await AuthProvider.Login(token);
 
-            mensaje = "Acceso válido";
-
-            // ✅ USAR TU PROVIDER (CORRECTO)
-            await ((CustomAuthStateProvider)AuthStateProvider).Login(token);
+            _message = Texto("success");
 
             Nav.NavigateTo("/", true);
         }
         catch (Exception ex)
         {
-            mensaje = "Error: " + ex.Message;
+            _message = "Error";
+            Console.WriteLine(ex.Message);
         }
+        finally
+        {
+            loading = false;
+        }
+    }
+
+    // ✅ TEXTOS MULTIIDIOMA
+    string Texto(string clave)
+    {
+        return (idioma, clave) switch
+        {
+            ("es", "login") => "Iniciar",
+            ("en", "login") => "Login",
+
+            ("es", "loading") => "Ingresando...",
+            ("en", "loading") => "Signing in...",
+
+            ("es", "usernotfound") => "Usuario no encontrado",
+            ("en", "usernotfound") => "User not found",
+
+            ("es", "wrongpassword") => "Contraseña incorrecta",
+            ("en", "wrongpassword") => "Wrong password",
+
+            ("es", "noaccess") => "Sin acceso",
+            ("en", "noaccess") => "No access",
+
+            ("es", "invalid") => "Credenciales inválidas",
+            ("en", "invalid") => "Invalid credentials",
+
+            ("es", "noresponse") => "Servidor sin respuesta",
+            ("en", "noresponse") => "No server response",
+
+            ("es", "success") => "Acceso válido",
+            ("en", "success") => "Access granted",
+
+            _ => "..."
+        };
     }
 }

@@ -174,3 +174,6 @@ C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\P
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\obj\Debug\net8.0\RRHH.pdb
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\obj\Debug\net8.0\RRHH.genruntimeconfig.cache
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\obj\Debug\net8.0\ref\RRHH.dll
+C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\BlazorComponentUtilities.dll
+C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\BlazorStrap.dll
+C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll

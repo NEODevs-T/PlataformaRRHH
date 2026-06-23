@@ -11,26 +11,26 @@
 
 <div class="layout-container">
 
-    <!-- SIDEBAR -->
-    <aside class="sidebar">
-        <NavMenu />
-    </aside>
+    <!-- ✅ SOLO se muestra si está autenticado -->
+    <AuthorizeView>
+        <Authorized Context="auth">
 
-    <!-- MAIN -->
-    <div class="main-wrapper">
+            <!-- SIDEBAR -->
+            <aside class="sidebar">
+                <NavMenu />
+            </aside>
 
-        <!-- TOPBAR -->
-        <div class="topbar">
+            <!-- MAIN -->
+            <div class="main-wrapper">
 
-            <span class="title">
-                Neo RH
-            </span>
-            
+                <!-- TOPBAR -->
+                <div class="topbar">
 
-            <!-- ✅ USER INFO -->
-            <AuthorizeView>
-                <Authorized Context="auth">
+                    <span class="title">
+                        Neo RH
+                    </span>
 
+                    <!-- USER INFO -->
                     <div class="user-info">
 
                         <span class="user-name">
@@ -48,17 +48,23 @@
 
                     </div>
 
-                </Authorized>
-            </AuthorizeView>
+                </div>
 
-        </div>
+                <!-- CONTENT -->
+                <main class="main-content">
+                    @Body
+                </main>
 
-        <!-- CONTENT -->
-        <main class="main-content">
+            </div>
+
+        </Authorized>
+
+        <!-- ❌ NO renderiza nada si no está autenticado -->
+            <NotAuthorized>
             @Body
-        </main>
+        </NotAuthorized>
 
-    </div>
+    </AuthorizeView>
 
 </div>
 
@@ -68,10 +74,10 @@
     {
         await AuthProvider.Logout();
 
-        Nav.NavigateTo("/login");
+        Nav.NavigateTo("/login", true); // fuerza reload
     }
 
-    // ✅ HELPERS LIMPIOS
+    // ✅ Helpers (asegúrate que existan en tu provider)
     string GetNombre(ClaimsPrincipal user)
     {
         return CustomAuthStateProvider.GetUserName(user);

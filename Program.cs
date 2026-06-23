@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Components.Authorization;
 
 using NeoRH;
 using NeoRH.Services;
+using NeoRH.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,6 +11,10 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddRazorPages();
 
 builder.Services.AddServerSideBlazor();
+
+builder.Services.AddHttpClient();
+
+builder.Services.AddScoped<IDashboardData, DashboardData>();
 
 // ✅ LOCAL STORAGE
 builder.Services.AddBlazoredLocalStorage();

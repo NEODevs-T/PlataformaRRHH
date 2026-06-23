@@ -16,64 +16,126 @@ public class RRHHApiService : IRRHHApiService
     {
         try
         {
-            var response = await _http.GetFromJsonAsync<List<T>>($"{_baseUrl}{endpoint}");
-            return response ?? new List<T>();
+            var url = $"{_baseUrl}{endpoint}";
+
+            Console.WriteLine("=====================================");
+            Console.WriteLine($"GET => {url}");
+            Console.WriteLine("=====================================");
+
+            var response = await _http.GetAsync(url);
+
+            Console.WriteLine($"STATUS => {response.StatusCode}");
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var errorBody = await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine($"ERROR BODY => {errorBody}");
+
+                return new List<T>();
+            }
+
+            var data =
+                await response.Content.ReadFromJsonAsync<List<T>>();
+
+            Console.WriteLine($"REGISTROS => {data?.Count ?? 0}");
+
+            return data ?? new List<T>();
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error GET {endpoint}: {ex.Message}");
+            Console.WriteLine($"ERROR GET {endpoint}");
+            Console.WriteLine(ex.ToString());
+
             return new List<T>();
         }
     }
 
     public async Task<string?> Login(UserLoginDto dto)
     {
-        var response = await _http.PostAsJsonAsync(
-            "api/Auth/Login",
-            dto);
+        try
+        {
+            var response = await _http.PostAsJsonAsync(
+                "api/Auth/Login",
+                dto);
 
-        if (!response.IsSuccessStatusCode)
+            Console.WriteLine($"LOGIN STATUS => {response.StatusCode}");
+
+            if (!response.IsSuccessStatusCode)
+                return null;
+
+            return await response.Content.ReadAsStringAsync();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"ERROR LOGIN => {ex}");
+
             return null;
-
-        return await response.Content.ReadAsStringAsync();
+        }
     }
 
     public async Task<List<MaestroTrabajadorDTO>> GetMaestroTrabajadores()
     {
-        return await _http.GetFromJsonAsync<List<MaestroTrabajadorDTO>>("api/maestrotrabajador")
+        Console.WriteLine("Consultando MaestroTrabajador...");
+
+        return await _http.GetFromJsonAsync<List<MaestroTrabajadorDTO>>(
+            "api/maestrotrabajador")
             ?? new List<MaestroTrabajadorDTO>();
     }
 
     public async Task<List<AusenciaVDTO>> GetAusencias()
     {
-        return await GetAsync<AusenciaVDTO>("AusenciaV");
+        Console.WriteLine("Consultando AusenciaV...");
+
+        return await GetAsync<AusenciaVDTO>(
+            "AusenciaV");
     }
 
     public async Task<List<PeriodosVDTO>> GetPeriodos()
     {
-        return await GetAsync<PeriodosVDTO>("PeriodosV");
+        Console.WriteLine("Consultando PeriodosV...");
+
+        return await GetAsync<PeriodosVDTO>(
+            "PeriodosV");
     }
 
     public async Task<List<PermisosNomDiariaVDTO>> GetPermisosNomDiaria()
     {
-        return await GetAsync<PermisosNomDiariaVDTO>("PermisosNomDiaria");
+        Console.WriteLine("Consultando PermisosNomDiariaV...");
+
+        return await GetAsync<PermisosNomDiariaVDTO>(
+            "PermisosNomDiariaV");
     }
 
     public async Task<List<RepososVDTO>> GetReposos()
     {
-        return await GetAsync<RepososVDTO>("Reposos");
+        Console.WriteLine("Consultando RepososV...");
+
+        return await GetAsync<RepososVDTO>(
+            "RepososV/GetRepososFiltrados");
     }
 
     public async Task<bool> PostAsync<T>(string endpoint, T data)
     {
         try
         {
-            var response = await _http.PostAsJsonAsync($"{_baseUrl}{endpoint}", data);
+            var url = $"{_baseUrl}{endpoint}";
+
+            Console.WriteLine($"POST => {url}");
+
+            var response = await _http.PostAsJsonAsync(
+                url,
+                data);
+
+            Console.WriteLine($"POST STATUS => {response.StatusCode}");
+
             return response.IsSuccessStatusCode;
         }
         catch (Exception ex)
         {
-            Console.WriteLine($"Error POST {endpoint}: {ex.Message}");
+            Console.WriteLine($"ERROR POST {endpoint}");
+            Console.WriteLine(ex.ToString());
+
             return false;
         }
     }

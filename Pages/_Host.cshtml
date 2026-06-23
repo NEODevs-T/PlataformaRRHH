@@ -28,6 +28,8 @@
     <!-- Scripts -->
     <script src="_framework/blazor.server.js"></script>
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+    <script src="_content/BlazorStrap/blazorstrap.js"></script>
+    <script src="_content/BlazorStrap/popper.min.js"></script>
     <script>
     function downloadFile(filename, content) {
         var link = document.createElement('a');
@@ -61,6 +63,26 @@
         if (element) observer.observe(element);
     };
     </script>
+    <script>
+
+    window.downloadFile = (fileName, base64) => {
+
+        const link = document.createElement('a');
+
+        link.download = fileName;
+
+        link.href =
+            "data:text/csv;base64," + base64;
+
+        document.body.appendChild(link);
+
+        link.click();
+
+        document.body.removeChild(link);
+    };
+
+    </script>
+
 
 </body>
 </html>
