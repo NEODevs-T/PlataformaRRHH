@@ -19,7 +19,9 @@ C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\P
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\RRHH.pdb
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Azure.Core.dll
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Azure.Identity.dll
+C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\BlazorComponentUtilities.dll
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Blazored.LocalStorage.dll
+C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\BlazorStrap.dll
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\BouncyCastle.Cryptography.dll
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\ClosedXML.dll
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\ClosedXML.Parser.dll
@@ -48,6 +50,7 @@ C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\P
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.Relational.dll
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Microsoft.EntityFrameworkCore.SqlServer.dll
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Microsoft.Extensions.Configuration.Binder.dll
+C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Microsoft.Extensions.DependencyModel.dll
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Microsoft.Extensions.Logging.Abstractions.dll
@@ -174,6 +177,7 @@ C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\P
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\obj\Debug\net8.0\RRHH.pdb
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\obj\Debug\net8.0\RRHH.genruntimeconfig.cache
 C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\obj\Debug\net8.0\ref\RRHH.dll
-C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\BlazorComponentUtilities.dll
-C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\BlazorStrap.dll
-C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\Microsoft.Extensions.DependencyInjection.dll
+C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\PdfSharpCore.dll
+C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\ICSharpCode.SharpZipLib.dll
+C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\SixLabors.ImageSharp.dll
+C:\Users\Andres.sanmiguel\OneDrive - GrandBay Paper & Care Products\Documentos\Proyectos\Proyecto RRHH\NeoRH\bin\Debug\net8.0\de\PdfSharpCore.resources.dll

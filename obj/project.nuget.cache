@@ -1,6 +1,6 @@
 {
   "version": 2,
-  "dgSpecHash": "J9wnmYWUn4k=",
+  "dgSpecHash": "+tPLzp4c37k=",
   "success": true,
   "projectFilePath": "C:\\Users\\Andres.sanmiguel\\OneDrive - GrandBay Paper & Care Products\\Documentos\\Proyectos\\Proyecto RRHH\\NeoRH\\RRHH.csproj",
   "expectedPackageFiles": [
@@ -76,9 +76,12 @@
     "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\microsoft.win32.systemevents\\6.0.0\\microsoft.win32.systemevents.6.0.0.nupkg.sha512",
     "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\mimekit\\4.17.0\\mimekit.4.17.0.nupkg.sha512",
     "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\mono.texttemplating\\2.2.1\\mono.texttemplating.2.2.1.nupkg.sha512",
+    "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\pdfsharpcore\\1.3.67\\pdfsharpcore.1.3.67.nupkg.sha512",
     "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\radzen.blazor\\5.2.10\\radzen.blazor.5.2.10.nupkg.sha512",
     "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\rbush.signed\\4.0.0\\rbush.signed.4.0.0.nupkg.sha512",
+    "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\sharpziplib\\1.4.2\\sharpziplib.1.4.2.nupkg.sha512",
     "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\sixlabors.fonts\\1.0.0\\sixlabors.fonts.1.0.0.nupkg.sha512",
+    "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\sixlabors.imagesharp\\1.0.4\\sixlabors.imagesharp.1.0.4.nupkg.sha512",
     "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\system.codedom\\4.4.0\\system.codedom.4.4.0.nupkg.sha512",
     "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\system.collections.immutable\\6.0.0\\system.collections.immutable.6.0.0.nupkg.sha512",
     "C:\\Users\\Andres.sanmiguel\\.nuget\\packages\\system.composition\\6.0.0\\system.composition.6.0.0.nupkg.sha512",

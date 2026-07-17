@@ -1,6 +1,6 @@
 {
   "Version": 1,
-  "Hash": "c7JvOzeFyx7HdTwUzOfH4oz0bD6P3dZN6fpaPqSDHQ4=",
+  "Hash": "ozvfuGXQGU+zsKFZbn7+dvsCMyLGonwlPKAgO/P0BBM=",
   "Source": "RRHH",
   "BasePath": "_content/RRHH",
   "Mode": "Default",
@@ -1250,6 +1250,25 @@
       "CopyToOutputDirectory": "Never",
       "CopyToPublishDirectory": "PreserveNewest",
       "OriginalItemSpec": "wwwroot\\img\\Search.png"
+    },
+    {
+      "Identity": "C:\\Users\\Andres.sanmiguel\\OneDrive - GrandBay Paper & Care Products\\Documentos\\Proyectos\\Proyecto RRHH\\NeoRH\\wwwroot\\js\\Grafico.js",
+      "SourceId": "RRHH",
+      "SourceType": "Discovered",
+      "ContentRoot": "C:\\Users\\Andres.sanmiguel\\OneDrive - GrandBay Paper & Care Products\\Documentos\\Proyectos\\Proyecto RRHH\\NeoRH\\wwwroot\\",
+      "BasePath": "_content/RRHH",
+      "RelativePath": "js/Grafico.js",
+      "AssetKind": "All",
+      "AssetMode": "All",
+      "AssetRole": "Primary",
+      "AssetMergeBehavior": "PreferTarget",
+      "AssetMergeSource": "",
+      "RelatedAsset": "",
+      "AssetTraitName": "",
+      "AssetTraitValue": "",
+      "CopyToOutputDirectory": "Never",
+      "CopyToPublishDirectory": "PreserveNewest",
+      "OriginalItemSpec": "wwwroot\\js\\Grafico.js"
     },
     {
       "Identity": "C:\\Users\\Andres.sanmiguel\\OneDrive - GrandBay Paper & Care Products\\Documentos\\Proyectos\\Proyecto RRHH\\NeoRH\\wwwroot\\js\\imprimir.js",

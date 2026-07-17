@@ -34,12 +34,20 @@ build_metadata.AdditionalFiles.CssScope =
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSGVhZENvdW50LnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/HeadCountDashboard.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSGVhZENvdW50RGFzaGJvYXJkLnJhem9y
+build_metadata.AdditionalFiles.CssScope = 
+
 [C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Historico.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSGlzdG9yaWNvLnJhem9y
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Index.razor]
 build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kZXgucmF6b3I=
+build_metadata.AdditionalFiles.CssScope = 
+
+[C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Indicadores.razor]
+build_metadata.AdditionalFiles.TargetPath = UGFnZXNcSW5kaWNhZG9yZXMucmF6b3I=
 build_metadata.AdditionalFiles.CssScope = 
 
 [C:/Users/Andres.sanmiguel/OneDrive - GrandBay Paper & Care Products/Documentos/Proyectos/Proyecto RRHH/NeoRH/Pages/Login.razor]
