@@ -1,51 +1,111 @@
 using System.Net.Http.Json;
+using Microsoft.Extensions.Configuration;
 using NeoRH.DTOs;
+using NeoAPI.DTOs.RRHH;
+using NeoAPI.RRHHModels;
+using System.Linq;
 
 namespace NeoRH.Data;
 
 public class DashboardData : IDashboardData
 {
     private readonly IHttpClientFactory _clientFactory;
+    private readonly string _baseUrl;
 
     private HttpClient cliente = new();
 
-#if DEBUG
-    private const string BaseUrl =
-        "http://localhost:5021/api";
-#else
-    private const string BaseUrl =
-        "URL_PUBLICADA_DE_NEOAPI";
-#endif
-
     public DashboardData(
-        IHttpClientFactory clientFactory)
+        IHttpClientFactory clientFactory,
+        IConfiguration configuration)
     {
         _clientFactory = clientFactory;
+
+        _baseUrl =
+            configuration["ApiSettings:BaseUrl"]
+            ?? throw new Exception(
+                "ApiSettings:BaseUrl no configurado");
     }
 
-    public async Task<List<PermisosNomDiariaVDTO>> GetPermisos()
+        public async Task<List<PermisosNomDiariaHistVDTO>> GetPermisos()
     {
         try
         {
             cliente = _clientFactory.CreateClient();
 
             var url =
-                $"{BaseUrl}/PermisosNomDiariaV";
+                $"{_baseUrl}PermisosNomDiariaHistV?page=1&pageSize=2000";
 
-            Console.WriteLine("=================================");
-            Console.WriteLine($"GET => {url}");
-            Console.WriteLine("=================================");
+            Console.WriteLine(
+                $"URL PERMISOS => {url}");
 
             var response =
                 await cliente.GetAsync(url);
-
-            Console.WriteLine(
-                $"STATUS => {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
             {
                 var error =
                     await response.Content.ReadAsStringAsync();
+
+                Console.WriteLine(
+                    $"PERMISOS ERROR HTTP = {response.StatusCode}");
+
+                Console.WriteLine(
+                    $"PERMISOS VACIOS");
+
+                Console.WriteLine(
+                    $"ERROR => {error}");
+
+                return new List<PermisosNomDiariaHistVDTO>();
+            }
+
+            var data =
+                await response.Content.ReadFromJsonAsync<
+                    PagedResponse<PermisosNomDiariaHistVDTO>>();
+
+            if (data == null)
+            {
+                return new List<PermisosNomDiariaHistVDTO>();
+            }
+
+            var permisos =
+                data.Data.ToList();
+
+            Console.WriteLine(
+                $"PERMISOS CARGADOS = {permisos.Count}");
+
+            return permisos;
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"ERROR PERMISOS => {ex}");
+
+            return new List<PermisosNomDiariaHistVDTO>();
+        }
+    }
+
+    public async Task<List<VRotacionDTO>> GetNominaMensual()
+    {
+        try
+        {
+            cliente = _clientFactory.CreateClient();
+
+            var anio = DateTime.Now.Year;
+
+            var url =
+                $"{_baseUrl}VRotacion?anio={anio}";
+
+            Console.WriteLine(
+                $"URL => {url}");
+
+            var response =
+                await cliente.GetAsync(url);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var error =
+                    await response.Content
+                        .ReadAsStringAsync();
 
                 Console.WriteLine(
                     $"ERROR => {error}");
@@ -54,18 +114,19 @@ public class DashboardData : IDashboardData
             }
 
             var data =
-                await response.Content.ReadFromJsonAsync<
-                    List<PermisosNomDiariaVDTO>>();
+                await response.Content
+                    .ReadFromJsonAsync<
+                        List<VRotacionDTO>>();
 
             Console.WriteLine(
-                $"REGISTROS => {data?.Count ?? 0}");
+                $"MENSUAL CARGADOS = {data?.Count ?? 0}");
 
             return data ?? new();
         }
         catch (Exception ex)
         {
             Console.WriteLine(
-                $"ERROR PERMISOS => {ex}");
+                $"ERROR NOMINA MENSUAL => {ex}");
 
             return new();
         }
@@ -78,22 +139,19 @@ public class DashboardData : IDashboardData
             cliente = _clientFactory.CreateClient();
 
             var url =
-                $"{BaseUrl}/RepososV/GetRepososFiltrados";
+                $"{_baseUrl}RepososV/GetRepososFiltrados";
 
-            Console.WriteLine("=================================");
-            Console.WriteLine($"GET => {url}");
-            Console.WriteLine("=================================");
+            Console.WriteLine(
+                $"URL => {url}");
 
             var response =
                 await cliente.GetAsync(url);
 
-            Console.WriteLine(
-                $"STATUS => {response.StatusCode}");
-
             if (!response.IsSuccessStatusCode)
             {
                 var error =
-                    await response.Content.ReadAsStringAsync();
+                    await response.Content
+                        .ReadAsStringAsync();
 
                 Console.WriteLine(
                     $"ERROR => {error}");
@@ -102,11 +160,12 @@ public class DashboardData : IDashboardData
             }
 
             var data =
-                await response.Content.ReadFromJsonAsync<
-                    List<RepososVDTO>>();
+                await response.Content
+                    .ReadFromJsonAsync<
+                        List<RepososVDTO>>();
 
             Console.WriteLine(
-                $"REGISTROS => {data?.Count ?? 0}");
+                $"REPOSOS CARGADOS = {data?.Count ?? 0}");
 
             return data ?? new();
         }
@@ -119,51 +178,86 @@ public class DashboardData : IDashboardData
         }
     }
 
-    public async Task<List<AusenciaVDTO>> GetAusencias()
+            public async Task<IndicadoresResumenDTO> GetResumenDiario(int anio)
     {
         try
         {
             cliente = _clientFactory.CreateClient();
 
             var url =
-                $"{BaseUrl}/AusenciaV";
+                $"{_baseUrl}PermisosNomDiariaHistV/resumen?anio={anio}";
 
-            Console.WriteLine("=================================");
-            Console.WriteLine($"GET => {url}");
-            Console.WriteLine("=================================");
+            Console.WriteLine(
+                $"URL RESUMEN DIARIO => {url}");
 
             var response =
                 await cliente.GetAsync(url);
 
+            var contenido =
+                await response.Content.ReadAsStringAsync();
+
             Console.WriteLine(
-                $"STATUS => {response.StatusCode}");
+                $"RESPUESTA DIARIO = {contenido}");
 
-            if (!response.IsSuccessStatusCode)
-            {
-                var error =
-                    await response.Content.ReadAsStringAsync();
-
-                Console.WriteLine(
-                    $"ERROR => {error}");
-
-                return new();
-            }
+            response.EnsureSuccessStatusCode();
 
             var data =
-                await response.Content.ReadFromJsonAsync<
-                    List<AusenciaVDTO>>();
+                System.Text.Json.JsonSerializer.Deserialize
+                    <IndicadoresResumenDTO>(
+                        contenido,
+                        new System.Text.Json.JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
 
-            Console.WriteLine(
-                $"REGISTROS => {data?.Count ?? 0}");
-
-            return data ?? new();
+            return data ?? new IndicadoresResumenDTO();
         }
         catch (Exception ex)
         {
             Console.WriteLine(
-                $"ERROR AUSENCIAS => {ex}");
+                $"ERROR RESUMEN DIARIO => {ex}");
 
-            return new();
+            return new IndicadoresResumenDTO();
+        }
+    }
+
+        public async Task<IndicadoresResumenDTO> GetResumenMensual(int anio)
+    {
+        try
+        {
+            cliente = _clientFactory.CreateClient();
+
+            var url =
+                $"{_baseUrl}VRotacionHist/resumen?anio={anio}";
+
+            var response =
+                await cliente.GetAsync(url);
+
+            var contenido =
+                await response.Content.ReadAsStringAsync();
+
+            Console.WriteLine(
+                $"RESPUESTA MENSUAL = {contenido}");
+
+            response.EnsureSuccessStatusCode();
+
+            var data =
+                System.Text.Json.JsonSerializer.Deserialize
+                    <IndicadoresResumenDTO>(
+                        contenido,
+                        new System.Text.Json.JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+
+            return data ?? new IndicadoresResumenDTO();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine(
+                $"ERROR RESUMEN MENSUAL => {ex}");
+
+            return new IndicadoresResumenDTO();
         }
     }
 }
