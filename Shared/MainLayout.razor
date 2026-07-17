@@ -11,7 +11,6 @@
 
 <div class="layout-container">
 
-    <!-- ✅ SOLO se muestra si está autenticado -->
     <AuthorizeView>
         <Authorized Context="auth">
 
@@ -37,10 +36,6 @@
                             👤 @GetNombre(auth.User)
                         </span>
 
-                        <span class="user-role">
-                            🔐 @GetRol(auth.User)
-                        </span>
-
                         <button class="btn-logout"
                                 @onclick="CerrarSesion">
                             Cerrar sesión
@@ -59,7 +54,6 @@
 
         </Authorized>
 
-        <!-- ❌ NO renderiza nada si no está autenticado -->
             <NotAuthorized>
             @Body
         </NotAuthorized>
@@ -74,10 +68,10 @@
     {
         await AuthProvider.Logout();
 
-        Nav.NavigateTo("/login", true); // fuerza reload
+        Nav.NavigateTo("/login", true);
     }
 
-    // ✅ Helpers (asegúrate que existan en tu provider)
+    // Helpers
     string GetNombre(ClaimsPrincipal user)
     {
         return CustomAuthStateProvider.GetUserName(user);

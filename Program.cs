@@ -7,7 +7,7 @@ using NeoRH.Data;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// ✅ BLAZOR SERVER
+// BLAZOR SERVER
 builder.Services.AddRazorPages();
 
 builder.Services.AddServerSideBlazor();
@@ -16,20 +16,20 @@ builder.Services.AddHttpClient();
 
 builder.Services.AddScoped<IDashboardData, DashboardData>();
 
-// ✅ LOCAL STORAGE
+// LOCAL STORAGE
 builder.Services.AddBlazoredLocalStorage();
 
-// ✅ AUTH BLAZOR
+// AUTH BLAZOR
 builder.Services.AddAuthorizationCore();
 
-// ✅ CUSTOM AUTH PROVIDER
+// CUSTOM AUTH PROVIDER
 builder.Services.AddScoped<CustomAuthStateProvider>();
 
 builder.Services.AddScoped<
     AuthenticationStateProvider,
     CustomAuthStateProvider>();
 
-// ✅ HTTP CLIENT
+// HTTP CLIENT
 var apiBaseUrl =
     builder.Configuration["ApiSettings:BaseUrl"];
 
@@ -39,7 +39,7 @@ builder.Services.AddScoped(sp =>
         BaseAddress = new Uri(apiBaseUrl!)
     });
 
-// ✅ API SERVICE
+// API SERVICE
 builder.Services.AddScoped<
     IRRHHApiService,
     RRHHApiService>();
@@ -51,13 +51,15 @@ if (!app.Environment.IsDevelopment())
     app.UseExceptionHandler("/Error");
 }
 
-// ✅ STATIC FILES
+app.UseHttpsRedirection();
+
+// STATIC FILES
 app.UseStaticFiles();
 
-// ✅ ROUTING
+// ROUTING
 app.UseRouting();
 
-// ✅ BLAZOR HUB
+// BLAZOR HUB
 app.MapBlazorHub();
 
 app.MapFallbackToPage("/_Host");

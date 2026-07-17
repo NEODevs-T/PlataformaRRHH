@@ -8,6 +8,10 @@
 @inject CustomAuthStateProvider AuthProvider
 @inject NavigationManager Nav
 
+<link href="css/site.css" rel="stylesheet" />
+<link href="bootstrap/bootstrap.min.css" rel="stylesheet" />
+<script src="js/imprimir.js"></script>
+
 @attribute [AllowAnonymous]
 
 <div class="login-wrapper">
@@ -72,12 +76,12 @@
             _message = "";
             loading = true;
 
-            // ✅ CULTURA
+            // CULTURA
             var culture = new CultureInfo(idioma);
             CultureInfo.DefaultThreadCurrentCulture = culture;
             CultureInfo.DefaultThreadCurrentUICulture = culture;
 
-            // ✅ VALIDACIÓN CAMPOS
+            // VALIDACIÓN CAMPOS
             if (string.IsNullOrWhiteSpace(user.UserName) ||
                 string.IsNullOrWhiteSpace(user.Password))
             {
@@ -85,25 +89,21 @@
                 return;
             }
 
-            // ✅ PROYECTO CORRECTO (NO TOCAR)
+            // PROYECTO
             user.Proyecto = "PlataformaRH";
 
             var result = await Http.PostAsJsonAsync(
                 "http://operaciones.papeleslatinos.com/AuthenticationP/api/Auth/Login",
                 user);
 
-            // ✅ VALIDACIÓN HTTP
+            // VALIDACIÓN HTTP
             if (!result.IsSuccessStatusCode)
             {
                 _message = "Error en servidor";
                 return;
             }
 
-            Console.WriteLine($"STATUS: {result.StatusCode}");
-
             var response = await result.Content.ReadAsStringAsync();
-
-            Console.WriteLine($"API RAW: {response}");
 
             if (string.IsNullOrWhiteSpace(response))
             {
@@ -111,12 +111,10 @@
                 return;
             }
 
-            // ✅ LIMPIEZA SEGURA
+            // LIMPIEZA SEGURA
             var token = response.Trim().Replace("\"", "");
 
-            Console.WriteLine($"TOKEN LIMPIO: {token}");
-
-            // ✅ VALIDACIONES BACKEND
+            // VALIDACIONES BACKEND
             if (token == "NotFoundUser")
             {
                 _message = Texto("usernotfound");
@@ -135,24 +133,23 @@
                 return;
             }
 
-            // ✅ VALIDACIÓN JWT
+            // VALIDACIÓN JWT
             if (!token.Contains("."))
             {
                 _message = Texto("invalid");
                 return;
             }
 
-            // ✅ LOGIN OK
+            // LOGIN OK
             await AuthProvider.Login(token);
 
             _message = Texto("success");
 
             Nav.NavigateTo("/", true);
         }
-        catch (Exception ex)
+        catch (Exception)
         {
             _message = "Error";
-            Console.WriteLine(ex.Message);
         }
         finally
         {
@@ -160,7 +157,7 @@
         }
     }
 
-    // ✅ TEXTOS MULTIIDIOMA
+    // TEXTOS MULTI-IDIOMA
     string Texto(string clave)
     {
         return (idioma, clave) switch

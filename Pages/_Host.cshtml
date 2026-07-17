@@ -8,81 +8,89 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="~/" />
+    <base href="/" />
 
     <title>Neo RRHH</title>
 
-    <!-- CSS -->
-    <link href="./css/site.css" rel="stylesheet" />
-    <link rel="stylesheet" href="_content/Radzen.Blazor/css/material-base.css" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" integrity="" crossorigin="anonymous" referrerpolicy="no-referrer" />
+    <!-- Bootstrap -->
+    <link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+
+    <!-- CSS aplicación -->
+    <link href="css/site.css" rel="stylesheet" />
+
+    <!-- CSS generado por Blazor -->
+    <link href="RRHH.styles.css" rel="stylesheet" />
+
+    <!-- Radzen -->
+    <link href="_content/Radzen.Blazor/css/material-base.css"
+          rel="stylesheet" />
+
+    <!-- FontAwesome -->
+    <link rel="stylesheet"
+          href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+          crossorigin="anonymous"
+          referrerpolicy="no-referrer" />
 
 </head>
 
 <body>
-    <!-- IMPORTANTE 🔥 -->
+
     <app>
-    <component type="typeof(App)" render-mode="Server" />
+        <component type="typeof(App)"
+                   render-mode="Server" />
     </app>
 
-    <!-- Scripts -->
+    <!-- Blazor -->
     <script src="_framework/blazor.server.js"></script>
+
+    <!-- Radzen -->
     <script src="_content/Radzen.Blazor/Radzen.Blazor.js"></script>
+
+    <!-- BlazorStrap -->
     <script src="_content/BlazorStrap/blazorstrap.js"></script>
     <script src="_content/BlazorStrap/popper.min.js"></script>
+
+    <!-- Scripts propios -->
+    <script src="js/imprimir.js"></script>
+    <script srcjs
+
     <script>
-    function downloadFile(filename, content) {
-        var link = document.createElement('a');
-        link.download = filename;
-        link.href = "data:application/octet-stream;base64," + content;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-    }
+        window.downloadFile = (fileName, base64) => {
+
+            const link = document.createElement('a');
+
+            link.download = fileName;
+
+            link.href =
+                "data:text/csv;base64," + base64;
+
+            document.body.appendChild(link);
+
+            link.click();
+
+            document.body.removeChild(link);
+        };
+
+        window.initScrollObserver = (
+            dotnetHelper,
+            element,
+            scrollContainer) => {
+
+            const observer = new IntersectionObserver(entries => {
+
+                if (entries[0].isIntersecting) {
+                    dotnetHelper.invokeMethodAsync('CargarMas');
+                }
+
+            }, {
+                root: scrollContainer,
+                threshold: 0.1
+            });
+
+            if (element)
+                observer.observe(element);
+        };
     </script>
-        <script>
-    function downloadFile(filename, contentBase64) {
-        const link = document.createElement("a");
-        link.href = "data:text/csv;base64," + contentBase64;
-        link.download = filename;
-        link.click();
-    }
-    </script>
-    <script>
-    window.initScrollObserver = (dotnetHelper, element, scrollContainer) => {
-
-        const observer = new IntersectionObserver(entries => {
-            if (entries[0].isIntersecting) {
-                dotnetHelper.invokeMethodAsync('CargarMas');
-            }
-        }, {
-            root: scrollContainer,
-            threshold: 0.1
-        });
-
-        if (element) observer.observe(element);
-    };
-    </script>
-    <script>
-
-    window.downloadFile = (fileName, base64) => {
-
-        const link = document.createElement('a');
-
-        link.download = fileName;
-
-        link.href =
-            "data:text/csv;base64," + base64;
-
-        document.body.appendChild(link);
-
-        link.click();
-
-        document.body.removeChild(link);
-    };
-
-    </script>
-
 
 </body>
 </html>
