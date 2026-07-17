@@ -96,12 +96,12 @@ else
 
         <div class="card dashboard-kpi">
             <h5>Reposos</h5>
-            <span>@resumenActual.Reposos</span>
+            <span>@totalReposos</span>
         </div>
 
         <div class="card dashboard-kpi">
             <h5>Ausencias</h5>
-            <span>@resumenActual.Ausencias</span>
+            <span>@eventosAusentismo</span>
         </div>
 
     </div>
@@ -1030,8 +1030,6 @@ else
                     {
                         Permisos = resumenDiario.Permisos,
                         Faltas = resumenDiario.Faltas,
-                        Reposos = resumenDiario.Reposos,
-                        Ausencias = resumenDiario.Ausencias
                     };
             }
             else if (tipoNominaIndicadores == "Mensual")
@@ -1041,8 +1039,6 @@ else
                     {
                         Permisos = resumenMensual.Permisos,
                         Faltas = resumenMensual.Faltas,
-                        Reposos = resumenMensual.Reposos,
-                        Ausencias = resumenMensual.Ausencias
                     };
             }
             else
@@ -1057,14 +1053,6 @@ else
                         Faltas =
                             resumenDiario.Faltas +
                             resumenMensual.Faltas,
-
-                        Reposos =
-                            resumenDiario.Reposos,
-
-                        Ausencias =
-                            resumenDiario.Ausencias +
-                            resumenMensual.Ausencias -
-                            resumenDiario.Reposos
                     };
             }
             Console.WriteLine(
@@ -1587,9 +1575,9 @@ else
 
             indiceAusentismo =
                 horasProgramadas > 0
-                    ? ((double)resumenActual.Ausencias /
-                        horasProgramadas) * 100
-                    : 0;
+                ? ((double)(totalPermisos + totalFaltas)
+                    / horasProgramadas) * 100
+                : 0;
 
                     Console.WriteLine(
                         $"AÑO={anioIndicadores}");
@@ -1932,26 +1920,7 @@ else
                     {
                         Permisos = permisos,
 
-                        Faltas = faltas,
-
-                        Reposos = repososResumen,
-
-                        Ausencias =
-                            permisos +
-                            faltas +
-                            repososResumen,
-
-                        Vacaciones =
-                            diaria.Vacaciones +
-                            mensual.Vacaciones,
-
-                        Libres =
-                            diaria.Libres +
-                            mensual.Libres,
-
-                        Utilidades =
-                            diaria.Utilidades +
-                            mensual.Utilidades
+                        Faltas = faltas
                     };
                     var filaMensual =
                     new ResumenNominaDTO
