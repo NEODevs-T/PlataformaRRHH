@@ -1,0 +1,392 @@
+@using NeoRH.DTOs
+@using System.Linq
+@inject IRRHHApiService ApiService
+
+@page "/headcount-dashboard"
+
+<link href="./css/site.css" rel="stylesheet" />
+
+@if (cargando)
+{
+    <div class="loading-container">
+
+        <div class="loading-spinner"></div>
+
+        <div class="loading-text">
+            Cargando información de HeadCount...
+        </div>
+
+    </div>
+}
+else
+{
+
+<div class="dashboard-header">
+    Dashboard HeadCount
+</div>
+
+    <div>
+        Registros cargados:
+        @trabajadores.Count
+    </div>
+
+    <div>
+        Activos:
+        @totalGeneralHeadCount
+    </div>
+
+<div class="tabs-dashboard">
+
+        <NavLink href="/dashboard"
+                class="tab-dashboard">
+            Ausentismo
+        </NavLink>
+
+        <NavLink href="/headcount-dashboard"
+                class="tab-dashboard">
+            HeadCount
+        </NavLink>
+
+</div>
+<!-- FILTROS -->
+
+<div class="dashboard-card filtros">
+
+    <select class="input"
+        @bind="empresaSeleccionada"
+        @bind:after="CalcularMetricas">
+
+    <option value="TODOS">TODOS</option>
+    <option value="PAVECA">PAVECA</option>
+    <option value="DEFORSA">DEFORSA</option>
+
+    </select>
+
+    <select class="input"
+            @bind="anioSeleccionado"
+            @bind:after="CalcularMetricas">
+
+        @foreach(var anio in aniosDisponibles)
+        {
+            <option value="@anio">
+                @anio
+            </option>
+        }
+
+    </select>
+
+    <button class="btn-success"
+            @onclick="() => mostrarDetalle = !mostrarDetalle">
+        Ver Aprendices y Pasantes
+    </button>
+
+</div>
+
+@if (mostrarDetalle)
+{
+    <div class="dashboard-card">
+
+        <div class="excel-header">
+            DISTRIBUCIÓN DEL PERSONAL
+        </div>
+
+        <div class="excel-grid">
+
+            <div class="excel-row">
+                <div>Obreros</div>
+                <div>@obreros</div>
+            </div>
+
+            <div class="excel-row">
+                <div>Aprendices ND</div>
+                <div>@aprendicesNd</div>
+            </div>
+
+            <div class="excel-row">
+                <div>Empleados</div>
+                <div>@empleados</div>
+            </div>
+
+            <div class="excel-row">
+                <div>Vendedores</div>
+                <div>@vendedores</div>
+            </div>
+
+            <div class="excel-row">
+                <div>Aprendices NM</div>
+                <div>@aprendicesNmDetalle</div>
+            </div>
+
+            <div class="excel-row">
+                <div>PCD</div>
+                <div>@pcd</div>
+            </div>
+
+        </div>
+
+    </div>
+}
+
+<!-- KPI PRINCIPALES -->
+
+<div class="cards-container">
+
+    <div class="card dashboard-kpi">
+        <h5>HeadCount Total</h5>
+        <span>@totalGeneralHeadCount</span>
+    </div>
+
+    <div class="card dashboard-kpi">
+        <h5>Obreros</h5>
+        <span>@obreros</span>
+    </div>
+
+    <div class="card dashboard-kpi">
+        <h5>Empleados</h5>
+        <span>@empleados</span>
+    </div>
+
+    <div class="card dashboard-kpi">
+        <h5>Vendedores</h5>
+        <span>@vendedores</span>
+    </div>
+
+    <div class="card dashboard-kpi">
+        <h5>PCD</h5>
+        <span>@pcd</span>
+    </div>
+
+    <div class="card dashboard-kpi">
+        <h5>Aprendices</h5>
+        <span>@(aprendicesNd + aprendicesNmDetalle)</span>
+    </div>
+
+</div>
+
+<!-- HEADCOUNT GENERAL -->
+
+<div class="dashboard-section-title">
+    HeadCount General Paveca y Deforsa
+</div>
+
+<div class="cards-container">
+
+    <div class="card dashboard-kpi">
+        <h5>Nómina Diaria</h5>
+        <span>@pavecaDiaria</span>
+    </div>
+
+    <div class="card dashboard-kpi">
+        <h5>Nómina Mensual</h5>
+        <span>@pavecaMensual</span>
+    </div>
+
+    <div class="card dashboard-kpi">
+        <h5>Confidencial</h5>
+        <span>@pavecaConfidencial</span>
+    </div>
+
+    <div class="card dashboard-kpi">
+        <h5>Total Paveca</h5>
+        <span>@headCountPaveca</span>
+    </div>
+
+</div>
+
+<!-- ROTACIÓN -->
+
+<div class="dashboard-section-title">
+    Índice de Rotación
+</div>
+
+<div class="excel-row header">
+    <div>Total Excluidos</div>
+    <div>@totalExcluidosRotacion</div>
+</div>
+
+<!-- AUSENTISMO / FORMACIÓN -->
+
+<div class="dashboard-section-title">
+    Ausentismo / Formación
+</div>
+
+<div class="excel-row header">
+    <div>Total Excluidos</div>
+    <div>@totalExcluidosAusentismo</div>
+</div>
+
+<!-- PRODUCCIÓN -->
+
+<div class="excel-row header">
+    <div>Total Excluidos</div>
+    <div>@totalExcluidosProduccion</div>
+</div>
+
+}
+
+@code {
+
+    private List<MaestroTrabajadorDTO> trabajadores = new();
+
+    List<int> aniosDisponibles = new();
+
+    bool mostrarDetalle = false;
+
+    string empresaSeleccionada = "TODOS";
+    int anioSeleccionado = DateTime.Now.Year;
+
+    bool cargando = true;
+
+    int totalGeneralHeadCount = 0;
+
+    int headCountPaveca = 0;
+    int headCountDeforsa = 0;
+    //int headCountRotacion = 0;
+    //int headCountProduccion = 0;
+
+    int pavecaDiaria = 0;
+    int pavecaMensual = 0;
+    int pavecaConfidencial = 0;
+
+    //int deforsaMensual = 0;
+    //int deforsaConfidencial = 0;
+
+    //int rotacionDiaria = 0;
+    //int rotacionMensual = 0;
+    //int rotacionConfidencial = 0;
+
+    //int empleoProtegido = 0;
+    //int aprendicesInces = 0;
+    //int aprendicesNm = 0;
+    //int contratados = 0;
+    //int nuevosIngresos = 0;
+
+    int totalExcluidosRotacion = 0;
+
+    //int ausentismoDiaria = 0;
+    //int ausentismoMensual = 0;
+    //int ausentismoConfidencial = 0;
+
+    //int ausProtegido = 0;
+    //int trabVentas = 0;
+    //int ausConfidencial = 0;
+
+    int totalExcluidosAusentismo = 0;
+
+    //int finanzasDiaria = 0;
+    //int finanzasMensual = 0;
+    //int finanzasTotal = 0;
+
+    //int produccionDiaria = 0;
+    //int produccionMensual = 0;
+
+    //int aprendicesNdProduccion = 0;
+    //int aprendicesNmProduccion = 0;
+
+    int totalExcluidosProduccion = 0;
+
+    int obreros = 0;
+    int aprendicesNd = 0;
+    int empleados = 0;
+    int vendedores = 0;
+    int aprendicesNmDetalle = 0;
+    int pcd = 0;
+
+    protected override async Task OnInitializedAsync()
+    {
+        cargando = true;
+
+        trabajadores =
+            await ApiService.GetMaestroTrabajadores();
+
+        aniosDisponibles =
+            trabajadores
+                .Where(x => x.Fecing.HasValue)
+                .Select(x => x.Fecing!.Value / 10000)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .ToList();
+
+        if (aniosDisponibles.Any())
+        {
+            anioSeleccionado =
+                aniosDisponibles.First();
+        }
+
+        CalcularMetricas();
+
+        cargando = false;
+    }
+
+    private void CalcularMetricas()
+    {
+        var activos =
+            trabajadores
+            .Where(x =>
+            {
+                int anioIngreso =
+                    (x.Fecing ?? 0) / 10000;
+
+                bool activo =
+                    x.Fecret == 0;
+
+                return activo &&
+                    anioIngreso <= anioSeleccionado;
+            })
+            .ToList();
+
+        if (empresaSeleccionada == "PAVECA")
+        {
+            activos =
+                activos
+                    .Where(x => x.Ciafic == "10")
+                    .ToList();
+        }
+        else if (empresaSeleccionada == "DEFORSA")
+        {
+            activos =
+                activos
+                    .Where(x => x.Ciafic == "24")
+                    .ToList();
+        }
+
+        totalGeneralHeadCount = activos.Count();
+
+        headCountPaveca =
+            activos.Count(x => x.Ciafic == "10");
+
+        headCountDeforsa =
+            activos.Count(x => x.Ciafic == "24");
+
+        obreros =
+            activos.Count(x =>
+                x.Tpnfic == "1101" ||
+                x.Tpnfic == "1301");
+
+        empleados =
+            activos.Count(x =>
+                x.Tpnfic == "2101");
+
+        vendedores =
+            activos.Count(x =>
+                x.Tpnfic == "2301");
+
+        aprendicesNd =
+            activos.Count(x =>
+                x.Tpnfic == "2102");
+
+        pavecaConfidencial =
+            activos.Count(x =>
+                x.Tpnfic == "4101" ||
+                x.Tpnfic == "4401");
+        pcd =
+        activos.Count(x =>
+            x.Tpnfic == "2501");
+    }
+
+    private void FechaChanged(
+    ChangeEventArgs e)
+    {
+        CalcularMetricas();
+    }
+}

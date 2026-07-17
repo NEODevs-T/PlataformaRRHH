@@ -1,24 +1,220 @@
 @page "/dashboard"
 @using NeoRH.DTOs
+@using NeoAPI.DTOs.RRHH
+@using NeoAPI.RRHHModels
 @using System.Text
+@using System.Globalization;
+@using PdfSharpCore.Drawing;
+@using PdfSharpCore.Pdf;
+@using ClosedXML.Excel
+@using System.Diagnostics;
 @inject IJSRuntime JS
 @inject IDashboardData DashboardData
 
-<div class="dashboard-container">
+<link href="css/site.css" rel="stylesheet" />
+<link href="/css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+<script src="js/imprimir.js"></script>
 
-    <div class="dashboard-header">
-        Dashboard
+@if (cargando)
+{
+    <div class="loading-container">
+
+        <div class="loading-spinner"></div>
+
+        <div class="loading-text">
+            Cargando información de ausentismo...
+        </div>
+
+    </div>
+}
+else
+{
+
+    <div class="dashboard-container">
+
+        <div class="dashboard-header">
+            Dashboard Ausentismo
+        </div>
+
+        <div class="tabs-dashboard">
+
+        <NavLink href="/dashboard"
+                class="tab-dashboard">
+            Ausentismo
+        </NavLink>
+
+        <NavLink href="/headcount-dashboard"
+                class="tab-dashboard">
+            HeadCount
+        </NavLink>
+
+        </div>
+
+        <!-- FILTROS -->
+        <div class="dashboard-card filtros">
+
+            <select @bind="tipoNominaIndicadores"
+            @bind:after="AplicarFiltros">
+                <option value="Total">
+                    Todas las nóminas
+                </option>
+
+                <option value="Diaria">
+                    Nómina Diaria
+                </option>
+
+                <option value="Mensual">
+                    Nómina Mensual
+                </option>
+            </select>
+
+            <select value="@anioIndicadores"
+            @onchange="CambioAnioIndicadores"
+            class="input">
+
+                @foreach (var y in aniosDisponibles)
+                {
+                    <option value="@y">@y</option>
+                }
+
+            </select>
+
+        </div>
+
+        <!-- KPI -->
+    <div class="cards-container">
+
+        <div class="card dashboard-kpi">
+            <h5>Permisos</h5>
+            <span>@resumenActual.Permisos</span>
+        </div>
+
+        <div class="card dashboard-kpi">
+            <h5>Faltas</h5>
+            <span>@resumenActual.Faltas</span>
+        </div>
+
+        <div class="card dashboard-kpi">
+            <h5>Reposos</h5>
+            <span>@resumenActual.Reposos</span>
+        </div>
+
+        <div class="card dashboard-kpi">
+            <h5>Ausencias</h5>
+            <span>@resumenActual.Ausencias</span>
+        </div>
+
     </div>
 
-    <!-- FILTROS -->
-    <div class="dashboard-card filtros">
+    <!-- TITULO TENDENCIA -->
 
-        <select @bind="tipoNomina" @bind:after="AplicarFiltros" class="input">
-            <option value="Diaria">Nómina Diaria</option>
-            <option value="Total">Total General</option>
-        </select>
+    <div class="dashboard-section-title">
+        Tendencia Mensual
+    </div>
 
-        <select @bind="anioSeleccionado" @bind:after="AplicarFiltros" class="input">
+    <!-- TENDENCIA -->
+
+    <div class="dashboard-info-card">
+
+        <div class="filtros-tendencia">
+
+            <select @bind="anioTendencia">
+
+            @foreach(var y in aniosDisponibles)
+            {
+                <option value="@y">@y</option>
+            }
+
+            </select>
+
+            <select value="@tipoTendencia"
+            @onchange="CambioTipoTendencia"
+            class="input">
+
+                <option value="Todos">
+                    Todos
+                </option>
+
+                <option value="Reposos">
+                    Reposos
+                </option>
+
+                <option value="Permisos">
+                    Permisos
+                </option>
+
+                <option value="Faltas">
+                    Faltas
+                </option>
+
+            </select>
+
+            <select value="@mesTendencia"
+                @onchange="CambioMesTendencia"
+                class="input">
+
+            <option value="0">Todos</option>
+
+            @for (int i = 1;
+                i <= (anioIndicadores == DateTime.Now.Year
+                        ? DateTime.Now.Month
+                        : 12);
+                i++)
+            {
+                <option value="@i">
+                    @(new DateTime(
+                        anioIndicadores,
+                        i,
+                        1).ToString("MMMM"))
+                </option>
+            }
+
+            </select>
+
+        </div>
+
+        <div class="grafico-wrapper">
+
+        <div class="grafico-linea">
+
+            @foreach (var dia in tendenciaDias)
+            {
+                <div class="punto">
+
+                    <div class="barra-tendencia"
+                        style="height:@ObtenerAlturaBarra(dia.Total)">
+                    </div>
+
+                    <small class="valor">
+                        @dia.Total
+                    </small>
+
+                    <div class="dia">
+                        <div>@dia.Etiqueta</div>
+                        <small>@dia.Subtitulo</small>
+                    </div>
+
+                </div>
+            }
+
+        </div>
+
+    </div>
+</div>
+
+    <!-- COMPARATIVA -->
+    @if (comparativa.ValorActual > 0 ||
+        comparativa.ValorAnterior > 0)
+    {
+    <div class="dashboard-section-title">
+        Comparativa Mes Actual vs Mes Anterior
+    </div>
+
+    <!-- Filtros de comparativa -->
+        <div class="filtros">
+
+        <select value="@anioComparativa1"
+                @onchange="CambioAnioComparativa1">
 
             @foreach (var y in aniosDisponibles)
             {
@@ -27,53 +223,60 @@
 
         </select>
 
-        <button class="btn-success"
-                @onclick="AplicarFiltros">
-            Filtrar
-        </button>
+        <select value="@mesComparativa1"
+                @onchange="CambioMesComparativa1">
 
-    </div>
+            <option value="0">
+                    Todos
+            </option>
 
-    <!-- KPI -->
-<div class="cards-container">
+            @for (int i = 1;
+                i <= (anioComparativa1 == DateTime.Now.Year
+                        ? DateTime.Now.Month
+                        : 12);
+                i++)
+            {
+                <option value="@i">
+                    @(new DateTime(2025, i, 1).ToString("MMMM"))
+                </option>
+            }
 
-    <div class="card dashboard-kpi">
-        <h5>Permisos</h5>
-        <span>@totalPermisos</span>
-    </div>
+        </select>
 
-    <div class="card dashboard-kpi">
-        <h5>Faltas</h5>
-        <span>@totalFaltas</span>
-    </div>
+        <select value="@anioComparativa2"
+                @onchange="CambioAnioComparativa2">
 
-    <div class="card dashboard-kpi">
-        <h5>Reposos</h5>
-        <span>@totalReposos</span>
-    </div>
+            @foreach (var y in aniosDisponibles)
+            {
+                <option value="@y">@y</option>
+            }
 
-    <div class="card dashboard-kpi">
-        <h5>Índice %</h5>
-        <span>@indiceAusentismo.ToString("0.00")</span>
-    </div>
+        </select>
 
-</div>
+        <select value="@mesComparativa2"
+                @onchange="CambioMesComparativa2">
 
-<!-- TITULO TENDENCIA -->
+            <option value="0">
+                Todos
+            </option>
 
-<div class="dashboard-section-title">
-    Tendencia Mensual
-</div>
+            @for (int i = 1;
+                i <= (anioComparativa2 == DateTime.Now.Year
+                        ? DateTime.Now.Month
+                        : 12);
+                i++)
+            {
+                <option value="@i">
+                    @(new DateTime(2025, i, 1).ToString("MMMM"))
+                </option>
+            }
 
-<!-- TENDENCIA -->
+        </select>
 
-<div class="dashboard-info-card">
-
-    <div class="filtros-tendencia">
-
-        <select value="@tipoTendencia"
-        @onchange="CambioTipoGrafica"
-        class="input">
+        <!-- Filtros de comparativa  -->
+        <select class="input"
+                value="@tipoComparativa"
+                @onchange="CambioComparativa">
 
             <option value="Todos">
                 Todos
@@ -87,929 +290,2424 @@
                 Permisos
             </option>
 
-        </select>
-
-        <select value="@mesSeleccionado"
-            @onchange="CambioMes"
-            class="input">
-
-        <option value="0">Todos</option>
-
-        @for (int i = 1; i <= 12; i++)
-        {
-            <option value="@i">
-                @(new DateTime(
-                    anioSeleccionado,
-                    i,
-                    1).ToString("MMMM"))
+            <option value="Faltas">
+                Faltas
             </option>
-        }
 
         </select>
 
     </div>
 
-    <div class="grafico-linea">
-
-        @foreach (var dia in tendenciaDias)
-        {
-            <div class="punto">
-
-                <div class="barra-tendencia"
-                     style="height:@(dia.Total * 12)px">
-                </div>
-
-                <small class="valor">
-                    @dia.Total
-                </small>
-
-                <div class="dia">
-                    <div>@dia.Etiqueta</div>
-                    <small>@dia.Subtitulo</small>
-                </div>
-
-            </div>
-        }
-
-    </div>
-
-</div>
-
-<!-- TITULO COMPARATIVA -->
-@if (mesSeleccionado > 0)
-{
-<div class="dashboard-section-title">
-    Comparativa Mes Actual vs Mes Anterior
-</div>
-
-<!-- COMPARATIVA -->
-
-<!-- Filtros de comparativa  -->
-<select class="input"
-        value="@tipoComparativa"
-        @onchange="CambioTipoGrafica">
-
-    <option value="Todos">
-        Todos
-    </option>
-
-    <option value="Reposos">
-        Reposos
-    </option>
-
-    <option value="Permisos">
-        Permisos
-    </option>
-
-</select>
-
-<div class="dashboard-card">
-
-    <div class="comparativa-container">
-
-        <div class="barra-comparativa">
-
-            <h4>
-                @comparativa.MesActualTexto
-                (@comparativa.ValorActual)
-            </h4>
-
-            <div class="barra-horizontal verde"
-                    style="width:@(comparativa.ValorActual * 5)px">
-                </div>
-
-            <span>
-                @comparativa.ValorActual
-            </span>
-
-        </div>
-
-        <div class="barra-comparativa">
-
-            <h4>
-                @comparativa.MesAnteriorTexto
-                (@comparativa.ValorAnterior)
-            </h4>
-
-            <div class="barra-horizontal gris"
-                    style="width:@(comparativa.ValorAnterior * 5)px">
-                </div>
-
-            <span>
-                @comparativa.ValorAnterior
-            </span>
-
-        </div>
-
-    </div>
-
-</div>
-}
-
-<!-- TITULO RESUMEN -->
-
-<div class="dashboard-section-title">
-    Resumen General
-</div>
-
-<!-- RESUMEN GENERAL -->
-
-<div class="dashboard-card">
-
-<!-- Exportar a Excel -->
-    @if (false)
-    {
-        <div class="dashboard-actions">
-            <button class="btn-success"
-                    @onclick="ExportarExcel">
-                Exportar Excel
-            </button>
-        </div>
-    }
-
-    <div class="excel-grid">
-
-        <div class="excel-row header">
-            <div>Permisos</div>
-            <div>Faltas</div>
-            <div>Reposos</div>
-            <div>Horas Aus.</div>
-            <div>Horas Prog.</div>
-            <div>Índice %</div>
-        </div>
-
-        <div class="excel-row">
-
-            <div>@totalPermisos</div>
-
-            <div>@totalFaltas</div>
-
-            <div>@totalReposos</div>
-
-            <div>@horasAusentismo</div>
-
-            <div>@horasProgramadas</div>
-
-            <div>
-                @indiceAusentismo.ToString("0.00")%
-            </div>
-
-        </div>
-
-    </div>
-
-</div>
-
-<!-- TITULO DETALLE -->
-
-<div class="dashboard-section-title">
-    Detalle por Mes
-</div>
-
-<!-- DETALLE MENSUAL -->
-
-@foreach (var r in resumenMeses)
-{
     <div class="dashboard-card">
 
-        <div class="excel-header">
-            AUSENTISMO @r.NombreMes.ToUpper() @r.Anio
+        <div class="comparativa-container">
+
+            <div class="barra-comparativa">
+
+                <h4>
+                    @comparativa.MesActualTexto
+                    (@comparativa.ValorActual)
+                </h4>
+
+                <div class="barra-horizontal verde"
+                    style="@($"width:{ObtenerAnchoComparativa(comparativa.ValorActual)}")">
+                </div>
+
+                <span>
+                    @comparativa.ValorActual
+                </span>
+
+            </div>
+
+            <div class="barra-comparativa">
+
+                <h4>
+                    @comparativa.MesAnteriorTexto
+                    (@comparativa.ValorAnterior)
+                </h4>
+
+                <div class="barra-horizontal gris"
+                    style="@($"width:{ObtenerAnchoComparativa(comparativa.ValorAnterior)}")">
+                </div>
+
+                <span>
+                    @comparativa.ValorAnterior
+                </span>
+
+            </div>
+
         </div>
+
+    </div>
+    }
+
+    <!-- TITULO RESUMEN -->
+
+    <div class="dashboard-section-title">
+        Resumen General
+    </div>
+
+    <div class="filtros">
+
+        <select value="@anioResumen"
+                @onchange="CambioAnioResumen">
+
+            @foreach(var y in aniosDisponibles)
+            {
+                <option value="@y">@y</option>
+            }
+
+        </select>
+
+        <select value="@tipoNominaResumen"
+                @onchange="CambioTipoNominaResumen">
+
+            <option value="Todos">
+                Todas las nóminas
+            </option>
+
+            <option value="Diaria">
+                Nómina Diaria
+            </option>
+
+            <option value="Mensual">
+                Nómina Mensual
+            </option>
+
+        </select>
+
+    </div>
+
+    <!-- RESUMEN GENERAL -->
+
+    <div class="dashboard-card">
 
         <div class="excel-grid">
 
             <div class="excel-row header">
-
-                <div>Mes</div>
+                <div>Tipo</div>
                 <div>Permisos</div>
                 <div>Faltas</div>
                 <div>Reposos</div>
                 <div>Horas Aus.</div>
                 <div>Horas Prog.</div>
                 <div>Índice %</div>
-
             </div>
 
-            <div class="excel-row">
+            @foreach(var fila in resumenGeneralFilas)
+            {
+                <div class="excel-row">
 
-                <div>
-                    @r.NombreMes @r.Anio
+                    <div>@fila.Nombre</div>
+
+                    <div>@fila.Permisos</div>
+
+                    <div>@fila.Faltas</div>
+
+                    <div>@fila.Reposos</div>
+
+                    <div>@fila.Ausencias</div>
+
+                    <div>@fila.HorasProgramadas</div>
+
+                    <div>
+                        @fila.Indice.ToString("0.00")%
+                    </div>
+
                 </div>
+            }
 
-                <div>@r.Permisos</div>
-
-                <div>@r.Faltas</div>
-
-                <div>@r.Reposos</div>
-
-                <div>@r.HorasAusentismo</div>
-
-                <div>@r.HorasProgramadas</div>
-
-                <div>
-                    @r.Indice.ToString("0.00")%
                 </div>
 
             </div>
 
         </div>
 
+    <!-- TITULO DETALLE -->
+
+    <div class="dashboard-section-title">
+        Detalle por Mes
     </div>
+
+    <!-- Filtros de detalle -->
+        <div class="filtros">
+
+            <select
+                value="@anioDetalle"
+                @onchange="CambioAnioDetalle">
+
+                @foreach(var y in aniosDisponibles)
+                {
+                    <option value="@y">@y</option>
+                }
+
+            </select>
+
+            <select
+                value="@tipoNominaDetalle"
+                @onchange="CambioTipoNominaDetalle">
+
+                <option value="Todos">
+                    Todas las nóminas
+                </option>
+
+                <option value="Diaria">
+                    Nómina Diaria
+                </option>
+
+                <option value="Mensual">
+                    Nómina Mensual
+                </option>
+
+            </select>
+
+            <div class="mes-selector">
+
+            @foreach (var mes in Enumerable.Range(
+                1,
+                anioDetalle == DateTime.Now.Year
+                    ? DateTime.Now.Month
+                    : 12))
+            {
+                <button type="button"
+                        class="mes-chip @(mesesSeleccionados.Contains(mes) ? "activo" : "")"
+                        @onclick="() => ToggleMes(mes)">
+
+                    @(new DateTime(2025, mes, 1)
+                        .ToString("MMM"))
+
+                </button>
+            }
+
+            </div>
+
+        </div>
+    <!-- Exportar a Excel -->
+            <div class="dashboard-actions">
+
+            <button class="btn-success"
+                    @onclick="ExportarExcel">
+                📊 Exportar Excel
+            </button>
+        <!-- Exportar a PDF -->
+            <button class="btn-danger"
+                    @onclick="ExportarPdf">
+                📄 Exportar PDF
+            </button>
+
+        </div>
+
+    <!-- DETALLE MENSUAL -->
+
+        @foreach (var r in detalleMeses)
+    {
+        <div class="dashboard-card">
+
+            <div class="excel-header">
+                AUSENTISMO @r.NombreMes.ToUpper() @r.Anio
+            </div>
+
+            <div class="excel-grid">
+
+                <div class="excel-row header">
+
+                    <div>Mes</div>
+                    <div>Permisos</div>
+                    <div>Faltas</div>
+                    <div>Reposos</div>
+                    <div>Horas Aus.</div>
+                    <div>Horas Prog.</div>
+                    <div>Índice %</div>
+
+                </div>
+
+                <div class="excel-row">
+
+                    <div>
+                        @r.NombreMes @r.Anio
+                    </div>
+
+                    <div>@r.Permisos</div>
+
+                    <div>@r.Faltas</div>
+
+                    <div>@r.Reposos</div>
+
+                    <div>@r.eventosAusentismo</div>
+
+                    <div>@r.HorasProgramadas</div>
+
+                    <div>
+                        @r.Indice.ToString("0.00")%
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+    }
+}
+    @code {
+
+        List<PermisosNomDiariaHistVDTO> nomina = new();
+
+        List<VRotacionDTO> nominaMensual = new();
+
+        List<RepososVDTO> reposos = new();
+
+        List<ResumenNominaDTO> resumenGeneralFilas = new();
+
+        Dictionary<(int Anio, int Mes), int> repososPorMes = new();
+
+        Dictionary<int, int> repososPorAnio = new();
+
+        List<int> aniosDisponibles = new();
+        List<ResumenMensual> resumenMeses = new();
+        List<TendenciaDia> tendenciaDias = new();
+
+        List<PermisosNomDiariaHistVDTO> nominaFiltradaCache = new();
+
+        IndicadoresResumenDTO resumenGeneral = new(); 
+
+        IndicadoresResumenDTO resumenDiario = new();
+
+        IndicadoresResumenDTO resumenMensual = new();
+
+        IndicadoresResumenDTO resumenActual = new();
+
+        int horasProgramadas;
+
+        int anioTendencia = DateTime.Now.Year;
+
+        double indiceAusentismo;
+
+       // Icono del cargando de la página
+        bool cargando = true;
+
+        // BLOQUE 1
+        int anioIndicadores = DateTime.Now.Year;
+        int mesTendencia = DateTime.Now.Month;
+        string tipoNominaIndicadores = "Total";
+        string tipoTendencia = "Todos";
+        string tipoNominaResumen = "Todos";
+
+        // BLOQUE 2
+        int anioComparativa1 = DateTime.Now.Year;
+
+        int mesComparativa1 = DateTime.Now.Month;
+
+        int anioComparativa2 = DateTime.Now.Year;
+
+        string tipoNominaDetalle = "Todos";
+
+        int totalPermisos;
+
+        int totalFaltas;
+
+        int totalReposos;
+
+        int eventosAusentismo;
+
+        HashSet<int> mesesSeleccionados =
+        new()
+        {
+            DateTime.Now.Month
+        };
+
+        List<ResumenMensual> detalleMeses = new();
+
+        int mesComparativa2 =
+            DateTime.Now.Month > 1
+                ? DateTime.Now.Month - 1
+                : 12;
+        string tipoComparativa = "Todos";
+
+        // BLOQUE 3
+        int anioResumen = DateTime.Now.Year;
+
+        // BLOQUE 4
+        int anioDetalle = DateTime.Now.Year;
+
+        ComparativaMes comparativa = new();
+
+            protected override async Task OnInitializedAsync()
+        {
+            var permisosTask =
+            DashboardData.GetPermisos();
+
+            var repososTask =
+                DashboardData.GetReposos();
+
+            var mensualTask =
+            DashboardData.GetNominaMensual();
+
+            await Task.WhenAll(
+                permisosTask,
+                mensualTask,
+                repososTask);
+
+                resumenDiario =
+                    await DashboardData.GetResumenDiario(
+                        DateTime.Now.Year);
+
+                        
+
+                resumenMensual =
+                    await DashboardData.GetResumenMensual(
+                        DateTime.Now.Year);               
+
+            nomina = permisosTask.Result;
+
+            nominaMensual = mensualTask.Result;
+
+            reposos = repososTask.Result;
+
+            nominaFiltradaCache =
+                ObtenerNominaFiltrada()
+                .ToList();
+
+            aniosDisponibles =
+                nomina
+                    .Select(x => (int)x.Añohnh)
+
+                .Union(
+                    nominaMensual
+                        .Select(x => (int)x.Añohnh)
+                )
+
+                .Union(
+                    reposos
+                        .Where(r => r.FechaDesde.HasValue)
+                        .Select(r => r.FechaDesde!.Value.Year)
+                )
+
+                .Where(x => x >= 2024)
+                .Where(x => x <= DateTime.Now.Year)
+                .Distinct()
+                .OrderByDescending(x => x)
+                .ToList();
+
+            var sw = Stopwatch.StartNew();
+
+            Console.WriteLine(
+                $"Carga total: {sw.ElapsedMilliseconds} ms");
+
+                repososPorAnio =
+                    reposos
+                        .Where(r => r.FechaDesde.HasValue)
+                        .GroupBy(r => r.FechaDesde!.Value.Year)
+                        .ToDictionary(
+                            g => g.Key,
+                            g => g.Count());
+
+                repososPorMes =
+                    reposos
+                        .Where(r => r.FechaDesde.HasValue)
+                        .GroupBy(r => new
+                        {
+                            Anio = r.FechaDesde!.Value.Year,
+                            Mes = r.FechaDesde!.Value.Month
+                        })
+                        .ToDictionary(
+                            g => (g.Key.Anio, g.Key.Mes),
+                            g => g.Count());
+                                Console.WriteLine(
+                                    $"Reposos: {sw.ElapsedMilliseconds} ms");
+
+
+            if (aniosDisponibles.Any())
+            {
+                var anioActual = DateTime.Now.Year;
+
+                var anioInicial =
+                    aniosDisponibles.Contains(anioActual)
+                        ? anioActual
+                        : aniosDisponibles.First();
+
+                anioIndicadores = anioInicial;
+
+                anioComparativa1 = anioInicial;
+
+                anioComparativa2 =
+                    mesComparativa1 == 1
+                        ? anioInicial - 1
+                        : anioInicial;
+
+                anioResumen = anioInicial;
+
+                anioDetalle = anioInicial;
+            }
+
+            CalcularKPIs();
+            await GenerarResumen();
+            GenerarComparativa();
+            GenerarDetalle();
+            GenerarTendencia();
+            ConstruirResumen();
+            cargando = false;
+        }
+
+            void ToggleMes(int mes)
+        {
+            Console.WriteLine($"Click mes: {mes}");
+
+            if (mesesSeleccionados.Contains(mes))
+            {
+                if (mesesSeleccionados.Count > 1)
+                    mesesSeleccionados.Remove(mes);
+            }
+            else
+            {
+                mesesSeleccionados.Add(mes);
+            }
+
+            Console.WriteLine($"SELECCIONADOS = {string.Join(",", mesesSeleccionados)}");
+            GenerarDetalle();
+
+            StateHasChanged();
+        }
+
+        async Task CambioAnioIndicadores(ChangeEventArgs e)
+{
+    anioIndicadores =
+        Convert.ToInt32(e.Value);
+
+    Console.WriteLine(
+        $"AÑO SELECCIONADO={anioIndicadores}");
+
+    resumenDiario =
+        await DashboardData
+            .GetResumenDiario(anioIndicadores);
+
+    resumenMensual =
+        await DashboardData
+            .GetResumenMensual(anioIndicadores);
+
+    Console.WriteLine(
+        $"DIARIA={resumenDiario.Permisos}");
+
+    Console.WriteLine(
+        $"MENSUAL={resumenMensual.Permisos}");
+
+    await AplicarFiltros();
 }
 
-</div>
 
-@code {
-
-    List<PermisosNomDiariaVDTO> nomina = new();
-    List<RepososVDTO> reposos = new();
-    List<AusenciaVDTO> ausencias = new();
-    List<int> aniosDisponibles = new();
-    List<ResumenMensual> resumenMeses = new();
-    List<TendenciaDia> tendenciaDias = new();
-
-    int totalPermisos;
-    int totalFaltas;
-    int totalReposos;
-
-    int horasAusentismo;
-    int horasProgramadas;
-
-    double indiceAusentismo;
-    string tipoGrafica = "Todos";
-    string tipoTendencia = "Todos";
-    string tipoComparativa = "Todos";
-
-    int mesSeleccionado = DateTime.Now.Month;
-    int anioSeleccionado = DateTime.Now.Year;
-
-    ComparativaMes comparativa = new();
-
-    string tipoNomina = "Diaria";
-
-        protected override async Task OnInitializedAsync()
-    {
-        nomina = await DashboardData.GetPermisos();
-
-        reposos = await DashboardData.GetReposos();
-
-        aniosDisponibles =
-            nomina
-            .Select(x => (int)x.Añohnh)
-            .Union(
-                reposos
-                .Where(r => r.FechaDesde.HasValue)
-                .Select(r => r.FechaDesde!.Value.Year)
-            )
-            .Distinct()
-            .OrderByDescending(x => x)
-            .ToList();
-        
-        Console.WriteLine(
-            string.Join(", ",
-            aniosDisponibles));
-
-        if (aniosDisponibles.Any())
+        string ObtenerPuntosLinea()
         {
-            anioSeleccionado =
-                aniosDisponibles.First();
-        }
+            if (!tendenciaDias.Any())
+                return "";
 
-        CalcularKPIs();
-        GenerarComparativa();
-        GenerarTendencia();
-    }
+            int maximo =
+                tendenciaDias.Max(x => x.Total);
 
-    void AplicarFiltros()
-    {
-        CalcularKPIs();
-        GenerarComparativa();
-        GenerarTendencia();
+            if (maximo <= 0)
+                return "";
 
-        StateHasChanged();
-    }
+            double alturaGrafico = 180;
+            double anchoBarra = 60;
 
-    int ContarCodigo(
-        IEnumerable<PermisosNomDiariaVDTO> data,
-        string codigo)
-    {
-        int total = 0;
+            var puntos = new List<string>();
 
-        foreach (var item in data)
-        {
-            if (item.Dg01hh == codigo) total++;
-            if (item.Dg02hh == codigo) total++;
-            if (item.Dg03hh == codigo) total++;
-            if (item.Dg04hh == codigo) total++;
-            if (item.Dg05hh == codigo) total++;
-            if (item.Dg06hh == codigo) total++;
-            if (item.Dg07hh == codigo) total++;
-        }
-
-        return total;
-    }
-
-        (int Desde, int Hasta) ObtenerPeriodosMes(int mes)
-        {
-            return mes switch
+            for (int indice = 0;
+                indice < tendenciaDias.Count;
+                indice++)
             {
-                1 => (1, 2),
-                2 => (3, 4),
-                3 => (5, 6),
-                4 => (7, 8),
-                5 => (9, 10),
-                6 => (11, 12),
-                7 => (13, 14),
-                8 => (15, 16),
-                9 => (17, 18),
-                10 => (19, 20),
-                11 => (21, 22),
-                12 => (23, 24),
-                _ => (1, 24)
-            };
+                var valor =
+                    tendenciaDias[indice].Total;
+
+                double x =
+                    (indice * anchoBarra) +
+                    (anchoBarra / 2);
+
+                double y =
+                    alturaGrafico -
+                    ((double)valor / maximo
+                    * alturaGrafico);
+
+                puntos.Add($"{x},{y}");
+            }
+
+            return string.Join(" ", puntos);
         }
 
-        (string Desde, string Hasta) ObtenerRangoPeriodo(int periodo)
+
+        string ObtenerAlturaBarra(int valor)
         {
-            return periodo switch
+            if (!tendenciaDias.Any())
+                return "8px";
+
+            int maximo = tendenciaDias.Max(x => x.Total);
+
+            if (maximo <= 0)
+                return "8px";
+
+            const int alturaMaxima = 140;
+            const int alturaMinima = 8;
+
+            double altura =
+                alturaMinima +
+                ((valor * (alturaMaxima - alturaMinima))
+                / (double)maximo);
+
+            return $"{Math.Round(altura)}px";
+        }
+
+        async Task AplicarFiltros()
+        {
+            nominaFiltradaCache =
+                ObtenerNominaFiltrada()
+                .ToList();
+
+            CalcularKPIs();
+
+            await GenerarResumen();
+
+            GenerarComparativa();
+
+            GenerarDetalle();
+
+            GenerarTendencia();
+
+            ConstruirResumen();
+
+            StateHasChanged();
+        }
+
+        int ContarCodigo(
+            IEnumerable<PermisosNomDiariaHistVDTO> data,
+            string codigo)
+        {
+            int total = 0;
+
+            foreach (var item in data)
             {
-                1 => ("01/01", "15/01"),
-                2 => ("16/01", "31/01"),
+                if ((item.Dg01hh?.Trim().ToUpper()) == codigo) total++;
+                if ((item.Dg02hh?.Trim().ToUpper()) == codigo) total++;
+                if ((item.Dg03hh?.Trim().ToUpper()) == codigo) total++;
+                if ((item.Dg04hh?.Trim().ToUpper()) == codigo) total++;
+                if ((item.Dg05hh?.Trim().ToUpper()) == codigo) total++;
+                if ((item.Dg06hh?.Trim().ToUpper()) == codigo) total++;
+                if ((item.Dg07hh?.Trim().ToUpper()) == codigo) total++;
+            }
 
-                3 => ("01/02", "15/02"),
-                4 => ("16/02", "28/02"),
-
-                5 => ("01/03", "15/03"),
-                6 => ("16/03", "31/03"),
-
-                7 => ("01/04", "15/04"),
-                8 => ("16/04", "30/04"),
-
-                9 => ("01/05", "15/05"),
-                10 => ("16/05", "31/05"),
-
-                11 => ("01/06", "15/06"),
-                12 => ("16/06", "30/06"),
-
-                13 => ("01/07", "15/07"),
-                14 => ("16/07", "31/07"),
-
-                15 => ("01/08", "15/08"),
-                16 => ("16/08", "31/08"),
-
-                17 => ("01/09", "15/09"),
-                18 => ("16/09", "30/09"),
-
-                19 => ("01/10", "15/10"),
-                20 => ("16/10", "31/10"),
-
-                21 => ("01/11", "15/11"),
-                22 => ("16/11", "30/11"),
-
-                23 => ("01/12", "15/12"),
-                24 => ("16/12", "31/12"),
-
-                _ => ("", "")
-            };
+            return total;
         }
 
-        public class ComparativaMes
-    {
-
-        public string MesActualTexto { get; set; } = "";
-
-        public string MesAnteriorTexto { get; set; } = "";
-
-        public int ValorActual { get; set; }
-
-        public int ValorAnterior { get; set; }
-    }
-
-        int ObtenerMesDesdePeriodo(int periodo)
-    {
-        return ((periodo - 1) / 2) + 1;
-    }
-
-    string ObtenerNombreMesDesdePeriodo(int periodo)
+            int ContarCodigoMensual(
+            IEnumerable<VRotacionDTO> data,
+            string codigo)
         {
-            return periodo switch
+
+            int total = 0;
+
+            foreach(var item in data)
             {
-                1 or 2 => "Enero",
-                3 or 4 => "Febrero",
-                5 or 6 => "Marzo",
-                7 or 8 => "Abril",
-                9 or 10 => "Mayo",
-                11 or 12 => "Junio",
-                13 or 14 => "Julio",
-                15 or 16 => "Agosto",
-                17 or 18 => "Septiembre",
-                19 or 20 => "Octubre",
-                21 or 22 => "Noviembre",
-                23 or 24 => "Diciembre",
-                _ => "Sin Mes"
-            };
+                if(item.Dg01hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg02hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg03hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg04hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg05hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg06hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg07hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg08hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg09hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg10hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg11hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg12hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg13hh?.Trim().ToUpper() == codigo)total++;
+                if(item.Dg14hh?.Trim().ToUpper() == codigo) total++;
+                if(item.Dg15hh?.Trim().ToUpper() == codigo) total++;
+            }
+
+            return total;
         }
 
-        void GenerarComparativa()
-    {
-        if (mesSeleccionado == 0)
+            (int Desde, int Hasta) ObtenerPeriodosMes(int mes)
+            {
+                return mes switch
+                {
+                    1 => (1, 2),
+                    2 => (3, 4),
+                    3 => (5, 6),
+                    4 => (7, 8),
+                    5 => (9, 10),
+                    6 => (11, 12),
+                    7 => (13, 14),
+                    8 => (15, 16),
+                    9 => (17, 18),
+                    10 => (19, 20),
+                    11 => (21, 22),
+                    12 => (23, 24),
+                    _ => (1, 24)
+                };
+            }
+
+            (string Desde, string Hasta) ObtenerRangoPeriodo(int periodo)
+            {
+                return periodo switch
+                {
+                    1 => ("01/01", "15/01"),
+                    2 => ("16/01", "31/01"),
+
+                    3 => ("01/02", "15/02"),
+                    4 => ("16/02", "28/02"),
+
+                    5 => ("01/03", "15/03"),
+                    6 => ("16/03", "31/03"),
+
+                    7 => ("01/04", "15/04"),
+                    8 => ("16/04", "30/04"),
+
+                    9 => ("01/05", "15/05"),
+                    10 => ("16/05", "31/05"),
+
+                    11 => ("01/06", "15/06"),
+                    12 => ("16/06", "30/06"),
+
+                    13 => ("01/07", "15/07"),
+                    14 => ("16/07", "31/07"),
+
+                    15 => ("01/08", "15/08"),
+                    16 => ("16/08", "31/08"),
+
+                    17 => ("01/09", "15/09"),
+                    18 => ("16/09", "30/09"),
+
+                    19 => ("01/10", "15/10"),
+                    20 => ("16/10", "31/10"),
+
+                    21 => ("01/11", "15/11"),
+                    22 => ("16/11", "30/11"),
+
+                    23 => ("01/12", "15/12"),
+                    24 => ("16/12", "31/12"),
+
+                    _ => ("", "")
+                };
+            }
+
+            public class ResumenDetalle
         {
-            comparativa = new ComparativaMes();
-            return;
+            public string TipoNomina { get; set; } = "";
+
+            public int Mes { get; set; }
+
+            public int Anio { get; set; }
+
+            public int Permisos { get; set; }
+
+            public int Faltas { get; set; }
+
+            public int Reposos { get; set; }
+
+            public int eventosAusentismo { get; set; }
+
+            public int HorasProgramadas { get; set; }
+
+            public double Indice { get; set; }
         }
 
-        int mesActual = mesSeleccionado;
-        int anioActual = anioSeleccionado;
-
-        int mesAnterior = mesActual - 1;
-        int anioAnterior = anioActual;
-
-        if (mesAnterior == 0)
+            public class ComparativaMes
         {
-            mesAnterior = 12;
-            anioAnterior--;
+
+            public string MesActualTexto { get; set; } = "";
+
+            public string MesAnteriorTexto { get; set; } = "";
+
+            public int ValorActual { get; set; }
+
+            public int ValorAnterior { get; set; }
         }
 
-        int actual = 0;
-        int anterior = 0;
-
-        if (tipoComparativa == "Reposos")
+            void ConstruirResumen()
         {
-            actual =
-                reposos.Count(r =>
-                    r.FechaDesde.HasValue &&
-                    r.FechaDesde.Value.Year == anioActual &&
-                    r.FechaDesde.Value.Month == mesActual);
+            if (tipoNominaIndicadores == "Diaria")
+            {
+                resumenActual =
+                    new IndicadoresResumenDTO
+                    {
+                        Permisos = resumenDiario.Permisos,
+                        Faltas = resumenDiario.Faltas,
+                        Reposos = resumenDiario.Reposos,
+                        Ausencias = resumenDiario.Ausencias
+                    };
+            }
+            else if (tipoNominaIndicadores == "Mensual")
+            {
+                resumenActual =
+                    new IndicadoresResumenDTO
+                    {
+                        Permisos = resumenMensual.Permisos,
+                        Faltas = resumenMensual.Faltas,
+                        Reposos = resumenMensual.Reposos,
+                        Ausencias = resumenMensual.Ausencias
+                    };
+            }
+            else
+            {
+                resumenActual =
+                    new IndicadoresResumenDTO
+                    {
+                        Permisos =
+                            resumenDiario.Permisos +
+                            resumenMensual.Permisos,
 
-            anterior =
-                reposos.Count(r =>
-                    r.FechaDesde.HasValue &&
-                    r.FechaDesde.Value.Year == anioAnterior &&
-                    r.FechaDesde.Value.Month == mesAnterior);
-        }
-        else if (tipoComparativa == "Permisos")
-        {
-            var periodoActual =
-                ObtenerPeriodosMes(mesActual);
+                        Faltas =
+                            resumenDiario.Faltas +
+                            resumenMensual.Faltas,
 
-            var periodoAnterior =
-                ObtenerPeriodosMes(mesAnterior);
+                        Reposos =
+                            resumenDiario.Reposos,
 
-            actual =
-                ContarCodigo(
-                    nomina.Where(x =>
-                        (int)x.Añohnh == anioActual &&
-                        (int)x.Prdhnh >= periodoActual.Desde &&
-                        (int)x.Prdhnh <= periodoActual.Hasta),
-                    "P");
+                        Ausencias =
+                            resumenDiario.Ausencias +
+                            resumenMensual.Ausencias -
+                            resumenDiario.Reposos
+                    };
+            }
+            Console.WriteLine(
+                $"RESUMEN DIARIO = {resumenDiario.Permisos}");
 
-            anterior =
-                ContarCodigo(
-                    nomina.Where(x =>
-                        (int)x.Añohnh == anioAnterior &&
-                        (int)x.Prdhnh >= periodoAnterior.Desde &&
-                        (int)x.Prdhnh <= periodoAnterior.Hasta),
-                    "P");
-        }
-        else
-        {
-            var periodoActual =
-                ObtenerPeriodosMes(mesActual);
+            Console.WriteLine(
+                $"RESUMEN MENSUAL = {resumenMensual.Permisos}");
 
-            var periodoAnterior =
-                ObtenerPeriodosMes(mesAnterior);
-
-            int permisosActual =
-                ContarCodigo(
-                    nomina.Where(x =>
-                        (int)x.Añohnh == anioActual &&
-                        (int)x.Prdhnh >= periodoActual.Desde &&
-                        (int)x.Prdhnh <= periodoActual.Hasta),
-                    "P");
-
-            int permisosAnterior =
-                ContarCodigo(
-                    nomina.Where(x =>
-                        (int)x.Añohnh == anioAnterior &&
-                        (int)x.Prdhnh >= periodoAnterior.Desde &&
-                        (int)x.Prdhnh <= periodoAnterior.Hasta),
-                    "P");
-
-            int repososActual =
-                reposos.Count(r =>
-                    r.FechaDesde.HasValue &&
-                    r.FechaDesde.Value.Year == anioActual &&
-                    r.FechaDesde.Value.Month == mesActual);
-
-            int repososAnterior =
-                reposos.Count(r =>
-                    r.FechaDesde.HasValue &&
-                    r.FechaDesde.Value.Year == anioAnterior &&
-                    r.FechaDesde.Value.Month == mesAnterior);
-
-            actual =
-                permisosActual +
-                repososActual;
-
-            anterior =
-                permisosAnterior +
-                repososAnterior;
+            Console.WriteLine(
+                $"RESUMEN ACTUAL = {resumenActual.Permisos}");
         }
 
-        comparativa = new ComparativaMes
+        int ObtenerRepososIndicadores()
         {
-            MesActualTexto =
-                new DateTime(anioActual, mesActual, 1)
-                .ToString("MMMM yyyy"),
-
-            MesAnteriorTexto =
-                new DateTime(anioAnterior, mesAnterior, 1)
-                .ToString("MMMM yyyy"),
-
-            ValorActual = actual,
-            ValorAnterior = anterior
-        };
-    }
-
-        void CalcularKPIs()
-    {
-        var data = nomina.AsEnumerable();
-
-        Console.WriteLine(
-        string.Join(",",
-        nomina
-        .Select(x => (int)x.Añohnh)
-        .Distinct()
-        .OrderBy(x => x)));
-
-        data = data.Where(x =>
-            (int)x.Añohnh == anioSeleccionado);
-
-        if (mesSeleccionado > 0)
-        {
-            var periodo =
-                ObtenerPeriodosMes(mesSeleccionado);
-
-            data = data.Where(x =>
-                (int)x.Prdhnh >= periodo.Desde &&
-                (int)x.Prdhnh <= periodo.Hasta);
-        }
-
-        var trabajadores = data
-            .Select(x => x.Fichnh)
-            .Distinct()
-            .Count();
-
-        totalPermisos = ContarCodigo(data, "P");
-
-        totalFaltas = ContarCodigo(data, "F");
-
-        totalReposos =
-            reposos.Count(r =>
+            return reposos.Count(r =>
                 r.FechaDesde.HasValue &&
-                r.FechaDesde.Value.Year == anioSeleccionado &&
-                (
-                    mesSeleccionado == 0 ||
-                    r.FechaDesde.Value.Month == mesSeleccionado
-                ));
-
-        horasAusentismo =
-            totalPermisos +
-            totalFaltas +
-            totalReposos;
-
-        horasProgramadas =
-            trabajadores * 20 * 8;
-
-        indiceAusentismo =
-            horasProgramadas > 0
-            ? Math.Round(
-                ((double)horasAusentismo /
-                horasProgramadas) * 100,
-                2)
-            : 0;
-
-        GenerarResumen();
-        GenerarTendencia();
-    }
-
-        async Task ExportarExcel()
-    {
-        var sb = new StringBuilder();
-
-        sb.AppendLine("Mes,Año,Permisos,Faltas,Reposos,HorasAusentismo,HorasProgramadas,Indice");
-
-        foreach (var r in resumenMeses)
-        {
-            sb.AppendLine(
-                $"{r.NombreMes}," +
-                $"{r.Anio}," +
-                $"{r.Permisos}," +
-                $"{r.Faltas}," +
-                $"{r.Reposos}," +
-                $"{r.HorasAusentismo}," +
-                $"{r.HorasProgramadas}," +
-                $"{r.Indice}");
+                r.FechaDesde.Value.Year == anioIndicadores);
         }
 
-        var archivo =
-            Convert.ToBase64String(
-                Encoding.UTF8.GetBytes(sb.ToString()));
+            int ObtenerMesDesdePeriodo(int periodo)
+            {
+                if (periodo < 1 || periodo > 24)
+                    return 0;
 
-        await JS.InvokeVoidAsync(
-            "downloadFile",
-            "ResumenAusentismo.csv",
-            archivo);
-    }
+                return ((periodo - 1) / 2) + 1;
+            }
 
-    void GenerarResumen()
-    {
-        var data = nomina.AsEnumerable();
+            int ObtenerQuincenaDesdeSemana(int semana)
+            {
+                return semana switch
+                {
+                    1 or 2 => 1,
+                    3 or 4 => 2,
 
-        data = data.Where(x =>
-            (int)x.Añohnh == anioSeleccionado);
+                    5 or 6 => 3,
+                    7 or 8 => 4,
 
-        if (mesSeleccionado > 0)
+                    9 or 10 => 5,
+                    11 or 12 => 6,
+
+                    13 or 14 => 7,
+                    15 or 16 => 8,
+
+                    17 or 18 => 9,
+                    19 or 20 => 10,
+
+                    21 or 22 => 11,
+                    23 or 24 => 12,
+
+                    25 or 26 => 13,
+                    27 or 28 => 14,
+
+                    29 or 30 => 15,
+                    31 or 32 => 16,
+
+                    33 or 34 => 17,
+                    35 or 36 => 18,
+
+                    37 or 38 => 19,
+                    39 or 40 => 20,
+
+                    41 or 42 => 21,
+                    43 or 44 => 22,
+
+                    45 or 46 => 23,
+                    47 or 48 => 24,
+
+                    49 or 50 => 23,
+                    51 or 52 or 53 => 24,
+
+                    _ => 0
+                };
+            }
+
+            int ObtenerPermisos(
+                int anio,
+                int? periodoDesde = null,
+                int? periodoHasta = null)
+            {
+                var diaria =
+                    nomina.Where(x =>
+                        (int)x.Añohnh == anio);
+
+                var mensual =
+                    nominaMensual.Where(x =>
+                        (int)x.Añohnh == anio);
+
+                if (
+                    periodoDesde.HasValue &&
+                    periodoHasta.HasValue)
+                {
+                    diaria = diaria.Where(x =>
+                        ObtenerQuincenaDesdeSemana(
+                            (int)x.Prdhnh) >= periodoDesde &&
+                        ObtenerQuincenaDesdeSemana(
+                            (int)x.Prdhnh) <= periodoHasta);
+
+                    mensual = mensual.Where(x =>
+                        (int)x.Prdhnh >= periodoDesde &&
+                        (int)x.Prdhnh <= periodoHasta);
+                }
+
+                int permisosDiaria =
+                    ContarCodigo(diaria, "P");
+
+                int permisosMensual =
+                    ContarCodigoMensual(
+                        mensual,
+                        "P");
+
+                return tipoNominaIndicadores switch
+                {
+                    "Diaria" => permisosDiaria,
+                    "Mensual" => permisosMensual,
+                    _ => permisosDiaria + permisosMensual
+                };
+            }
+
+            int ObtenerFaltas(
+                int anio,
+                int? periodoDesde = null,
+                int? periodoHasta = null)
+            {
+                var diaria =
+                    nomina.Where(x =>
+                        (int)x.Añohnh == anio);
+
+                var mensual =
+                    nominaMensual.Where(x =>
+                        (int)x.Añohnh == anio);
+
+                if (
+                periodoDesde.HasValue &&
+                periodoHasta.HasValue)
+                {
+                    diaria = diaria.Where(x =>
+                        ObtenerQuincenaDesdeSemana(
+                            (int)x.Prdhnh) >= periodoDesde &&
+                        ObtenerQuincenaDesdeSemana(
+                            (int)x.Prdhnh) <= periodoHasta);
+
+                    mensual = mensual.Where(x =>
+                        (int)x.Prdhnh >= periodoDesde &&
+                        (int)x.Prdhnh <= periodoHasta);
+                }
+
+                int faltasDiaria =
+                    ContarCodigo(diaria, "F");
+
+                int faltasMensual =
+                    ContarCodigoMensual(
+                        mensual,
+                        "F");
+
+                return tipoNominaIndicadores switch
+                {
+                    "Diaria" => faltasDiaria,
+                    "Mensual" => faltasMensual,
+                    _ => faltasDiaria + faltasMensual
+                };
+            }
+
+        string ObtenerNombreMesDesdePeriodo(int periodo)
+            {
+                return periodo switch
+                {
+                    1 or 2 => "Enero",
+                    3 or 4 => "Febrero",
+                    5 or 6 => "Marzo",
+                    7 or 8 => "Abril",
+                    9 or 10 => "Mayo",
+                    11 or 12 => "Junio",
+                    13 or 14 => "Julio",
+                    15 or 16 => "Agosto",
+                    17 or 18 => "Septiembre",
+                    19 or 20 => "Octubre",
+                    21 or 22 => "Noviembre",
+                    23 or 24 => "Diciembre",
+                    _ => "Sin Mes"
+                };
+            }
+
+            void GenerarComparativa()
         {
-            var periodo =
-                ObtenerPeriodosMes(mesSeleccionado);
+                // Si uno está en mes y el otro quedó en año,
+                // obligar a ambos a trabajar por mes.
+                if (mesComparativa1 > 0 &&
+                    mesComparativa2 == 0)
+                {
+                    mesComparativa2 = mesComparativa1;
+                }
 
-            data = data.Where(x =>
-                (int)x.Prdhnh >= periodo.Desde &&
-                (int)x.Prdhnh <= periodo.Hasta);
+                if (mesComparativa2 > 0 &&
+                    mesComparativa1 == 0)
+                {
+                    mesComparativa1 = mesComparativa2;
+                }
+
+                int mesActual =
+                    mesComparativa1;
+
+                int anioActual =
+                    anioComparativa1;
+
+                int mesAnterior =
+                    mesComparativa2;
+
+                int anioAnterior =
+                    anioComparativa2;
+
+                int actual = 0;
+                int anterior = 0;
+                
+            if (
+                (mesComparativa1 == 0 && mesComparativa2 > 0)
+                ||
+                (mesComparativa2 == 0 && mesComparativa1 > 0)
+            )
+            {
+                mesComparativa1 = 0;
+                mesComparativa2 = 0;
+            }
+            
+                    if (mesComparativa1 == 0 &&
+                mesComparativa2 == 0)
+            {
+                if (tipoComparativa == "Reposos")
+                {
+                    actual =
+                        repososPorAnio.GetValueOrDefault(
+                            anioActual,
+                            0);
+
+                    anterior =
+                        repososPorAnio.GetValueOrDefault(
+                            anioAnterior,
+                            0);
+                }
+                else if (tipoComparativa == "Permisos")
+                {
+                    
+                    actual =
+                        ObtenerPermisos(
+                            anioActual);
+
+                    anterior =
+                        ObtenerPermisos(
+                            anioAnterior);
+                }
+                else if (tipoComparativa == "Faltas")
+                {
+                    actual =
+                        ObtenerFaltas(
+                            anioActual);
+
+                    anterior =
+                        ObtenerFaltas(
+                            anioAnterior);
+                }
+                else
+                {
+                    actual =
+                        ObtenerPermisos(anioActual)
+                        +
+                        ObtenerFaltas(anioActual)
+                        +
+                        repososPorAnio.GetValueOrDefault(
+                            anioActual,
+                            0);
+
+                    anterior =
+                        ObtenerPermisos(anioAnterior)
+                        +
+                        ObtenerFaltas(anioAnterior)
+                        +
+                        repososPorAnio.GetValueOrDefault(
+                            anioAnterior,
+                            0);
+                }
+
+                comparativa = new ComparativaMes
+                {
+                    MesActualTexto = $"Año {anioActual}",
+                    MesAnteriorTexto = $"Año {anioAnterior}",
+                    ValorActual = actual,
+                    ValorAnterior = anterior
+                };
+
+                Console.WriteLine("==== COMPARATIVA ====");
+                Console.WriteLine($"Tipo: {tipoComparativa}");
+                Console.WriteLine($"Actual: {mesActual}/{anioActual}");
+                Console.WriteLine($"Anterior: {mesAnterior}/{anioAnterior}");
+                Console.WriteLine($"ValorActual = {actual}");
+                Console.WriteLine($"ValorAnterior = {anterior}");
+
+                return;
+            }
+
+            if (tipoComparativa == "Reposos")
+            {
+                actual =
+                repososPorMes.GetValueOrDefault(
+                    (anioActual, mesActual),
+                    0);
+
+                anterior =
+                    repososPorMes.GetValueOrDefault(
+                        (anioAnterior, mesAnterior),
+                        0);
+            }
+            else if (tipoComparativa == "Permisos")
+            {
+                var periodoActual =
+                    ObtenerPeriodosMes(
+                        mesActual);
+
+                var periodoAnterior =
+                    ObtenerPeriodosMes(
+                        mesAnterior);
+
+                actual =
+                    ObtenerPermisos(
+                        anioActual,
+                        periodoActual.Desde,
+                        periodoActual.Hasta);
+
+                anterior =
+                    ObtenerPermisos(
+                        anioAnterior,
+                        periodoAnterior.Desde,
+                        periodoAnterior.Hasta);
+            }
+            else if (tipoComparativa == "Faltas")
+            {
+                var periodoActual =
+                    ObtenerPeriodosMes(
+                        mesActual);
+
+                var periodoAnterior =
+                    ObtenerPeriodosMes(
+                        mesAnterior);
+
+                actual =
+                    ObtenerFaltas(
+                        anioActual,
+                        periodoActual.Desde,
+                        periodoActual.Hasta);
+
+                anterior =
+                    ObtenerFaltas(
+                        anioAnterior,
+                        periodoAnterior.Desde,
+                        periodoAnterior.Hasta);
+            }
+            else
+            {
+                var periodoActual =
+                    ObtenerPeriodosMes(mesActual);
+
+                var periodoAnterior =
+                    ObtenerPeriodosMes(mesAnterior);                
+
+                int repososActual =
+                    repososPorMes.GetValueOrDefault(
+                        (anioActual, mesActual),
+                        0);
+
+                int repososAnterior =
+                    repososPorMes.GetValueOrDefault(
+                        (anioAnterior, mesAnterior),
+                        0);
+
+                int permisosActual =
+                    ObtenerPermisos(
+                        anioActual,
+                        periodoActual.Desde,
+                        periodoActual.Hasta);
+
+                int permisosAnterior =
+                    ObtenerPermisos(
+                        anioAnterior,
+                        periodoAnterior.Desde,
+                        periodoAnterior.Hasta);
+
+                int faltasActual =
+                    ObtenerFaltas(
+                        anioActual,
+                        periodoActual.Desde,
+                        periodoActual.Hasta);
+
+                int faltasAnterior =
+                    ObtenerFaltas(
+                        anioAnterior,
+                        periodoAnterior.Desde,
+                        periodoAnterior.Hasta);
+
+                actual =
+                    permisosActual +
+                    faltasActual +
+                    repososActual;
+
+                anterior =
+                    permisosAnterior +
+                    faltasAnterior +
+                    repososAnterior;                       
+                }
+
+            if (mesActual <= 0 || mesAnterior <= 0)
+            {
+                comparativa = new ComparativaMes
+                {
+                    MesActualTexto = $"Año {anioActual}",
+                    MesAnteriorTexto = $"Año {anioAnterior}",
+                    ValorActual = actual,
+                    ValorAnterior = anterior
+                };
+
+                return;
+            }
+
+            comparativa = new ComparativaMes
+            {
+                MesActualTexto =
+                    new DateTime(anioActual, mesActual, 1)
+                    .ToString("MMMM yyyy"),
+
+                MesAnteriorTexto =
+                    new DateTime(anioAnterior, mesAnterior, 1)
+                    .ToString("MMMM yyyy"),
+
+                ValorActual = actual,
+                ValorAnterior = anterior
+            };
         }
 
-        resumenMeses = data
-            .GroupBy(x => new
+            void CalcularKPIs()
+        {     
+            var diaria =
+            nomina.Where(x =>
+                (int)x.Añohnh == anioIndicadores);
+
+            var mensual =
+                nominaMensual.Where(x =>
+                    (int)x.Añohnh == anioIndicadores);
+
+                    Console.WriteLine(
+                        $"REGISTROS DIARIA = {diaria.Count()}");
+
+                    Console.WriteLine(
+                        $"REGISTROS MENSUAL = {mensual.Count()}");
+
+                    
+            
+            if (tipoNominaIndicadores == "Diaria")
             {
-                Anio = (int)x.Añohnh,
-                Mes = ObtenerMesDesdePeriodo((int)x.Prdhnh)
-            })
-            .Select(g =>
+                mensual = Enumerable.Empty<VRotacionDTO>();
+            }
+            else if (tipoNominaIndicadores == "Mensual")
             {
-                var trabajadores = g
+                diaria = Enumerable.Empty<PermisosNomDiariaHistVDTO>();
+            }
+
+            var trabajadores =
+                diaria
                     .Select(x => x.Fichnh)
+                    .Union(
+                        mensual.Select(x => x.Fichnh))
                     .Distinct()
                     .Count();
 
-                var permisos = ContarCodigo(g, "P");
+            if(tipoNominaIndicadores == "Diaria")
+            {
+                totalPermisos =
+                    ContarCodigo(diaria, "P");
 
-                var faltas = ContarCodigo(g, "F");
+                totalFaltas =
+                    ContarCodigo(diaria, "F");
+            }
+            else if(tipoNominaIndicadores == "Mensual")
+            {
+                totalPermisos =
+                    ContarCodigoMensual(
+                        mensual,
+                        "P");
 
-                var totalRepososMes =
-                    reposos.Count(r =>
-                        r.FechaDesde.HasValue &&
-                        r.FechaDesde.Value.Year == g.Key.Anio &&
-                        r.FechaDesde.Value.Month == g.Key.Mes);
+                totalFaltas =
+                    ContarCodigoMensual(
+                        mensual,
+                        "F");
+            }
+            else
+            {
+                totalPermisos =
+                    ContarCodigo(diaria, "P")
+                    +
+                    ContarCodigoMensual(
+                        mensual,
+                        "P");
 
-                var horasAus =
-                    permisos +
-                    faltas +
-                    totalRepososMes;
+                totalFaltas =
+                    ContarCodigo(diaria, "F")
+                    +
+                    ContarCodigoMensual(
+                        mensual,
+                        "F");
+            }
 
-                var horasProg =
-                    trabajadores * 20 * 8;
+            totalReposos =
+                repososPorAnio.GetValueOrDefault(
+                    anioIndicadores,
+                    0);
 
-                return new ResumenMensual
-                {
-                    Anio = g.Key.Anio,
-                    Mes = g.Key.Mes,
-                    Permisos = permisos,
-                    Faltas = faltas,
-                    Reposos = totalRepososMes,
-                    HorasAusentismo = horasAus,
-                    HorasProgramadas = horasProg,
-                    Indice =
-                        horasProg > 0
-                        ? Math.Round(
-                            ((double)horasAus /
-                            horasProg) * 100,
-                            2)
-                        : 0
-                };
-            })
-            .OrderByDescending(x => x.Anio)
-            .ThenByDescending(x => x.Mes)
-            .ToList();
-    }
+            eventosAusentismo =
+                totalPermisos +
+                totalFaltas +
+                totalReposos;
 
-    void CambioComparativa(ChangeEventArgs e)
-    {
-        tipoComparativa =
-            e.Value?.ToString() ?? "Reposos";
+            horasProgramadas =
+                trabajadores * 20 * 8;
 
-        GenerarComparativa();
+            indiceAusentismo =
+                horasProgramadas > 0
+                    ? ((double)resumenActual.Ausencias /
+                        horasProgramadas) * 100
+                    : 0;
 
-        StateHasChanged();
-    }
+                    Console.WriteLine(
+                        $"AÑO={anioIndicadores}");
 
-    void CambioTipoGrafica(ChangeEventArgs e)
-    {
-        tipoGrafica =
-            e.Value?.ToString() ?? "Todos";
+                    Console.WriteLine(
+                        $"Permisos={totalPermisos}");
 
-        tipoTendencia = tipoGrafica;
-        tipoComparativa = tipoGrafica;
+                    Console.WriteLine(
+                        $"Faltas={totalFaltas}");
 
-        GenerarTendencia();
-        GenerarComparativa();
+                    Console.WriteLine(
+                        $"Reposos={totalReposos}");
 
-        StateHasChanged();
-    }
+            GenerarTendencia();
+        }
 
-    void CambioTipoTendencia(ChangeEventArgs e)
-    {
-        tipoTendencia = e.Value?.ToString() ?? "Reposos";
-
-        GenerarTendencia();
-
-        StateHasChanged();
-    }
-
-    void CambioMes(ChangeEventArgs e)
-    {
-        mesSeleccionado =
-            Convert.ToInt32(e.Value);
-
-        AplicarFiltros();
-
-        StateHasChanged();
-    }
-
-        void GenerarTendencia()
+            IEnumerable<PermisosNomDiariaHistVDTO> ObtenerNominaFiltrada()
         {
-            var mesesNomina =
+            var data = nomina.AsEnumerable();
+
+            if (tipoNominaIndicadores == "Diaria")
+            {
+                data = data.Where(x => x.Tpnhnh == "1101");
+            }
+            else if (tipoNominaIndicadores == "Mensual")
+            {
+                data = data.Where(x => x.Tpnhnh != "1101");
+            }
+
+            return data;
+        }
+
+
+            async Task ExportarExcel()
+        {
+            using var workbook =
+                new XLWorkbook();
+
+            var ws =
+                workbook.Worksheets.Add(
+                    "Resumen");
+
+            ws.Cell(1, 1).Value = "Mes";
+            ws.Cell(1, 2).Value = "Año";
+            ws.Cell(1, 3).Value = "Permisos";
+            ws.Cell(1, 4).Value = "Faltas";
+            ws.Cell(1, 5).Value = "Reposos";
+            ws.Cell(1, 6).Value = "Horas Aus.";
+            ws.Cell(1, 7).Value = "Horas Prog.";
+            ws.Cell(1, 8).Value = "Índice";
+
+            int fila = 2;
+
+            foreach (var r in detalleMeses)
+            {
+                ws.Cell(fila, 1).Value = r.NombreMes;
+                ws.Cell(fila, 2).Value = r.Anio;
+                ws.Cell(fila, 3).Value = r.Permisos;
+                ws.Cell(fila, 4).Value = r.Faltas;
+                ws.Cell(fila, 5).Value = r.Reposos;
+                ws.Cell(fila, 6).Value = r.eventosAusentismo;
+                ws.Cell(fila, 7).Value = r.HorasProgramadas;
+                ws.Cell(fila, 8).Value = r.Indice;
+
+                fila++;
+            }
+
+            ws.Columns().AdjustToContents();
+
+            using var stream =
+                new MemoryStream();
+
+            workbook.SaveAs(stream);
+
+            var archivo =
+                Convert.ToBase64String(
+                    stream.ToArray());
+
+            await JS.InvokeVoidAsync(
+                "downloadFile",
+                "ResumenAusentismo.xlsx",
+                archivo);
+        }
+
+            void GenerarDetalle()
+        {
+            detalleMeses = new();
+
+            var diaria =
                 nomina
                 .Where(x =>
-                    (int)x.Añohnh == anioSeleccionado)
-                .Select(x =>
-                    ObtenerMesDesdePeriodo(
-                        (int)x.Prdhnh));
+                    (int)x.Añohnh == anioDetalle);
 
-            var mesesReposos =
-                reposos
-                .Where(r =>
-                    r.FechaDesde.HasValue &&
-                    r.FechaDesde.Value.Year == anioSeleccionado)
-                .Select(r =>
-                    r.FechaDesde!.Value.Month);
+            var mensual =
+                nominaMensual
+                .Where(x =>
+                    (int)x.Añohnh == anioDetalle);
 
-            var mesesDisponibles =
-                mesesNomina
-                .Union(mesesReposos)
-                .Distinct()
-                .OrderBy(x => x)
-                .ToList();
-
-            // =========================
-            // TODOS LOS MESES
-            // =========================
-
-            if (mesSeleccionado == 0)
+            if (tipoNominaDetalle == "Diaria")
             {
-                tendenciaDias =
-                    mesesDisponibles
-                    .Select(m =>
-                    {
-                        var periodo =
-                            ObtenerPeriodosMes(m);
-
-                        int permisos =
-                            ContarCodigo(
-                                nomina.Where(x =>
-                                    (int)x.Añohnh == anioSeleccionado &&
-                                    (int)x.Prdhnh >= periodo.Desde &&
-                                    (int)x.Prdhnh <= periodo.Hasta),
-                                "P");
-
-                        int repososMes =
-                            reposos.Count(r =>
-                                r.FechaDesde.HasValue &&
-                                r.FechaDesde.Value.Year == anioSeleccionado &&
-                                r.FechaDesde.Value.Month == m);
-
-                        int total =
-                            tipoTendencia switch
-                            {
-                                "Reposos" => repososMes,
-                                "Permisos" => permisos,
-                                _ => permisos + repososMes
-                            };
-
-                        return new TendenciaDia
-                        {
-                            Etiqueta =
-                                new DateTime(
-                                    anioSeleccionado,
-                                    m,
-                                    1)
-                                .ToString("MMM"),
-
-                            Subtitulo = "",
-
-                            Total = total
-                        };
-                    })
-                    .ToList();
-
-                return;
+                detalleMeses =
+                    GenerarDetalleDiario(diaria);
             }
-
-            // =========================
-            // REPOSOS POR DIA
-            // =========================
-
-            if (tipoTendencia == "Reposos")
+            else if (tipoNominaDetalle == "Mensual")
             {
-                tendenciaDias =
-                    reposos
-                    .Where(r =>
-                        r.FechaDesde.HasValue &&
-                        r.FechaDesde.Value.Year == anioSeleccionado &&
-                        r.FechaDesde.Value.Month == mesSeleccionado)
-                    .GroupBy(r =>
-                        r.FechaDesde!.Value.Day)
-                    .Select(g => new TendenciaDia
-                    {
-                        Etiqueta = g.Key.ToString(),
-                        Subtitulo = "",
-                        Total = g.Count()
-                    })
-                    .OrderBy(x =>
-                        int.Parse(x.Etiqueta))
-                    .ToList();
-
-                return;
+                detalleMeses =
+                    GenerarDetalleMensual(mensual);
             }
+            else
+            {
+                detalleMeses =
+                    GenerarDetalleDiario(diaria)
+                    .Concat(
+                        GenerarDetalleMensual(mensual))
+                    .GroupBy(x => new
+                    {
+                        x.Anio,
+                        x.Mes
+                    })
+                    .Select(g => new ResumenMensual
+                    {
+                        Anio = g.Key.Anio,
+                        Mes = g.Key.Mes,
 
-    // =========================
-    // PERMISOS O TODOS POR PERIODO
-    // =========================
+                        Permisos =
+                            g.Sum(x => x.Permisos),
 
-    var periodosMes =
-        ObtenerPeriodosMes(mesSeleccionado);
+                        Faltas =
+                            g.Sum(x => x.Faltas),
 
-    tendenciaDias =
-        Enumerable
-        .Range(
-            periodosMes.Desde,
-            periodosMes.Hasta - periodosMes.Desde + 1)
-        .Select(p =>
+                        Reposos =
+                            g.Max(x => x.Reposos),
+
+                        eventosAusentismo =
+                            g.Sum(x => x.eventosAusentismo),
+
+                        HorasProgramadas =
+                            g.Sum(x => x.HorasProgramadas),
+
+                        Indice =
+                            g.Sum(x => x.HorasProgramadas) > 0
+                            ? Math.Round(
+                                (
+                                    (double)g.Sum(x => x.eventosAusentismo)
+                                    /
+                                    g.Sum(x => x.HorasProgramadas)
+                                ) * 100,
+                                2)
+                            : 0
+                    })
+                    .OrderByDescending(x => x.Anio)
+                    .ThenByDescending(x => x.Mes)
+                    .ToList();
+            }
+        }
+
+            List<ResumenMensual> GenerarDetalleDiario(
+            IEnumerable<PermisosNomDiariaHistVDTO> data)
         {
-            int permisosPeriodo =
-                ContarCodigo(
-                    nomina.Where(x =>
-                        (int)x.Añohnh == anioSeleccionado &&
-                        (int)x.Prdhnh == p),
-                    "P");
+            data = data.Where(x =>
+                mesesSeleccionados.Contains(
+                    ObtenerMesDesdePeriodo(
+                        ObtenerQuincenaDesdeSemana(
+                            (int)x.Prdhnh))));
 
-            int total = permisosPeriodo;
+            return data
+                .GroupBy(x => new
+                {
+                    Anio = (int)x.Añohnh,
+                    Mes = ObtenerMesDesdePeriodo(
+                    ObtenerQuincenaDesdeSemana(
+                        (int)x.Prdhnh))
+                })
+                .Select(g =>
+                {
+                    var trabajadores =
+                        g.Select(x => x.Fichnh)
+                        .Distinct()
+                        .Count();
 
-            if (tipoTendencia == "Todos")
+                    var permisos =
+                        ContarCodigo(g, "P");
+
+                    var faltas =
+                        ContarCodigo(g, "F");
+
+                    var repososMes =
+                        repososPorMes.GetValueOrDefault(
+                            (g.Key.Anio, g.Key.Mes),
+                            0);
+
+                    var ausencias =
+                        permisos +
+                        faltas +
+                        repososMes;
+
+                    return new ResumenMensual
+                    {
+                        Anio = g.Key.Anio,
+                        Mes = g.Key.Mes,
+                        Permisos = permisos,
+                        Faltas = faltas,
+                        Reposos = repososMes,
+                        eventosAusentismo = ausencias,
+                        HorasProgramadas =
+                            trabajadores * 20 * 8,
+                        Indice =
+                            trabajadores > 0
+                            ? Math.Round(
+                                (double)ausencias /
+                                (trabajadores * 20 * 8)
+                                * 100,
+                                2)
+                            : 0
+                    };
+                })
+                .ToList();
+        }
+
+
+            List<ResumenMensual> GenerarDetalleMensual(
+            IEnumerable<VRotacionDTO> data)
+        {
+            data = data.Where(x =>
+            mesesSeleccionados.Contains(
+                ObtenerMesDesdePeriodo(
+                    (int)x.Prdhnh)));
+
+            return data
+                .GroupBy(x => new
+                {
+                    Anio = (int)x.Añohnh,
+                    Mes = ObtenerMesDesdePeriodo(
+                        (int)x.Prdhnh)
+                })
+                .Select(g =>
+                {
+                    var trabajadores =
+                        g.Select(x => x.Fichnh)
+                        .Distinct()
+                        .Count();
+
+                    var permisos =
+                        ContarCodigoMensual(
+                            g,
+                            "P");
+
+                    var faltas =
+                        ContarCodigoMensual(
+                            g,
+                            "F");
+
+                    var repososMes =
+                        repososPorMes.GetValueOrDefault(
+                            (g.Key.Anio, g.Key.Mes),
+                            0);
+
+                    var ausencias =
+                        permisos +
+                        faltas +
+                        repososMes;
+
+                    return new ResumenMensual
+                    {
+                        Anio = g.Key.Anio,
+                        Mes = g.Key.Mes,
+                        Permisos = permisos,
+                        Faltas = faltas,
+                        Reposos = repososMes,
+                        eventosAusentismo = ausencias,
+                        HorasProgramadas =
+                            trabajadores * 20 * 8,
+                        Indice =
+                            trabajadores > 0
+                            ? Math.Round(
+                                (double)ausencias /
+                                (trabajadores * 20 * 8)
+                                * 100,
+                                2)
+                            : 0
+                    };
+                })
+                .ToList();
+        }
+
+            async Task CambioAnioResumen(
+        ChangeEventArgs e)
+        {
+            anioResumen =
+                Convert.ToInt32(e.Value);
+
+            await GenerarResumen();
+
+            StateHasChanged();
+        }
+
+            async Task GenerarResumen()
+        {
+            if (tipoNominaResumen == "Diaria")
             {
-                int repososMes =
+                resumenGeneral =
+                    await DashboardData
+                        .GetResumenDiario(
+                            anioResumen);
+            }
+            else if (tipoNominaResumen == "Mensual")
+            {
+                resumenGeneral =
+                    await DashboardData
+                        .GetResumenMensual(
+                            anioResumen);
+            }
+            else
+            {
+                var diaria =
+                    await DashboardData
+                        .GetResumenDiario(
+                            anioResumen);
+
+                var mensual =
+                    await DashboardData
+                        .GetResumenMensual(
+                            anioResumen);
+
+                var permisos =
+                    diaria.Permisos +
+                    mensual.Permisos;
+
+                var faltas =
+                    diaria.Faltas +
+                    mensual.Faltas;
+
+                var repososResumen =
                     reposos.Count(r =>
                         r.FechaDesde.HasValue &&
-                        r.FechaDesde.Value.Year == anioSeleccionado &&
-                        r.FechaDesde.Value.Month == mesSeleccionado);
+                        r.FechaDesde.Value.Year == anioResumen);
 
-                total += repososMes;
+                resumenGeneral =
+                    new IndicadoresResumenDTO
+                    {
+                        Permisos = permisos,
+
+                        Faltas = faltas,
+
+                        Reposos = repososResumen,
+
+                        Ausencias =
+                            permisos +
+                            faltas +
+                            repososResumen,
+
+                        Vacaciones =
+                            diaria.Vacaciones +
+                            mensual.Vacaciones,
+
+                        Libres =
+                            diaria.Libres +
+                            mensual.Libres,
+
+                        Utilidades =
+                            diaria.Utilidades +
+                            mensual.Utilidades
+                    };
+                    var filaMensual =
+                    new ResumenNominaDTO
+                    {
+                        Nombre = "TOTAL NOM. MENSUAL",
+                        Permisos = mensual.Permisos,
+                        Faltas = mensual.Faltas,
+                        Reposos = repososResumen,
+                        Ausencias =
+                            mensual.Permisos +
+                            mensual.Faltas +
+                            repososResumen,
+                        HorasProgramadas = 0,
+                        Indice = 0
+                    };
+
+                var filaDiaria =
+                    new ResumenNominaDTO
+                    {
+                        Nombre = "TOTAL NOM. DIARIA",
+                        Permisos = diaria.Permisos,
+                        Faltas = diaria.Faltas,
+                        Reposos = repososResumen,
+                        Ausencias =
+                            diaria.Permisos +
+                            diaria.Faltas +
+                            repososResumen,
+                        HorasProgramadas = 0,
+                        Indice = 0
+                    };
+
+                var filaTotal =
+                    new ResumenNominaDTO
+                    {
+                        Nombre = "TOTAL AMBAS NOMINAS",
+                        Permisos =
+                            diaria.Permisos +
+                            mensual.Permisos,
+
+                        Faltas =
+                            diaria.Faltas +
+                            mensual.Faltas,
+
+                        Reposos = repososResumen,
+
+                        Ausencias =
+                            diaria.Permisos +
+                            mensual.Permisos +
+                            diaria.Faltas +
+                            mensual.Faltas +
+                            repososResumen,
+
+                        HorasProgramadas = 0,
+
+                        Indice = 0
+                    };
+                    if(tipoNominaResumen == "Mensual")
+                    {
+                        resumenGeneralFilas =
+                            new()
+                            {
+                                filaMensual
+                            };
+                    }
+                    else if(tipoNominaResumen == "Diaria")
+                    {
+                        resumenGeneralFilas =
+                            new()
+                            {
+                                filaDiaria
+                            };
+                    }
+                    else
+                    {
+                        resumenGeneralFilas =
+                            new()
+                            {
+                                filaMensual,
+                                filaDiaria,
+                                filaTotal
+                            };
+                    }
+            }
+        }
+
+        void CambioComparativa(ChangeEventArgs e)
+        {
+            tipoComparativa =
+                e.Value?.ToString() ?? "Reposos";
+
+            GenerarComparativa();
+
+            StateHasChanged();
+        }
+
+        void CambioAnioDetalle(ChangeEventArgs e)
+        {
+            anioDetalle =
+                Convert.ToInt32(e.Value);
+
+            int mesMaximo =
+                anioDetalle == DateTime.Now.Year
+                    ? DateTime.Now.Month
+                    : 12;
+
+            mesesSeleccionados.RemoveWhere(
+                m => m > mesMaximo);
+
+            if (!mesesSeleccionados.Any())
+            {
+                mesesSeleccionados.Add(mesMaximo);
             }
 
-            var rango =
-                ObtenerRangoPeriodo(p);
+            GenerarDetalle();
 
-            return new TendenciaDia
+            StateHasChanged();
+        }
+
+        string ObtenerAnchoComparativa(int valor)
+        {
+            int maximo =
+                Math.Max(
+                    comparativa.ValorActual,
+                    comparativa.ValorAnterior);
+
+            if (maximo == 0)
+                return "0%";
+
+            double porcentaje =
+                (valor * 100.0) / maximo;
+
+            return porcentaje.ToString(
+                "0.##",
+                CultureInfo.InvariantCulture)
+                + "%";
+        }
+
+        void CambioTipoNominaDetalle(ChangeEventArgs e)
+        {
+            tipoNominaDetalle =
+                e.Value?.ToString() ?? "Todos";
+
+            GenerarDetalle();
+
+            StateHasChanged();
+        }
+
+        async Task ExportarPdf()
+        {
+            var document = new PdfDocument();
+
+            var page = document.AddPage();
+
+            page.Width = 842;
+            page.Height = 595;
+
+            var gfx =
+                XGraphics.FromPdfPage(page);
+
+            var titulo =
+                new XFont("Arial", 22, XFontStyle.Bold);
+
+            var subtitulo =
+                new XFont("Arial", 12, XFontStyle.Bold);
+
+            var texto =
+                new XFont("Arial", 10, XFontStyle.Regular);
+
+            int y = 40;
+
+            gfx.DrawString(
+                "Dashboard Ausentismo",
+                titulo,
+                XBrushes.DarkGreen,
+                new XRect(0, y, page.Width, 30),
+                XStringFormats.TopCenter);
+
+            y += 50;
+
+            gfx.DrawString(
+                $"Año: {anioIndicadores}",
+                subtitulo,
+                XBrushes.Black,
+                40,
+                y);
+
+            y += 35;
+
+            //=========================
+            // RESUMEN GENERAL
+            //=========================
+
+            gfx.DrawString(
+                "Resumen General",
+                subtitulo,
+                XBrushes.DarkGreen,
+                40,
+                y);
+
+            y += 20;
+
+            int x = 40;
+
+            string[] headers =
             {
-                Etiqueta =
-                        $"P{p}",
-
-                Total = total
+                "Permisos",
+                "Faltas",
+                "Reposos",
+                "Horas Aus.",
+                "Horas Prog.",
+                "Indice %"
             };
+
+            string[] valores =
+            {
+                totalPermisos.ToString(),
+                totalFaltas.ToString(),
+                totalReposos.ToString(),
+                eventosAusentismo.ToString(),
+                horasProgramadas.ToString(),
+                indiceAusentismo.ToString("0.00")
+            };
+
+            for(int i = 0; i < headers.Length; i++)
+            {
+                gfx.DrawRectangle(
+                    XPens.Black,
+                    XBrushes.DarkGreen,
+                    x,
+                    y,
+                    110,
+                    25);
+
+                gfx.DrawString(
+                    headers[i],
+                    texto,
+                    XBrushes.White,
+                    new XRect(x, y, 110, 25),
+                    XStringFormats.Center);
+
+                x += 110;
+            }
+
+            y += 25;
+
+            x = 40;
+
+            for(int i = 0; i < valores.Length; i++)
+            {
+                gfx.DrawRectangle(
+                    XPens.Black,
+                    XBrushes.White,
+                    x,
+                    y,
+                    110,
+                    25);
+
+                gfx.DrawString(
+                    valores[i],
+                    texto,
+                    XBrushes.Black,
+                    new XRect(x, y, 110, 25),
+                    XStringFormats.Center);
+
+                x += 110;
+            }
+
+            y += 50;
+
+            //=========================
+            // DETALLE POR MES
+            //=========================
+
+            gfx.DrawString(
+                "Detalle por Mes",
+                subtitulo,
+                XBrushes.DarkGreen,
+                40,
+                y);
+
+            y += 20;
+
+            string[] columnas =
+            {
+                "Mes",
+                "Permisos",
+                "Faltas",
+                "Reposos",
+                "Indice %"
+            };
+
+            int[] anchos =
+            {
+                160,
+                90,
+                90,
+                90,
+                110
+            };
+
+            x = 40;
+
+            for(int i = 0; i < columnas.Length; i++)
+            {
+                gfx.DrawRectangle(
+                    XPens.Black,
+                    XBrushes.DarkGreen,
+                    x,
+                    y,
+                    anchos[i],
+                    25);
+
+                gfx.DrawString(
+                    columnas[i],
+                    texto,
+                    XBrushes.White,
+                    new XRect(x, y, anchos[i], 25),
+                    XStringFormats.Center);
+
+                x += anchos[i];
+            }
+
+            y += 25;
+
+            foreach(var r in detalleMeses)
+            {
+                x = 40;
+
+                string[] fila =
+                {
+                    $"{r.NombreMes} {r.Anio}",
+                    r.Permisos.ToString(),
+                    r.Faltas.ToString(),
+                    r.Reposos.ToString(),
+                    r.Indice.ToString("0.00")
+                };
+
+                for(int i = 0; i < fila.Length; i++)
+                {
+                    gfx.DrawRectangle(
+                        XPens.Black,
+                        x,
+                        y,
+                        anchos[i],
+                        22);
+
+                    gfx.DrawString(
+                        fila[i],
+                        texto,
+                        XBrushes.Black,
+                        new XRect(x, y, anchos[i], 22),
+                        XStringFormats.Center);
+
+                    x += anchos[i];
+                }
+
+                y += 22;
+
+                if(y > page.Height - 40)
+                    break;
+            }
+
+            using var stream = new MemoryStream();
+
+            document.Save(stream);
+
+            var archivo =
+                Convert.ToBase64String(
+                    stream.ToArray());
+
+            await JS.InvokeVoidAsync(
+                "downloadFile",
+                "DashboardAusentismo.pdf",
+                archivo);
+        }
+
+            void CambioMesTendencia(ChangeEventArgs e)
+        {
+            mesTendencia =
+                Convert.ToInt32(e.Value);
+
+            GenerarTendencia();
+
+            StateHasChanged();
+        }
+
+        //Nuevo método para generar la tendencia de ausentismo
+
+        void CambioAnioComparativa1(ChangeEventArgs e)
+        {
+            anioComparativa1 =
+                Convert.ToInt32(e.Value);
+
+            GenerarComparativa();
+
+            StateHasChanged();
+        }
+
+            void CambioTipoTendencia(ChangeEventArgs e)
+        {
+            tipoTendencia =
+                e.Value?.ToString() ?? "Todos";
+
+            GenerarTendencia();
+
+            StateHasChanged();
+        }
+
+        async Task CambioTipoNominaResumen(
+            ChangeEventArgs e)
+        {
+            tipoNominaResumen =
+                e.Value?.ToString() ?? "Todos";
+
+            await GenerarResumen();
+
+            StateHasChanged();
+        }
+
+            void CambioMesComparativa1(ChangeEventArgs e)
+        {
+            mesComparativa1 =
+                Convert.ToInt32(e.Value);
+
+            // Si salimos de "Todos"
+            // el otro mes no puede quedarse en 0
+            if (mesComparativa1 > 0 &&
+                mesComparativa2 == 0)
+            {
+                mesComparativa2 = mesComparativa1;
+            }
+
+            // Si entramos en Todos
+            if (mesComparativa1 == 0)
+            {
+                mesComparativa2 = 0;
+            }
+
+            GenerarComparativa();
+
+            StateHasChanged();
+        }
+
+        void CambioAnioComparativa2(ChangeEventArgs e)
+        {
+            anioComparativa2 =
+                Convert.ToInt32(e.Value);
+
+            GenerarComparativa();
+
+            StateHasChanged();
+        }
+
+        void CambioMesComparativa2(ChangeEventArgs e)
+        {
+            mesComparativa2 =
+                Convert.ToInt32(e.Value);
+
+            // Si salimos de "Todos"
+            // el otro mes no puede quedarse en 0
+            if (mesComparativa2 > 0 &&
+                mesComparativa1 == 0)
+            {
+                mesComparativa1 = mesComparativa2;
+            }
+
+            // Si entramos en Todos
+            if (mesComparativa2 == 0)
+            {
+                mesComparativa1 = 0;
+            }
+
+            GenerarComparativa();
+
+            StateHasChanged();
+        }
+
+            void GenerarTendencia()
+            {  
+                // =========================
+                // TODOS LOS MESES
+                // =========================
+
+                    if (mesTendencia == 0)
+                {
+                    tendenciaDias =
+                        Enumerable.Range(
+                        1,
+                        anioIndicadores == DateTime.Now.Year
+                            ? DateTime.Now.Month
+                            : 12)
+                        .Select(m =>
+                        {
+                            var periodo =
+                                ObtenerPeriodosMes(m);
+
+                            int permisosDiaria =
+                                    ContarCodigo(
+                                        nomina.Where(x =>
+                                            (int)x.Añohnh == anioIndicadores &&
+                                            ObtenerQuincenaDesdeSemana(
+                                                (int)x.Prdhnh) >= periodo.Desde &&
+                                            ObtenerQuincenaDesdeSemana(
+                                                (int)x.Prdhnh) <= periodo.Hasta),
+                                        "P");
+
+                                int permisosMensual =
+                                    ContarCodigoMensual(
+                                        nominaMensual.Where(x =>
+                                            (int)x.Añohnh == anioIndicadores &&
+                                            (int)x.Prdhnh >= periodo.Desde &&
+                                            (int)x.Prdhnh <= periodo.Hasta),
+                                        "P");
+
+                                int permisos =
+                                    tipoNominaIndicadores switch
+                                    {
+                                        "Diaria" => permisosDiaria,
+                                        "Mensual" => permisosMensual,
+                                        _ => permisosDiaria + permisosMensual
+                                    };
+
+                                int faltasDiaria =
+                                    ContarCodigo(
+                                        nomina.Where(x =>
+                                            (int)x.Añohnh == anioIndicadores &&
+                                            ObtenerQuincenaDesdeSemana(
+                                                (int)x.Prdhnh) >= periodo.Desde &&
+                                            ObtenerQuincenaDesdeSemana(
+                                                (int)x.Prdhnh) <= periodo.Hasta),
+                                        "F");
+
+                                int faltasMensual =
+                                    ContarCodigoMensual(
+                                        nominaMensual.Where(x =>
+                                            (int)x.Añohnh == anioIndicadores &&
+                                            (int)x.Prdhnh >= periodo.Desde &&
+                                            (int)x.Prdhnh <= periodo.Hasta),
+                                        "F");
+
+                                int faltas =
+                                    tipoNominaIndicadores switch
+                                    {
+                                        "Diaria" => faltasDiaria,
+                                        "Mensual" => faltasMensual,
+                                        _ => faltasDiaria + faltasMensual
+                                    };
+
+                            int repososMes =
+                                repososPorMes.GetValueOrDefault(
+                                    (anioIndicadores, m),
+                                    0);
+
+                            int total =
+                                tipoTendencia switch
+                                {
+                                    "Reposos" => repososMes,
+
+                                    "Permisos" => permisos,
+
+                                    "Faltas" => faltas,
+
+                                    _ => permisos +
+                                        faltas +
+                                        repososMes
+                                };
+
+                            return new TendenciaDia
+                            {
+                                Etiqueta =
+                                    new DateTime(
+                                        anioIndicadores,
+                                        m,
+                                        1)
+                                    .ToString("MMM")
+                                    .ToUpper(),
+
+                                Subtitulo =
+                                    new DateTime(
+                                        anioIndicadores,
+                                        m,
+                                        1)
+                                    .ToString("yyyy"),
+
+                                Total = total
+                            };
+                        })
+                        .ToList();
+                    return;
+                }
+
+                // =========================
+                // REPOSOS POR DIA
+                // =========================
+
+                if (tipoTendencia == "Reposos")
+                {
+                    int diasMes =
+                    DateTime.DaysInMonth(
+                        anioIndicadores,
+                        mesTendencia);
+
+                tendenciaDias =
+                    Enumerable.Range(1, diasMes)
+                    .Select(d => new TendenciaDia
+                    {
+                        Etiqueta = d.ToString(),
+                        Subtitulo = $"{d}/{mesTendencia}",
+                        Total = reposos.Count(r =>
+                            r.FechaDesde.HasValue &&
+                            r.FechaDesde.Value.Year == anioIndicadores &&
+                            r.FechaDesde.Value.Month == mesTendencia &&
+                            r.FechaDesde.Value.Day == d)
+                    })
+                    .ToList();
+                    return;
+                }
+
+        // =========================
+        // PERMISOS O TODOS POR PERIODO
+        // =========================
+
+            var periodo =
+    ObtenerPeriodosMes(mesTendencia);
+
+    tendenciaDias =
+        Enumerable.Range(
+            periodo.Desde,
+            periodo.Hasta - periodo.Desde + 1)
+        .Select(p =>
+        {
+
+            int totalPermisos =
+                ObtenerPermisos(
+                    anioIndicadores,
+                    p,
+                    p);
+
+            int totalFaltas =
+                ObtenerFaltas(
+                    anioIndicadores,
+                    p,
+                    p);
+
+        int total = 0;
+
+    if (tipoTendencia == "Permisos")
+    {
+        total = totalPermisos;
+    }
+    else if (tipoTendencia == "Faltas")
+    {
+        total = totalFaltas;
+    }
+    else if (tipoTendencia == "Reposos")
+    {
+        total = 0;
+    }
+    else
+    {
+        int repososMes =
+            repososPorMes.GetValueOrDefault(
+                (anioIndicadores, mesTendencia),
+                0);
+
+        var periodoMes =
+            ObtenerPeriodosMes(
+                mesTendencia);
+
+        int permisosMes =
+            ObtenerPermisos(
+                anioIndicadores,
+                periodoMes.Desde,
+                periodoMes.Hasta);
+
+
+        if (permisosMes > 0)
+        {
+            int repososPeriodo =
+                (int)Math.Round(
+                    repososMes *
+                    ((double)totalPermisos / permisosMes));
+
+            total =
+                totalPermisos +
+                totalFaltas +
+                repososPeriodo;
+        }
+        else
+        {
+            total =
+                totalPermisos +
+                totalFaltas;
+        }
+    }
+            var rango =
+            ObtenerRangoPeriodo(p);
+
+        return new TendenciaDia
+        {
+            Etiqueta = $"P{p}",
+
+            Subtitulo =
+                $"{rango.Desde}-{rango.Hasta}",
+
+            Total = total
+        };
         })
         .ToList();
-}
-
-
-        public class TendenciaDia
-    {
-        public string Etiqueta { get; set; } = "";
-
-        public string Subtitulo { get; set; } = "";
-
-        public int Total { get; set; }
     }
 
-    public class ResumenMensual
+
+            public class TendenciaDia
+        {
+            public string Etiqueta { get; set; } = "";
+
+            public string Subtitulo { get; set; } = "";
+
+            public int Total { get; set; }
+        }
+
+        public class ResumenMensual
+        {
+            public string NombreMes
+            {
+                get
+                {
+                    if (Mes < 1 || Mes > 12)
+                        return $"Mes inválido ({Mes})";
+
+                    return new DateTime(2025, Mes, 1)
+                        .ToString("MMMM");
+                }
+            }
+
+
+            public int Mes { get; set; }
+
+            public int Anio { get; set; }
+
+            public int Permisos { get; set; }
+
+            public int Faltas { get; set; }
+
+            public int Reposos { get; set; }
+
+            public int eventosAusentismo { get; set; }
+
+            public int HorasProgramadas { get; set; }
+
+            public double Indice { get; set; }
+
+    }
+        public class ResumenNominaDTO
     {
-        public string NombreMes =>
-        new DateTime(2025, Mes, 1)
-        .ToString("MMMM");
-
-
-        public int Mes { get; set; }
-
-        public int Anio { get; set; }
+        public string Nombre { get; set; } = "";
 
         public int Permisos { get; set; }
 
@@ -1017,7 +2715,7 @@
 
         public int Reposos { get; set; }
 
-        public int HorasAusentismo { get; set; }
+        public int Ausencias { get; set; }
 
         public int HorasProgramadas { get; set; }
 

@@ -13,14 +13,15 @@ a, .nav-item {
 }
 
 /* ======================
-    BASE
+    BASE DEL INICIO
 ====================== */
 html, body {
     height: 100%;
     width: 100%;
     margin: 0;
     padding: 0;
-    overflow: auto;
+    overflow-x:hidden;
+    overflow-y:auto;
 }
 
 body {
@@ -29,17 +30,17 @@ body {
 }
 
 /* ======================
-    LAYOUT
+    LAYOUT 
 ====================== */
 .layout-container {
-    display: flex;
-    height: 100vh;
-    width: 100vw;
-    overflow: auto;
+    display:flex;
+    height:100vh;
+    width:100%;
+    overflow-x:hidden;
 }
 
 /* ======================
-    SIDEBAR
+    SIDEBAR IZQUIERDO
 ====================== */
 .sidebar {
     width: 260px;
@@ -136,7 +137,7 @@ body {
 }
 
 /* ======================
-    MAIN
+    MAINlAYOUT
 ====================== */
 .main-wrapper {
     flex: 1;
@@ -182,14 +183,17 @@ body {
 
 /* CONTENIDO */
 .main-content {
-    flex: 1;
-    padding: 20px;
-    overflow-y: auto;
-    background: #f4f6f9;
+    flex:1;
+    padding:20px;
+
+    overflow-y:auto;
+    overflow-x: visible;
+    animation: fadeIn 0.3s ease;
 }
 
+
 /* ======================
-    TITLES
+    TITULOS
 ====================== */
 .page-title {
     font-size: 24px;
@@ -220,7 +224,7 @@ body {
 }
 
 /* ======================
-    CARDS
+    CARDS CONTAINER
 ====================== */
 .cards-container {
     display: flex;
@@ -269,7 +273,7 @@ body {
     color: #007853;
 }
 
-/*moviles*/
+/* ESTILO RESPONSIVE PARA MOVILES */
 @media(max-width:768px)
 {
     .cards-container
@@ -280,12 +284,6 @@ body {
 
     .dashboard-info-card
     {
-        overflow-x:auto;
-    }
-
-    .grafico-linea
-    {
-        min-width:700px;
         overflow-x:auto;
     }
 
@@ -402,7 +400,7 @@ body {
         color .4s ease;
 }
 
-/* HOVER */
+/* HOVER 01 */
 
 .card:hover .kpi-number {
 
@@ -418,7 +416,7 @@ body {
     transform: scale(1.05);
 }
 
-/* HOVER */
+/* HOVER 02 */
 
 .card:hover .kpi-number {
 
@@ -436,7 +434,7 @@ body {
 
 
 /* ======================
-    FILTROS
+    FILTROS DISEÑO
 ====================== */
 .filtro-container {
     display: flex;
@@ -452,7 +450,7 @@ body {
 }
 
 /* ======================
-    BOTONES
+    BOTONES DISEÑO
 ====================== */
 .btn {
     background: #007bff;
@@ -488,7 +486,7 @@ body {
 }
 
 /* ======================
-    TABLAS
+    TABLAS DISEÑO
 ====================== */
 .table-custom {
     width: 100%;
@@ -510,11 +508,11 @@ body {
 
 .table-custom tr:hover {
     background: #e9f7f2;
-    color: #1f2937; /* ✅ evita texto blanco */
+    color: #1f2937;
 }
 
 .table-custom tr:hover td {
-    color: #1f2937 !important; /* ✅ fuerza color visible */
+    color: #1f2937 !important;
 }
 
 .table-custom thead tr {
@@ -522,13 +520,12 @@ body {
     color: white;
 }
 
-/* FIX extra importante */
 .table-custom td {
     color: #1f2937;
 }
 
 /* ======================
-    MODAL
+    MODAL OVERLAY
 ====================== */
 .modal-overlay {
     position: fixed;
@@ -572,7 +569,7 @@ body {
     background-position: center;
 }
 
-/* TARJETA */
+/* CARD DEL LOGIN */
 .login-card {
     width: 360px;
     padding: 35px 30px;
@@ -591,19 +588,19 @@ body {
     text-align: center;
 }
 
-/* LOGO */
+/* LOGO DEL LOGIN */
 .login-logo {
     width: 80px;
     margin-bottom: 10px;
 }
 
-/* TITULO */
+/* TITULO DEL LOGIN */
 .login-card h1 {
     color: white;
     margin-bottom: 20px;
 }
 
-/* FORM */
+/* FORMULARIO DEL LOGIN*/
 .login-form {
     width: 100%;
     display: flex;
@@ -611,7 +608,7 @@ body {
     gap: 12px;
 }
 
-/* INPUTS */
+/* INPUTS DEL FORMULARIO */
 .login-form input {
     width: 100%;
     padding: 10px;
@@ -623,7 +620,7 @@ body {
     font-size: 14px;
 }
 
-/* BOTON */
+/* BOTON DEL LOGIN*/
 .login-form button {
     width: 100%;
     background: #007853;
@@ -642,18 +639,18 @@ body {
     background: #009a6c;
 }
 
-/* MENSAJE */
+/* MENSAJE DE EMERGENCIA DEL LOGIN*/
 .login-card p {
     margin-top: 10px;
     color: white;
     font-size: 13px;
 }
 
-/* ======================
-    RESPONSIVE GLOBAL
-====================== */
+/* =========================================
+    RESPONSIVE GLOBAL PARA DISTINTOS TAMAÑOS
+============================================ */
 
-/* TABLET */
+/* Tabla Responsive */
 @media (max-width: 1024px) {
 
     .main-content {
@@ -669,10 +666,37 @@ body {
     }
 }
 
-/* MÓVIL */
+/* Responsive Movil */
 @media (max-width: 768px) {
 
-    /* LAYOUT */
+    
+.dashboard-container{
+        padding:15px;
+    }
+
+    .dashboard-section-title{
+        font-size:22px;
+    }
+
+    .filtros,
+    .filtros-tendencia{
+        flex-direction:column;
+    }
+
+    .filtros select,
+    .filtros-tendencia select{
+        width:100%;
+    }
+
+    .dia{
+        font-size:11px;
+    }
+
+    .dia small{
+        font-size:10px;
+    }
+
+    /* MainLAYOUT */
     .layout-container {
         flex-direction: column;
     }
@@ -681,7 +705,7 @@ body {
         width: 100%;
     }
 
-    /* TOPBAR */
+    /* TOPBAR Responsive */
     .topbar {
         flex-direction: column;
         height: auto;
@@ -689,13 +713,13 @@ body {
         padding: 10px;
     }
 
-    /* USER INFO */
+    /* USER INFO Responsive*/
     .user-info {
         flex-direction: column;
         gap: 5px;
     }
 
-    /* FILTROS */
+    /* FILTROS Responsive*/
     .filtro-container {
         flex-direction: column;
         align-items: stretch;
@@ -708,7 +732,7 @@ body {
         width: 100%;
     }
 
-    /* TABLAS */
+    /* TABLAS Responsive*/
     .table-custom {
         display: block;
         overflow-x: auto;
@@ -716,7 +740,7 @@ body {
     }
 }
 
-/* MÓVIL PEQUEÑO */
+/* MÓVIL PEQUEÑO Responsive */
 @media (max-width: 480px) {
 
     .page-title {
@@ -788,13 +812,8 @@ body {
     transform: scale(1.01);
 }
 
-/* CONTENIDO */
-.main-content {
-    animation: fadeIn 0.3s ease;
-}
-
 /* ======================
-    HEADCOUNT PRO
+    Diseño de HeadCount
 ====================== */
 
 /* CONTENEDOR */
@@ -911,9 +930,9 @@ body {
     color: #007853;
 }
 
-/* ======================
-    GRÁFICO BARRAS
-====================== */
+/* ================================
+    GRÁFICO DE BARRAS / DASHBOARD
+================================ */
 .grafico-container {
     display: flex;
     align-items: flex-end;
@@ -956,7 +975,7 @@ body {
 }
 
 /* ======================
-    GRAFICO HEADCOUNT
+    GRAFICO HEADCOUNT 
 ====================== */
 
 .grafico-container {
@@ -1035,9 +1054,9 @@ body {
     color: #555;
 }
 
-/* ======================
-    MOVIMIENTOS PRO
-====================== */
+/* =========================
+    MOVIMIENTOS GRAFICOS
+========================= */
 
 .rotacion-layout {
     display: flex;
@@ -1053,7 +1072,7 @@ body {
     box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-/* FILA */
+/* FILA CON ANIMACIONES */
 .movimiento-row {
     display: flex;
     align-items: center;
@@ -1068,7 +1087,7 @@ body {
     flex: 1;
 }
 
-/* ICONOS */
+/* ICONOS TAMAÑO Y POSICIÓN */
 .icono {
     position: relative;
     cursor: pointer;
@@ -1135,7 +1154,7 @@ body {
     background: linear-gradient(135deg, #ff9800, #ff5722);
 }
 
-/* HISTORICO */
+/* HISTORICO APARTADO */
 .table-custom td {
     font-size: 13px;
 }
@@ -1155,15 +1174,15 @@ body {
 
 /* FOOTER LOGIN */
 .login-footer {
-    margin-top: 25px; /* ✅ más abajo */
+    margin-top: 25px;
 
     font-size: 14px;
 
-    color: rgba(255,255,255,0.85); /* ✅ más claro */
+    color: rgba(255,255,255,0.85); 
 
     text-align: center;
 
-    letter-spacing: 1px; /* opcional más elegante */
+    letter-spacing: 1px;
 }
 
 
@@ -1178,7 +1197,7 @@ body {
     border: 2px solid #28a745;
 }
 
-/* CHECK */
+/* CHECK CON MOVIMIENTOS*/
 .check {
     position: absolute;
     right: 10px;
@@ -1189,7 +1208,7 @@ body {
     font-weight: bold;
 }
 
-/* TEXTO OK */
+/* TEXTO EN APARTADOS*/
 .text-ok {
     color: #28a745;
     font-size: 12px;
@@ -1199,7 +1218,7 @@ body {
 }
 
 /* ======================
-    DASHBOARD (INDEX)
+    DASHBOARD DEL INDEX
 ====================== */
 
 /* DASHBOARD GRID */
@@ -1238,12 +1257,12 @@ body {
 }
 
 .excel-grid {
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    min-width:900px;
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+
     width:100%;
-    overflow-x:auto;
+    min-width:0;
 }
 
 .excel-row.header{
@@ -1314,7 +1333,7 @@ body {
 }
 
 /* ======================
-    KPI CARDS (MEJORADAS)
+    KPI CARDS DASHBOARD
 ====================== */
 
 .cards-container {
@@ -1338,27 +1357,27 @@ body {
     transition: 0.25s ease;
 }
 
-/* EFECTO HOVER MÁS PRO */
+/* EFECTO DEL HOVER */
 .card:hover {
     transform: translateY(-6px);
     box-shadow: 0 10px 20px rgba(0,0,0,0.15);
 }
 
-/* TITULO KPI */
+/* TITULO DE LOS KPI */
 .card h5 {
     font-size: 14px;
     color: #666;
     margin-bottom: 5px;
 }
 
-/* VALOR KPI */
+/* VALOR DE LOS KPI */
 .card span {
     font-size: 28px;
     font-weight: bold;
     color: #007853;
 }
 
-/*idioma*/
+/* Caja de idioma */
 .idioma-box {
     position: fixed;
     top: 20px;
@@ -1374,7 +1393,7 @@ body {
     font-size: 13px;
 }
 
-/*Dashboard Separación*/
+/* Dashboard Separación de Elementos */
 .dashboard-container {
     padding: 25px 40px;
     max-width:100%;
@@ -1604,7 +1623,7 @@ lo-title {
 
     color: #007853;
 
-    font-size: 26px;
+    font-size: 22px;
 
     font-weight: 700;
 
@@ -1696,7 +1715,7 @@ lo-title {
     color: #1f2937 !important;
 }
 
-/* KPI DASHBOARD */
+/* DISEÑO DE KPIs PARA EL DASHBOARD */
 
 .dashboard-kpi {
 
@@ -1742,7 +1761,7 @@ lo-title {
     transform: scale(1.05);
 }
 
-/*Separador de secciones*/
+/* Separador de secciones en el DASHBOARD*/
 .dashboard-section-title {
     font-size: 30px;
     font-weight: bold;
@@ -1752,7 +1771,7 @@ lo-title {
     border-bottom: 3px solid #198754;
 }
 
-/* CABECERA RESUMEN Y DETALLE */
+/* CABECERA DE RESUMEN Y DETALLE */
 
 .excel-row.header {
     background: #007853 !important;
@@ -1763,7 +1782,7 @@ lo-title {
     font-weight: 700 !important;
 }
 
-/* NO CAMBIAR COLOR EN HOVER */
+/* NO CAMBIAR EL COLOR EN HOVER */
 
 .excel-row.header:hover {
     background: #007853 !important;
@@ -1771,13 +1790,6 @@ lo-title {
 
 .excel-row.header:hover div {
     color: white !important;
-}
-
-
-.barra-horizontal{
-    height:30px;
-    border-radius:6px;
-    margin:0;
 }
 
 .valor{
@@ -1789,7 +1801,7 @@ lo-title {
 
 .dia{
     color:white;
-    font-size:11px;
+    font-size:13px;
     margin-top:8px;
     text-align:center;
 }
@@ -1799,15 +1811,7 @@ lo-title {
     min-height:6px;
     background:#43e97b;
     border-radius:6px 6px 0 0;
-}
-
-.barra-tendencia::after{
-    content:'';
-    position:absolute;
-    top:0;
-    right:-18px;
-    width:18px;
-    border-top:2px solid white;
+    
 }
 
 .comparativa-container{
@@ -1825,6 +1829,7 @@ lo-title {
     height:40px;
     border-radius:8px;
     margin-top:8px;
+    max-width:100%;
 }
 
 .verde{
@@ -1835,15 +1840,74 @@ lo-title {
     background:#9ca3af;
 }
 
-.grafico-linea {
-    display: flex;
-    justify-content: center;
-    align-items: end;
-    gap: 40px;
-    min-height: 220px;
-    width: 100%;
+.barra-tendencia{
+    position:relative;
+    z-index:2;
 }
 
+.grafico-toolbar{
+    display:flex;
+    justify-content:flex-end;
+    gap:10px;
+    margin-bottom:15px;
+}
+
+.btn-scroll{
+    border:none;
+    border-radius:8px;
+    padding:8px 14px;
+
+    background:#ffffff;
+    color:#067a51;
+
+    font-weight:bold;
+    cursor:pointer;
+}
+
+.btn-scroll:hover{
+    background:#f3f4f6;
+}
+
+.grafico-wrapper{
+    width:100%;
+    overflow-x:auto;
+    overflow-y:hidden;
+}
+
+.grafico-linea{
+    display:grid;
+
+    grid-template-columns:
+        repeat(auto-fit,minmax(60px,80px));
+
+    justify-content:center; /* <-- esto */
+
+    gap:16px;
+}
+
+.punto{
+    flex:0 0 90px;
+    width: 60px;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+}
+
+
+.dashboard-info-card{
+    background:linear-gradient(
+        135deg,
+        #006847,
+        #009a6c
+    );
+
+    border-radius:22px;
+
+    padding:35px;
+
+    overflow:visible;
+}
 
 .valor{
     order:-1;
@@ -1851,22 +1915,251 @@ lo-title {
 
 .dia{
     margin-top:8px;
-    font-size:12px;
+    font-size:13px;
 }
 
-.punto{
-    min-width:45px;
+.dia small{
+    display:block;
+    margin-top:6px;
+    font-size:13px;
+    font-weight:600;
+    white-space:nowrap;
 }
 
-.dia {
-    text-align: center;
+/*Tabs del Dashboard*/
+.tabs-dashboard{
+    display:flex;
+    gap:10px;
+    margin-bottom:20px;
+}
+
+.tab-dashboard{
+    padding:12px 20px;
+    background:white;
+    border-radius:10px;
+    text-decoration:none;
+    color:#0a5c4a;
+    font-weight:600;
+    border:1px solid #dcdcdc;
+}
+
+.tab-dashboard.active{
+    background:#0a8a5b;
+    color:white;
+}
+
+
+/*Menu del dashboard*/
+.menu-toggle{
+    width:100%;
+    background:none;
+    border:none;
+    color:white;
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px 16px;
+    cursor:pointer;
+    font-size:16px;
+    text-align:left;
+}
+
+.menu-toggle:hover{
+    background:rgba(255,255,255,0.15);
+}
+
+.submenu{
+    margin-left:15px;
+    display:flex;
+    flex-direction:column;
+    gap:5px;
+}
+
+.nav-subitem{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:10px 14px;
+    color:white;
+    text-decoration:none;
+    border-radius:8px;
+    transition:.2s;
+}
+
+.nav-subitem:hover{
+    background:rgba(255,255,255,.15);
+}
+
+.menu-group{
+    margin-bottom:10px;
+}
+
+/*Indicadores*/
+.indicadores-header{
+    margin-bottom:30px;
+}
+
+.indicadores-header h1{
+    font-size:42px;
+    color:#0f3568;
+    font-weight:700;
+}
+
+.indicadores-header p{
+    color:#666;
+    font-size:18px;
+}
+
+.indicadores-grid{
+    display:grid;
+    grid-template-columns:repeat(auto-fit,minmax(320px,1fr));
+    gap:25px;
+}
+
+.indicador-card{
+    background:white;
+    padding:30px;
+    border-radius:18px;
+    text-decoration:none;
+    color:inherit;
+    box-shadow:0 8px 20px rgba(0,0,0,.08);
+    transition:.25s;
+}
+
+.indicador-card:hover{
+    transform:translateY(-5px);
+    box-shadow:0 12px 30px rgba(0,0,0,.12);
+}
+
+.indicador-card h3{
+    color:#0f3568;
+    margin-top:15px;
+}
+
+.icono{
+    font-size:40px;
+    color:#0a8a5b;
+}
+
+.indicadores-subtitulo{
+    color:#6b7280;
+    margin-bottom:25px;
+    font-size:17px;
+}
+
+/* mismos estilos que módulos */
+
+.modulo-box{
+    display:block;
+    text-decoration:none;
+}
+
+.dashboard-actions{
+    display:flex;
+    gap:12px;
+    margin-bottom:20px;
+}
+
+.dashboard-actions button{
+    min-width:170px;
+    font-weight:600;
+}
+
+.filtros {
+    display: flex;
+    gap: 12px;
+    margin-top: 20px;
+    margin-bottom: 40px;
+}
+
+.mes-selector{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    align-items:center;
+}
+
+.mes-chip{
+    border:none;
+    border-radius:20px;
+    padding:8px 14px;
+    background:#eceff1;
+    color:#55606d;
+    font-weight:600;
+    cursor:pointer;
+    transition:.25s;
+}
+
+.mes-chip:hover{
+    transform:translateY(-1px);
+}
+
+.mes-chip.activo{
+    background:#067a51;
+    color:white;
+    box-shadow:0 4px 12px rgba(6,122,81,.35);
+}
+
+.mes-chip.activo:hover{
+    background:#056844;
+}
+
+
+/* ====================== 
+    LOADING SPINNER Del HEADCOUNT DASHBOARD
+====================== */
+.loading-container {
+    position: fixed;
+    inset: 0;
+    background: rgba(255,255,255,0.90);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 99999;
+}
+
+.loading-spinner {
+    width: 70px;
+    height: 70px;
+    border: 8px solid #e5e7eb;
+    border-top: 8px solid #0a7b54;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+.loading-text {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: 600;
+    color: #0a7b54;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.tabs-dashboard {
+    display: flex;
+    gap: 1rem;
+    margin-bottom: 1rem;
+}
+
+.tab-link {
+    text-decoration: none;
+    padding: 8px 16px;
+    border-radius: 6px;
+    background-color: #f3f4f6;
+    color: #333;
+    font-weight: 600;
+}
+
+.tab-link.active {
+    background-color: #198754;
     color: white;
-    margin-top: 8px;
-    font-size: 12px;
-}
-
-.dia small {
-    display: block;
-    font-size: 10px;
-    opacity: .9;
 }
