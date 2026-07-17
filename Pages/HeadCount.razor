@@ -179,7 +179,7 @@ else
         if (!string.IsNullOrWhiteSpace(cargoFiltro))
             query = query.Where(e => e.Cgofic == cargoFiltro);
 
-        // ✅ FILTRO FECHA
+        // FILTRO FECHA
         if (fechaSeleccionada.HasValue)
         {
             if (tipoPeriodo == "diaria")

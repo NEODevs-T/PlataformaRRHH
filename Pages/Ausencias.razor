@@ -1,6 +1,8 @@
 @page "/ausencias"
 @inject IJSRuntime JS
 @using NeoRH.DTOs
+@using NeoAPI.DTOs.RRHH
+@using NeoAPI.RRHHModels
 @inject IRRHHApiService Api
 @using Microsoft.AspNetCore.Authorization
 
@@ -82,15 +84,15 @@ else
 }
 
 @code {
-    // 🔹 DATA
-    List<PermisosNomDiariaVDTO> nomina = new();
+    // DATA
+    List<PermisosNomDiariaHistVDTO> nomina = new();
     List<RepososVDTO> reposos = new();
     List<MaestroTrabajadorDTO> trabajadores = new();
 
     List<AusenciaDetalleDTO> resultado = new();
 
 
-    // 🔹 FILTROS
+    // FILTROS
     string? fichaFiltro;
     string? departamentoFiltro;
     string? cargoFiltro;
@@ -126,7 +128,7 @@ else
     {
         resultado.Clear();
 
-        // 🔹 NOMINA (FALTAS / PERMISOS)
+        // NOMINA (FALTAS / PERMISOS)
         foreach (var x in nomina)
         {
             int anio = (int)x.Añohnh;
@@ -166,7 +168,7 @@ else
             }
         }
 
-        // 🔹 REPOSOS
+        // REPOSOS
         foreach (var r in reposos)
         {
             if (!r.FechaDesde.HasValue) continue;
@@ -190,7 +192,7 @@ else
             });
         }
 
-        // 🔹 FILTROS FINALES
+        // FILTROS FINALES
 
         if (!string.IsNullOrEmpty(fichaFiltro))
             resultado = resultado.Where(x => x.Ficha.Contains(fichaFiltro)).ToList();

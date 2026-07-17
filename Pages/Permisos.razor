@@ -144,14 +144,14 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // ✅ REPOSOS
+        // REPOSOS
         var rep = await Api.GetReposos();
 
         if (rep != null)
         {
             reposos = rep;
 
-            // ✅ llenar departamentos
+            // llenar departamentos
             departamentos = reposos
                 .Select(x => x.Departamento)
                 .Where(x => !string.IsNullOrWhiteSpace(x))
@@ -159,15 +159,9 @@ else
                 .ToList();
         }
 
-        // ✅ PERMISOS
-        var all = await Api.GetAusencias();
+        // PERMISOS DESHABILITADOS TEMPORALMENTE
 
-        if (all != null)
-        {
-            permisos = all
-                .Where(x => x.Tpndnh == "P")
-                .ToList();
-        }
+        permisos = new List<AusenciaVDTO>();
 
         repososFiltrado = reposos;
         permisosFiltrado = permisos;
@@ -251,7 +245,7 @@ else
         }
     }
 
-    // ✅ EXPORTAR POR TAB
+    // EXPORTAR POR TAB
     async Task ExportarExcel()
     {
         var sb = new StringBuilder();

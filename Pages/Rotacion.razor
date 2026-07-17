@@ -185,7 +185,7 @@ else
                         Nombre = x.Nomfi1 ?? "",
                         Apellido = x.Apefi1 ?? "",
                         Cargo = x.Cgofic ?? "",
-                        CargoNuevo = x.Cgofic ?? "" // listo para futuro backend
+                        CargoNuevo = x.Cgofic ?? ""
                     }).ToList(),
 
                     Retiros = retiros.Select(x => new PersonaMovimiento
@@ -204,7 +204,7 @@ else
             .ToList();
     }
 
-    // ✅ MODELOS
+    // MODELOS
 
     public class HeadCountViewModel
     {

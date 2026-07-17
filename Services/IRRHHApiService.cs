@@ -1,10 +1,9 @@
 using NeoRH.DTOs;
+using NeoAPI.DTOs.RRHH;
+using NeoAPI.RRHHModels;
 
 public interface IRRHHApiService
-{
-    // AUSENCIAS
-    Task<List<AusenciaVDTO>> GetAusencias();
-
+{  
     // Maestro Trabajadores
     Task<List<MaestroTrabajadorDTO>> GetMaestroTrabajadores();
 
@@ -12,12 +11,14 @@ public interface IRRHHApiService
     Task<List<PeriodosVDTO>> GetPeriodos();
 
     // PERMISOS
-    Task<List<PermisosNomDiariaVDTO>> GetPermisosNomDiaria();
+    Task<List<PermisosNomDiariaHistVDTO>> GetPermisosNomDiaria();
+
+    Task<List<VRotacionDTO>> GetNominaMensual();
 
     // REPOSOS
     Task<List<RepososVDTO>> GetReposos();
 
-    //Login
+    //LOGIN
     Task<string?> Login(UserLoginDto dto);
 
     // GENERICO (opcional)

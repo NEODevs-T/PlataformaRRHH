@@ -79,7 +79,6 @@ else
 
 @code {
 
-    List<AusenciaVDTO> ausencias = new();
     List<MaestroTrabajadorDTO> empleados = new();
     List<AusenciaViewModel> ausenciasCombinadas = new();
 
@@ -91,8 +90,7 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // ✅ AHORA SÍ TRAEMOS EMPLEADOS
-        ausencias = await Api.GetAusencias();
+        // SE TRAEN LOS EMPLEADOS
         empleados = await Api.GetMaestroTrabajadores();
 
         CombinarDatos();
@@ -102,32 +100,7 @@ else
 
     void CombinarDatos()
     {
-        ausenciasCombinadas = (
-            from a in ausencias
-            join e in empleados
-            on a.Ciadnh equals e.Codfic into temp
-            from e in temp.DefaultIfEmpty()
-            select new AusenciaViewModel
-            {
-                Ficha = a.Ciadnh,
-                Tipo = a.Tpndnh,
-                Año = a.Añodnh,
-                Fecha = a.Ficdnh,
-
-                Nombre = e != null
-                    ? string.Join(" ", new[]
-                    {
-                        e.Nomfi1,
-                        e.Nomfi2,
-                        e.Apefi1,
-                        e.Apefi2
-                    }.Where(x => !string.IsNullOrWhiteSpace(x)))
-                    : "N/A",
-
-                Departamento = e?.Dptfic ?? "N/A",
-                Cargo = e?.Cgofic ?? "N/A"
-            }
-        ).ToList();
+        ausenciasCombinadas = new List<AusenciaViewModel>();
     }
 
     void AplicarFiltros()

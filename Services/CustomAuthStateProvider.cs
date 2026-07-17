@@ -21,7 +21,7 @@ namespace NeoRH.Services
 
         public override async Task<AuthenticationState> GetAuthenticationStateAsync()
         {
-            // ✅ TOKEN CORRECTO
+            // TOKEN DE LA PLATAFORMA
             var token = await _localStorage.GetItemAsStringAsync("PlataformaRHToken") ?? "";
 
             var identity = new ClaimsIdentity();
@@ -29,7 +29,6 @@ namespace NeoRH.Services
 
             if (!string.IsNullOrEmpty(token))
             {
-                // ✅ LIMPIEZA MÍNIMA (NO ROMPE NADA)
                 token = token
                     .Replace("\"", "")
                     .Replace("\n", "")
@@ -60,7 +59,6 @@ namespace NeoRH.Services
                 .Replace("\r", "")
                 .Trim();
 
-            // ✅ AQUÍ EL CAMBIO IMPORTANTE
             await _localStorage.SetItemAsync("PlataformaRHToken", token);
 
             _http.DefaultRequestHeaders.Authorization =

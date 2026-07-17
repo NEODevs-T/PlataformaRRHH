@@ -1,5 +1,7 @@
 using System.Net.Http.Json;
 using NeoRH.DTOs;
+using NeoAPI.DTOs.RRHH;
+using NeoAPI.RRHHModels;
 
 public class RRHHApiService : IRRHHApiService
 {
@@ -18,13 +20,7 @@ public class RRHHApiService : IRRHHApiService
         {
             var url = $"{_baseUrl}{endpoint}";
 
-            Console.WriteLine("=====================================");
-            Console.WriteLine($"GET => {url}");
-            Console.WriteLine("=====================================");
-
             var response = await _http.GetAsync(url);
-
-            Console.WriteLine($"STATUS => {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
             {
@@ -38,8 +34,6 @@ public class RRHHApiService : IRRHHApiService
             var data =
                 await response.Content.ReadFromJsonAsync<List<T>>();
 
-            Console.WriteLine($"REGISTROS => {data?.Count ?? 0}");
-
             return data ?? new List<T>();
         }
         catch (Exception ex)
@@ -51,6 +45,13 @@ public class RRHHApiService : IRRHHApiService
         }
     }
 
+        public async Task<List<VRotacionDTO>> GetNominaMensual()
+    {
+        return await _http.GetFromJsonAsync<List<VRotacionDTO>>(
+            "api/rrhh/nomina-mensual")
+            ?? new();
+    }
+
     public async Task<string?> Login(UserLoginDto dto)
     {
         try
@@ -58,8 +59,6 @@ public class RRHHApiService : IRRHHApiService
             var response = await _http.PostAsJsonAsync(
                 "api/Auth/Login",
                 dto);
-
-            Console.WriteLine($"LOGIN STATUS => {response.StatusCode}");
 
             if (!response.IsSuccessStatusCode)
                 return null;
@@ -78,17 +77,8 @@ public class RRHHApiService : IRRHHApiService
     {
         Console.WriteLine("Consultando MaestroTrabajador...");
 
-        return await _http.GetFromJsonAsync<List<MaestroTrabajadorDTO>>(
-            "api/maestrotrabajador")
-            ?? new List<MaestroTrabajadorDTO>();
-    }
-
-    public async Task<List<AusenciaVDTO>> GetAusencias()
-    {
-        Console.WriteLine("Consultando AusenciaV...");
-
-        return await GetAsync<AusenciaVDTO>(
-            "AusenciaV");
+        return await GetAsync<MaestroTrabajadorDTO>(
+            "MaestroTrabajador");
     }
 
     public async Task<List<PeriodosVDTO>> GetPeriodos()
@@ -99,11 +89,11 @@ public class RRHHApiService : IRRHHApiService
             "PeriodosV");
     }
 
-    public async Task<List<PermisosNomDiariaVDTO>> GetPermisosNomDiaria()
+    public async Task<List<PermisosNomDiariaHistVDTO>> GetPermisosNomDiaria()
     {
         Console.WriteLine("Consultando PermisosNomDiariaV...");
 
-        return await GetAsync<PermisosNomDiariaVDTO>(
+        return await GetAsync<PermisosNomDiariaHistVDTO>(
             "PermisosNomDiariaV");
     }
 
@@ -126,8 +116,6 @@ public class RRHHApiService : IRRHHApiService
             var response = await _http.PostAsJsonAsync(
                 url,
                 data);
-
-            Console.WriteLine($"POST STATUS => {response.StatusCode}");
 
             return response.IsSuccessStatusCode;
         }
