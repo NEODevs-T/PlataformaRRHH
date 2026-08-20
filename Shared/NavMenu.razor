@@ -1,9 +1,10 @@
 ﻿@namespace NeoRH.Shared
 
+@using NeoRH.Services
 @using Microsoft.AspNetCore.Components.Routing
 @using Microsoft.AspNetCore.Components.Authorization
 
-<div class="sidebar-menu">
+<div class="menu">
 
     <!-- HEADER -->
     <div class="sidebar-header">
@@ -12,7 +13,16 @@
     </div>
 
     <!-- MENU -->
-    <div class="menu">
+    <AuthorizeView>
+        <Authorized Context="auth">
+
+            @{
+                var rol = CustomAuthStateProvider.GetUserRole(auth.User);
+
+                bool esAdmin =
+                    rol == "Admin" ||
+                    rol == "SuperAdmin";
+            }
 
         <!-- INICIO -->
         <NavLink href="/"
@@ -36,6 +46,9 @@
             <span>Ausencias</span>
         </NavLink>
 
+        @if (esAdmin)
+        {
+
         <!-- HISTORICO -->
         <NavLink href="/historico"
                 class="nav-item">
@@ -50,20 +63,13 @@
             <span>HeadCount</span>
         </NavLink>
 
-        <!-- PERMISOS -->
-        <NavLink href="/permisos"
-                class="nav-item">
-            <i class="oi oi-key"></i>
-            <span>Permisos</span>
+        <!-- ROTACION -->
+        <NavLink href="/rotacion" class="nav-item">
+            <i class="oi oi-random"></i>
+            <span>Rotación</span>
         </NavLink>
-
-        <!-- REPOSOS -->
-        <NavLink href="/reposos"
-                class="nav-item">
-            <i class="oi oi-heart"></i>
-            <span>Reposos</span>
-        </NavLink>
-
-    </div>
+        }
+                </Authorized>
+    </AuthorizeView>
 
 </div>

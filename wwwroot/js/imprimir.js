@@ -1,16 +1,28 @@
-window.downloadFile = (fileName, bytesBase64) => {
+window.imprimirElemento = function (id) {
 
-    const link = document.createElement('a');
+    const contenido = document.getElementById(id);
 
-    link.download = fileName;
+    if (!contenido) {
+        console.error(`No existe el elemento ${id}`);
+        return;
+    }
 
-    link.href =
-        "data:application/octet-stream;base64," +
-        bytesBase64;
+    const ventana = window.open('', '_blank');
 
-    document.body.appendChild(link);
+    ventana.document.write(`
+        <html>
+        <head>
+            <title>Detalle Reposo</title>
+        </head>
+        <body>
+            ${contenido.innerHTML}
+        </body>
+        </html>
+    `);
 
-    link.click();
+    ventana.document.close();
 
-    document.body.removeChild(link);
+    setTimeout(() => {
+        ventana.print();
+    }, 500);
 };

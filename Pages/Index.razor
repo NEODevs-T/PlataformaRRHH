@@ -1,7 +1,16 @@
 ﻿@page "/"
 
+@using NeoRH.DTOs
+@using NeoRH.Services
+
+@inject IRRHHApiService Api
+@inject CustomAuthStateProvider CustomAuthStateProvider
 @inject NavigationManager Nav
 @inject AuthenticationStateProvider AuthStateProvider
+
+<link href="css/site.css" rel="stylesheet" />   
+<link href="/css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+<script src="js/imprimir.js"></script>
 
 <PageTitle>Inicio</PageTitle>
 
@@ -33,7 +42,14 @@
             </div>
 
             <div class="kpi-number">
-                N/A
+                @if (cargandoKPIs)
+                {
+                    <div class="spinner-kpi"></div>
+                }
+                else
+                {
+                    @personalActivo
+                }
             </div>
 
         </div>
@@ -42,24 +58,38 @@
 
             <div class="kpi-header">
                 <div class="kpi-icon">📅</div>
-                <h3>Ausencias del Día</h3>
+                <h3>Reposos del Día</h3>
             </div>
 
             <div class="kpi-number">
-                N/A
+                @if (cargandoKPIs)
+                {
+                    <div class="spinner-kpi"></div>
+                }
+                else
+                {
+                    @repososHoy
+                }
             </div>
-
+            
         </div>
 
         <div class="card">
 
             <div class="kpi-header">
                 <div class="kpi-icon">🏢</div>
-                <h3>Departamentos</h3>
+                <h3>Rotación</h3>
             </div>
 
             <div class="kpi-number">
-                N/A
+                @if (cargandoKPIs)
+                {
+                    <div class="spinner-kpi"></div>
+                }
+                else
+                {
+                    @rotacionHoy
+                }
             </div>
 
         </div>
@@ -107,82 +137,117 @@
 
         <div class="modulos-grid">
 
-            <div class="modulo-box"
-                @onclick='() => Nav.NavigateTo("/indicadores")'>
+        <!-- TODOS -->
 
-                <h4>📊 Indicadores</h4>
+        <div class="modulo-box"
+            @onclick='() => Nav.NavigateTo("/indicadores")'>
 
-                <p>
-                    Indicadores, tendencias y métricas clave de RRHH.
-                </p>
+            <h4>📊 Indicadores</h4>
 
-            </div>
-
-            <div class="modulo-box"
-                @onclick='() => Nav.NavigateTo("/ausencias")'>
-
-                <h4>📅 Ausencias</h4>
-
-                <p>
-                    Consulta y seguimiento detallado de ausencias.
-                </p>
-
-            </div>
-
-            <div class="modulo-box"
-                @onclick='() => Nav.NavigateTo("/historico")'>
-
-                <h4>🕘 Histórico</h4>
-
-                <p>
-                    Análisis y consulta de información histórica.
-                </p>
-
-            </div>
-
-            <div class="modulo-box"
-                @onclick='() => Nav.NavigateTo("/headcount")'>
-
-                <h4>👥 HeadCount</h4>
-
-                <p>
-                    Control de personal activo y estructura organizacional.
-                </p>
-
-            </div>
-
-            <div class="modulo-box"
-                @onclick='() => Nav.NavigateTo("/permisos")'>
-
-                <h4>📋 Permisos</h4>
-
-                <p>
-                    Gestión y seguimiento de permisos laborales.
-                </p>
-
-            </div>
-
-            <div class="modulo-box"
-                @onclick='() => Nav.NavigateTo("/reposos")'>
-
-                <h4>❤️ Reposos</h4>
-
-                <p>
-                    Control y monitoreo de reposos médicos.
-                </p>
-
-            </div>
+            <p>
+                Indicadores, tendencias y métricas clave de RRHH.
+            </p>
 
         </div>
 
-    </div>
+        <div class="modulo-box"
+            @onclick='() => Nav.NavigateTo("/ausencias")'>
 
-</div>
+            <h4>📅 Ausencias</h4>
 
-@code {
+            <p>
+                Consulta y seguimiento detallado de ausencias.
+            </p>
+
+        </div>
+
+            @if (rol == "Admin" || rol == "SuperAdmin")
+            {
+                <div class="modulo-box"
+                    @onclick='() => Nav.NavigateTo("/historico")'>
+                    <h4>🕘 Histórico</h4>
+                    <p>
+                        Análisis y consulta de información histórica.
+                    </p>
+                </div>
+
+                <div class="modulo-box"
+                    @onclick='() => Nav.NavigateTo("/headcount")'>
+                    <h4>👥 HeadCount</h4>
+                    <p>
+                        Control de personal activo y estructura organizacional.
+                    </p>
+                </div>
+
+                <div class="modulo-box"
+                    @onclick='() => Nav.NavigateTo("/rotacion")'>
+                    <h4>🔄 Rotación</h4>
+                    <p>
+                        Seguimiento de ingresos, retiros y movimientos de personal.
+                    </p>
+                </div>
+            }
+
+            </div> 
+
+        </div> 
+
+    </div> 
+
+@code
+{
+    string rol = "";
+
+    List<MaestroTrabajadorDTO> trabajadores = new();
+    List<RepososVDTO> reposos = new();
+
+    int personalActivo = 0;
+    int repososHoy = 0;
+    int rotacionHoy = 0;
+
+    bool cargandoKPIs = true;
+
+        private bool EsPasantePaveca(MaestroTrabajadorDTO x)
+    {
+        return x.Ciafic == "10"
+            && x.Tpnfic == "2102";
+    }
+
+    private bool EsAprendizPaveca(MaestroTrabajadorDTO x)
+    {
+        return x.Ciafic == "10"
+            && x.Cgofic == "000047";
+    }
+
+    private bool EsAprendizDeforsa(MaestroTrabajadorDTO x)
+    {
+        return x.Ciafic == "24"
+            && x.Cgofic == "000015";
+    }
+
+    private bool EsAprendizChempro(MaestroTrabajadorDTO x)
+    {
+        return x.Ciafic == "23"
+            && x.Cgofic == "000047";
+    }
+
+    private readonly HashSet<string> FichasExcluidas = new()
+    {
+        "A3129","A3744","A0018","A0025","I4719","J4941","J5221","I5207",
+        "22325","30855","31020","I4625",
+        "21592","22168","22182","22662","30759","30916","80292",
+        "A4750","I4494","I4570","I4571","I4572","I4578","I4611",
+        "I4628","I4629","I4715","I4743","I4744","I4745","I4749",
+        "I4978","I4979","I5003","I5013","I5014","I5141","I5143","I5144",
+        "10570","21956","22016","22255","22478","22831",
+        "23060","23070","30888","5I167","90218",
+        "J5233"
+    };
 
     protected override async Task OnInitializedAsync()
-    {
+    {   
+        try
+        {
         var auth = await AuthStateProvider.GetAuthenticationStateAsync();
 
         if (!auth.User.Identity?.IsAuthenticated ?? true)
@@ -190,6 +255,51 @@
             Nav.NavigateTo("/login", true);
             return;
         }
-    }
 
+        rol = CustomAuthStateProvider.GetUserRole(auth.User);
+
+        try
+        {
+            trabajadores = await Api.GetMaestroTrabajadores() ?? new();
+            var personalPaveca = trabajadores
+                .Where(x => x.Fecret == 0) // Activos
+                .Where(x => x.Ciafic == "10") // PAVECA
+                .Where(x => !EsPasantePaveca(x))
+                .Where(x => !EsAprendizPaveca(x))
+                .ToList();
+            personalActivo = personalPaveca.Count;
+            rotacionHoy = trabajadores
+            .Where(x => !string.IsNullOrWhiteSpace(x.Dptfic))
+            .Select(x => x.Dptfic)
+            .Distinct()
+            .Count();
+        }
+        catch
+        {
+            personalActivo = 0;
+            rotacionHoy = 0;
+        }
+
+        try
+        {
+            reposos = await Api.GetReposos() ?? new();
+
+            var hoy = DateOnly.FromDateTime(DateTime.Today);
+
+            repososHoy = reposos.Count(x =>
+                x.FechaDesde.HasValue &&
+                x.FechaDesde.Value == hoy);
+        }
+        catch
+        {
+            repososHoy = 0;
+        }
+        }
+        finally
+        {
+            cargandoKPIs = false;
+        }
+
+        
+    }
 }

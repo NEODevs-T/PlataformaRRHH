@@ -52,24 +52,31 @@
 
     <!-- Scripts propios -->
     <script src="js/imprimir.js"></script>
-    <script srcjs
 
     <script>
-        window.downloadFile = (fileName, base64) => {
+            window.downloadFile = (fileName, bytesBase64) => {
 
-            const link = document.createElement('a');
+                const link = document.createElement("a");
 
-            link.download = fileName;
+                link.download = fileName;
 
-            link.href =
-                "data:text/csv;base64," + base64;
+                const extension = fileName.toLowerCase();
 
-            document.body.appendChild(link);
+                if (extension.endsWith(".pdf")) {
+                    link.href =
+                        `data:application/pdf;base64,${bytesBase64}`;
+                }
+                else if (extension.endsWith(".xlsx")) {
+                    link.href =
+                        `data:application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;base64,${bytesBase64}`;
+                }
 
-            link.click();
+                document.body.appendChild(link);
 
-            document.body.removeChild(link);
-        };
+                link.click();
+
+                document.body.removeChild(link);
+            };
 
         window.initScrollObserver = (
             dotnetHelper,

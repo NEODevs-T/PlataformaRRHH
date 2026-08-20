@@ -42,6 +42,11 @@ namespace NeoRH.Services
             }
 
             var user = new ClaimsPrincipal(identity);
+
+                        foreach (var claim in user.Claims)
+            {
+                Console.WriteLine($"{claim.Type} = {claim.Value}");
+            }
             var state = new AuthenticationState(user);
 
             NotifyAuthenticationStateChanged(Task.FromResult(state));
