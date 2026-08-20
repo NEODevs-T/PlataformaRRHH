@@ -54,7 +54,6 @@ if (!app.Environment.IsDevelopment())
 app.UseHttpsRedirection();
 
 // STATIC FILES
-app.UsePathBase("/NeoRRHH");
 
 app.UseStaticFiles();
 

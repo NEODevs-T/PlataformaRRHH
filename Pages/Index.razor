@@ -140,7 +140,7 @@
         <!-- TODOS -->
 
         <div class="modulo-box"
-            @onclick='() => Nav.NavigateTo("/indicadores")'>
+            @onclick='() => Nav.NavigateTo("indicadores")'>
 
             <h4>📊 Indicadores</h4>
 
@@ -151,7 +151,7 @@
         </div>
 
         <div class="modulo-box"
-            @onclick='() => Nav.NavigateTo("/ausencias")'>
+            @onclick='() => Nav.NavigateTo("ausencias")'>
 
             <h4>📅 Ausencias</h4>
 
@@ -164,7 +164,7 @@
             @if (rol == "Admin" || rol == "SuperAdmin")
             {
                 <div class="modulo-box"
-                    @onclick='() => Nav.NavigateTo("/historico")'>
+                    @onclick='() => Nav.NavigateTo("historico")'>
                     <h4>🕘 Histórico</h4>
                     <p>
                         Análisis y consulta de información histórica.
@@ -172,7 +172,7 @@
                 </div>
 
                 <div class="modulo-box"
-                    @onclick='() => Nav.NavigateTo("/headcount")'>
+                    @onclick='() => Nav.NavigateTo("headcount")'>
                     <h4>👥 HeadCount</h4>
                     <p>
                         Control de personal activo y estructura organizacional.
@@ -180,7 +180,7 @@
                 </div>
 
                 <div class="modulo-box"
-                    @onclick='() => Nav.NavigateTo("/rotacion")'>
+                    @onclick='() => Nav.NavigateTo("rotacion")'>
                     <h4>🔄 Rotación</h4>
                     <p>
                         Seguimiento de ingresos, retiros y movimientos de personal.
@@ -252,7 +252,7 @@
 
         if (!auth.User.Identity?.IsAuthenticated ?? true)
         {
-            Nav.NavigateTo("/login", true);
+            Nav.NavigateTo($"{Nav.BaseUri}login", true);    
             return;
         }
 
