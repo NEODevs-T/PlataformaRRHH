@@ -507,11 +507,12 @@ body {
     align-items: center;
 
     background:
-        linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.65)),
+        linear-gradient(rgba(0,0,0,.45), rgba(0,0,0,.65)),
         url('/img/fondologin.jpg');
 
     background-size: cover;
     background-position: center;
+    background-repeat: no-repeat;
 }
 
 /* CARD DEL LOGIN */
@@ -1174,24 +1175,31 @@ body {
     color: #007853;
 }
 
-.excel-grid {
-    display:flex;
-    flex-direction:column;
-    gap:6px;
+.excel-grid .excel-row,
+.resumen-grid .excel-row {
+    display: grid;
+    grid-template-columns:
+        2.2fr   /* Tipo Nómina */
+        1fr     /* HeadCount */
+        1fr     /* Permisos */
+        1fr     /* Faltas */
+        1fr     /* Reposos */
+        1.4fr   /* Total Ausencias */
+        1.4fr   /* Días Hábiles */
+        1.6fr   /* Total Días Laborales */
+        1fr;    /* Índice */
 
-    width:100%;
-    min-width:0;
-}
-
-.excel-row.header{
-    background:#0a7a52;
-    color:#fff;
-    font-weight:600;
+    align-items: center;
 }
 
 .excel-row.header div {
+    font-weight: 600;
+    line-height: 1.2;
+    text-align: center;
+    white-space: normal;
     color: white !important;
 }
+
 
 .excel-row div {
     color: #1f2937 !important;
@@ -1658,11 +1666,6 @@ body {
 
 .excel-row.header {
     background: #007853 !important;
-}
-
-.excel-row.header div {
-    color: white !important;
-    font-weight: 700 !important;
 }
 
 /* NO CAMBIAR EL COLOR EN HOVER */
@@ -3089,5 +3092,36 @@ thead{
 
 .table-responsive::-webkit-scrollbar-track {
     background: #e9ecef;
+}
+
+/* RESUMEN ANUAL */
+.dashboard-card .excel-grid{
+    width:100%;
+}
+
+.dashboard-card .excel-row{
+    width:100%;
+    display:grid;
+    grid-template-columns:
+        2.2fr
+        1fr
+        1fr
+        1fr
+        1fr
+        1.4fr
+        1.4fr
+        1.6fr
+        1fr;
+}
+
+.dashboard-card .excel-row div{
+    width:100%;
+    text-align:center;
+}
+
+/* Centrar primera columna */
+.dashboard-card .excel-row div:first-child{
+    text-align:left;
+    padding-left:16px;
 }
 

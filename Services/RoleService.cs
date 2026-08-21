@@ -22,18 +22,16 @@ public class RoleService
                 UsrAdmin = "Global";
                 break;
 
-            case "RRHH_Admin":
-            case "RRHH_User":
+            case "Gerente_RRHH":
+            case "SuperUser":
                 UsrRol = "RRHH";
                 break;
 
-            case "Salud_Admin":
-            case "Salud_User":
+            case "Gerente_Salud":
                 UsrRol = "Salud";
                 break;
 
-            case "Finanzas_Admin":
-            case "Finanzas_User":
+            case "Gerente_Finanzas":
                 UsrRol = "Finanzas";
                 break;
 

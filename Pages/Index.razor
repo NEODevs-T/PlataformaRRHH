@@ -127,68 +127,108 @@
         </div>
 
     </div>
+            <!-- MODULOS -->
+            <div class="dashboard-card">
 
-    <!-- MODULOS -->
-    <div class="dashboard-card">
+                <h2 class="modulo-title">
+                    Módulos Disponibles
+                </h2>
 
-        <h2 class="modulo-title">
-            Módulos Disponibles
-        </h2>
+                <div class="modulos-grid">
 
-        <div class="modulos-grid">
+                    @if (
+            rol == "Admin" ||
+            rol == "SuperAdmin"
+        )
+        {
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("indicadores")'>
+                <h4>📊 Indicadores</h4>
+                <p>
+                    Indicadores, tendencias y métricas clave de RRHH.
+                </p>
+            </div>
 
-        <!-- TODOS -->
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("ausencias")'>
+                <h4>📅 Ausencias</h4>
+                <p>
+                    Consulta y seguimiento detallado de ausencias.
+                </p>
+            </div>
 
-        <div class="modulo-box"
-            @onclick='() => Nav.NavigateTo("indicadores")'>
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("historico")'>
+                <h4>🕘 Histórico</h4>
+                <p>
+                    Análisis y consulta de información histórica.
+                </p>
+            </div>
 
-            <h4>📊 Indicadores</h4>
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("headcount")'>
+                <h4>👥 HeadCount</h4>
+                <p>
+                    Control de personal activo y estructura organizacional.
+                </p>
+            </div>
 
-            <p>
-                Indicadores, tendencias y métricas clave de RRHH.
-            </p>
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("rotacion")'>
+                <h4>🔄 Rotación</h4>
+                <p>
+                    Seguimiento de ingresos, retiros y movimientos de personal.
+                </p>
+            </div>
+        }
 
-        </div>
+        @if (
+            rol == "Gerente_RRHH" ||
+            rol == "SuperUser"
+        )
+        {
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("indicadores")'>
+                <h4>📊 Indicadores</h4>
+                <p>
+                    Indicadores, tendencias y métricas clave de RRHH.
+                </p>
+            </div>
 
-        <div class="modulo-box"
-            @onclick='() => Nav.NavigateTo("ausencias")'>
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("ausencias")'>
+                <h4>📅 Ausencias</h4>
+                <p>
+                    Consulta y seguimiento detallado de ausencias.
+                </p>
+            </div>
+        }
 
-            <h4>📅 Ausencias</h4>
+        @if (
+            rol == "Gerente_Finanzas" 
+        )
+        {
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("ausencias")'>
+                <h4>📅 Ausencias</h4>
+                <p>
+                    Consulta y seguimiento detallado de ausencias.
+                </p>
+            </div>
+        }
 
-            <p>
-                Consulta y seguimiento detallado de ausencias.
-            </p>
-
-        </div>
-
-            @if (rol == "Admin" || rol == "SuperAdmin")
-            {
-                <div class="modulo-box"
-                    @onclick='() => Nav.NavigateTo("historico")'>
-                    <h4>🕘 Histórico</h4>
-                    <p>
-                        Análisis y consulta de información histórica.
-                    </p>
-                </div>
-
-                <div class="modulo-box"
-                    @onclick='() => Nav.NavigateTo("headcount")'>
-                    <h4>👥 HeadCount</h4>
-                    <p>
-                        Control de personal activo y estructura organizacional.
-                    </p>
-                </div>
-
-                <div class="modulo-box"
-                    @onclick='() => Nav.NavigateTo("rotacion")'>
-                    <h4>🔄 Rotación</h4>
-                    <p>
-                        Seguimiento de ingresos, retiros y movimientos de personal.
-                    </p>
-                </div>
-            }
-
-            </div> 
+        @if (
+            rol == "Gerente_Salud"
+        )
+        {
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("ausencias")'>
+                <h4>📅 Ausencias</h4>
+                <p>
+                    Consulta y seguimiento detallado de ausencias.
+                </p>
+            </div>
+        }
 
         </div> 
 

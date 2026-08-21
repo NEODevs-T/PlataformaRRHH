@@ -22,22 +22,38 @@
                 bool esAdmin =
                     rol == "Admin" ||
                     rol == "SuperAdmin";
+
+                bool esRRHH =
+                    rol == "Gerente_RRHH" ||
+                    rol == "SuperUser";
+
+                bool esFinanzas =
+                    rol == "Gerente_Finanzas";
+
+                bool esSalud =
+                    rol == "Gerente_Salud";
             }
 
         <!-- INICIO -->
-        <NavLink href="/"
+        <NavLink href=""
                 class="nav-item"
                 Match="NavLinkMatch.All">
             <i class="oi oi-home"></i>
             <span>Inicio</span>
         </NavLink>
 
+        @if (esAdmin || esRRHH)
+        {
         <!-- INDICADORES -->
         <NavLink href="indicadores"
                 class="nav-item">
             <i class="oi oi-bar-chart"></i>
             <span>Indicadores</span>
         </NavLink>
+
+        }
+        @if (esAdmin || esRRHH || esFinanzas || esSalud)
+        {
 
         <!-- AUSENCIAS -->
         <NavLink href="ausencias"
@@ -46,9 +62,10 @@
             <span>Ausencias</span>
         </NavLink>
 
+        }
+
         @if (esAdmin)
         {
-
         <!-- HISTORICO -->
         <NavLink href="historico"
                 class="nav-item">
