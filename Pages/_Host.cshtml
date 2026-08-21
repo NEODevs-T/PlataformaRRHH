@@ -2,13 +2,14 @@
 @namespace NeoRH.Pages
 @addTagHelper *, Microsoft.AspNetCore.Mvc.TagHelpers
 @using NeoRH
+@inject IConfiguration Configuration
 
 <!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <base href="/NeoRRHH/" />
+    <base href="@Configuration" />
 
     <title>Neo RRHH</title>
 
