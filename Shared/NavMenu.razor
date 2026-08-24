@@ -35,7 +35,7 @@
             }
 
         <!-- INICIO -->
-        <NavLink href=""
+        <NavLink href="/"
                 class="nav-item"
                 Match="NavLinkMatch.All">
             <i class="oi oi-home"></i>
@@ -45,7 +45,7 @@
         @if (esAdmin || esRRHH)
         {
         <!-- INDICADORES -->
-        <NavLink href="indicadores"
+        <NavLink href="/indicadores"
                 class="nav-item">
             <i class="oi oi-bar-chart"></i>
             <span>Indicadores</span>
@@ -56,7 +56,7 @@
         {
 
         <!-- AUSENCIAS -->
-        <NavLink href="ausencias"
+        <NavLink href="/ausencias"
                 class="nav-item">
             <i class="oi oi-calendar"></i>
             <span>Ausencias</span>
@@ -67,21 +67,21 @@
         @if (esAdmin)
         {
         <!-- HISTORICO -->
-        <NavLink href="historico"
+        <NavLink href="/historico"
                 class="nav-item">
             <i class="oi oi-clock"></i>
             <span>Histórico</span>
         </NavLink>
 
         <!-- HEADCOUNT -->
-        <NavLink href="headcount"
+        <NavLink href="/headcount"
                 class="nav-item">
             <i class="oi oi-people"></i>
             <span>HeadCount</span>
         </NavLink>
 
         <!-- ROTACION -->
-        <NavLink href="rotacion" class="nav-item">
+        <NavLink href="/rotacion" class="nav-item">
             <i class="oi oi-random"></i>
             <span>Rotación</span>
         </NavLink>
