@@ -2258,25 +2258,22 @@ thead{
     background: transparent;
 }
 
-.dropdown-departamentos {
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
+.dropdown-departamentos{
+    position:absolute;
+    top:100%;
+    left:0;
 
-    width:450px;
+    width:100%;
     min-width:450px;
 
-    background: white;
-    border: 1px solid #dcdcdc;
-    border-radius: 8px;
+    max-height:320px;
+    overflow-y:auto;
 
-    z-index: 9999;
+    background:white;
+    border:1px solid #dcdcdc;
+    border-radius:8px;
 
-    height: 320px;
-    max-height: 320px;
-    overflow-y: auto;
-    overflow-x: hidden;
+    z-index:9999;
 }
 
 .headcount-table .table-custom th:first-child,
@@ -3150,18 +3147,29 @@ thead{
     position: relative;
 }
 
-.btn-limpiar-departamentos {
-    position: absolute;
-    right: 8px;
-    top: 50%;
-    transform: translateY(-50%);
-    border: none;
-    background: transparent;
-    color: #666;
-    font-size: 18px;
-    font-weight: bold;
-    cursor: pointer;
-    padding: 0 6px;
+.btn-limpiar-departamentos{
+    position:absolute;
+    right:10px;
+    top:50%;
+    transform:translateY(-50%);
+
+    width:24px;
+    height:24px;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    border:none;
+    background:transparent;
+
+    color:#666;
+    font-size:24px;
+    line-height:1;
+
+    cursor:pointer;
+
+    z-index:20;
 }
 
 .btn-limpiar-departamentos:hover {
