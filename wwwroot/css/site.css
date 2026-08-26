@@ -2247,7 +2247,8 @@ thead{
 
 .departamento-filtro-container{
     position: relative;
-    min-width: 450px;
+    width: 100%;
+    min-width: 0;
 }
 
 .dropdown-overlay{
@@ -2257,48 +2258,54 @@ thead{
     background: transparent;
 }
 
-.dropdown-departamentos{
+.dropdown-departamentos {
     position: absolute;
     top: 100%;
     left: 0;
+    right: 0;
 
-    z-index: 10000;
+    width:450px;
+    min-width:450px;
 
-    width: 100%;
-    min-width: 450px;
-    max-width: 700px;
-    max-height: 350px;
-
-    overflow-y: auto;
-    overflow-x: hidden;
-
-    background: #ffffff;
-
+    background: white;
     border: 1px solid #dcdcdc;
     border-radius: 8px;
 
-    margin-top: 4px;
+    z-index: 9999;
 
-    box-shadow: 0 4px 12px rgba(0,0,0,.15);
+    height: 320px;
+    max-height: 320px;
+    overflow-y: auto;
+    overflow-x: hidden;
+}
+
+.headcount-table .table-custom th:first-child,
+.headcount-table .table-custom td:first-child{
+    width:40%;
+    min-width:400px;
+}
+
+.table-custom th{
+    white-space:nowrap;
 }
 
 .departamento-item{
-    display: flex !important;
-    align-items: center !important;
-    gap: 10px !important;
+    display:flex;
+    align-items:center;
+    gap:12px;
 
-    width: 100%;
-    padding: 8px 12px;
+    padding:10px 12px;
+    min-height:44px;
 
-    cursor: pointer;
-
-    border-bottom: 1px solid #f1f1f1;
-
-    user-select: none;
+    cursor:pointer;
 }
 
 .departamento-item:last-child{
     border-bottom: none;
+}
+
+.departamento-item input{
+    flex-shrink:0;
 }
 
 .departamento-item:hover{
@@ -2706,10 +2713,24 @@ thead{
 }
 
 .modal-content .table-responsive{
-    flex: 1;
-    overflow-x: auto;
-    overflow-y: auto;
-    max-height: unset;
+    width:100%;
+    overflow-x:auto;
+    overflow-y:auto;
+    max-height:550px;
+}
+
+.table-custom thead th{
+    background:rgb(0,120,83);
+    color:white;
+    font-size:14px;
+    font-weight:700;
+    text-transform:uppercase;
+    letter-spacing:.5px;
+}
+
+.filtros-tabla input{
+    border-radius:8px;
+    height:38px;
 }
 
 .detalle-info{
@@ -3123,5 +3144,27 @@ thead{
 .dashboard-card .excel-row div:first-child{
     text-align:left;
     padding-left:16px;
+}
+
+.buscador-departamento {
+    position: relative;
+}
+
+.btn-limpiar-departamentos {
+    position: absolute;
+    right: 8px;
+    top: 50%;
+    transform: translateY(-50%);
+    border: none;
+    background: transparent;
+    color: #666;
+    font-size: 18px;
+    font-weight: bold;
+    cursor: pointer;
+    padding: 0 6px;
+}
+
+.btn-limpiar-departamentos:hover {
+    color: #dc3545;
 }
 

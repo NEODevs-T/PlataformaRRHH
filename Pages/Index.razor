@@ -78,7 +78,7 @@
 
             <div class="kpi-header">
                 <div class="kpi-icon">🏢</div>
-                <h3>Rotación</h3>
+                <h3>% Rotación del Mes</h3>
             </div>
 
             <div class="kpi-number">
@@ -88,7 +88,7 @@
                 }
                 else
                 {
-                    @rotacionHoy
+                    @($"{rotacionHoy:N2}%")
                 }
             </div>
 
@@ -242,10 +242,11 @@
 
     List<MaestroTrabajadorDTO> trabajadores = new();
     List<RepososVDTO> reposos = new();
+    List<MaestroTrabajadorReDTO> trabajadoresRetirados = new();
 
     int personalActivo = 0;
     int repososHoy = 0;
-    int rotacionHoy = 0;
+    double rotacionHoy = 0;
 
     bool cargandoKPIs = true;
 
@@ -309,12 +310,34 @@
                 .Where(x => !EsPasantePaveca(x))
                 .Where(x => !EsAprendizPaveca(x))
                 .ToList();
+
+            trabajadoresRetirados =
+                await Api.GetMaestroTrabajadoresRe() ?? new();
+
             personalActivo = personalPaveca.Count;
-            rotacionHoy = trabajadores
-            .Where(x => !string.IsNullOrWhiteSpace(x.Dptfic))
-            .Select(x => x.Dptfic)
-            .Distinct()
-            .Count();
+            
+            var periodoActual =
+                (DateTime.Now.Year * 100) + DateTime.Now.Month;
+
+            var headCountActual = personalActivo;
+
+            var egresosMes = trabajadoresRetirados.Count(x =>
+            {
+                if (!x.Fecret.HasValue || x.Fecret <= 0)
+                    return false;
+
+                int periodoRetiro =
+                    ((int)x.Fecret.Value) / 100;
+
+                return periodoRetiro == periodoActual;
+            });
+
+            rotacionHoy =
+                headCountActual > 0
+                    ? Math.Round(
+                        ((double)egresosMes / headCountActual) * 100,
+                        2)
+                    : 0;
         }
         catch
         {
