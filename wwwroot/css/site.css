@@ -1148,13 +1148,6 @@ body {
     margin-bottom: 20px;
 }
 
-/* FILTROS */
-.filtros {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-}
-
 /* BOTÓN FILTRAR */
 .btn-filtrar {
     background: #007853;
@@ -1343,18 +1336,6 @@ body {
     color: white;
 
     box-shadow: 0 6px 18px rgba(0,120,83,.25);
-}
-
-.filtros {
-    display: flex;
-    gap: 10px;
-    flex-wrap: wrap;
-
-    background: white;
-    padding: 18px;
-    border-radius: 14px;
-
-    box-shadow: 0 4px 12px rgba(0,0,0,.08);
 }
 
 .cards-container {
@@ -1951,13 +1932,6 @@ body {
     font-weight:600;
 }
 
-.filtros {
-    display: flex;
-    gap: 12px;
-    margin-top: 20px;
-    margin-bottom: 40px;
-}
-
 .mes-selector{
     display:flex;
     flex-wrap:wrap;
@@ -2146,13 +2120,6 @@ thead{
 
 .cards-container {
     margin-bottom: 20px;
-}
-
-.filtros{
-    display:flex;
-    flex-wrap:wrap;
-    gap:16px;
-    align-items:flex-end;
 }
 
 .filtro-item{
@@ -2773,9 +2740,6 @@ thead{
     gap:20px;
 }
 
-.kpis-bottom-row .dashboard-kpi{
-    width:300px;
-}
 
 .dashboard-kpi.compact,
 .dashboard-kpi.highlight{
@@ -2820,9 +2784,6 @@ thead{
         align-items:center;
     }
 
-    .kpis-bottom-row .dashboard-kpi{
-        width:100%;
-    }
 }
 
 /*Tabla permisos*/
@@ -3176,3 +3137,62 @@ thead{
     color: #dc3545;
 }
 
+.modal-backdrop-custom{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.45);
+    z-index:9999;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+}
+
+.modal-detalle-headcount{
+    width:90%;
+    max-width:1400px;
+    height:85vh;
+
+    background:white;
+    border-radius:12px;
+
+    overflow:hidden;
+
+    display:flex;
+    flex-direction:column;
+}
+
+.modal-header{
+    padding:15px 20px;
+    background:#007853;
+    color:white;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+}
+
+.btn-close{
+    background:none;
+    border:none;
+    color:white;
+    font-size:20px;
+}
+
+.modal-detalle-headcount .table-responsive{
+    flex:1;
+    overflow:auto;
+    margin-bottom:0;
+}
+
+.filtros {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+
+    background: white;
+    padding: 18px;
+    border-radius: 14px;
+
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
