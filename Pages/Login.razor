@@ -3,6 +3,7 @@
 @using NeoRH.DTOs
 @using NeoRH.Services
 @using System.Globalization
+@using Microsoft.AspNetCore.Components.Forms
 
 @inject HttpClient Http
 @inject CustomAuthStateProvider AuthProvider
@@ -30,27 +31,30 @@
 
         <h1>Neo RRHH</h1>
 
-        <div class="login-form">
+        <EditForm Model="user"
+                OnValidSubmit="HandleLogin"
+                style="width:100%;">
 
-            <!-- USER -->
-            <div class="input-container">
-                <input placeholder="Usuario"
-                    @bind="user.UserName" />
+            <div class="login-form">
+
+                <div class="input-container">
+                    <input placeholder="Usuario"
+                        @bind="user.UserName" />
+                </div>
+
+                <div class="input-container">
+                    <input type="password"
+                        placeholder="Contraseña"
+                        @bind="user.Password" />
+                </div>
+
+                <button type="submit" disabled="@loading">
+                    @(loading ? Texto("loading") : Texto("login"))
+                </button>
+
             </div>
 
-            <!-- PASSWORD -->
-            <div class="input-container">
-                <input type="password"
-                    placeholder="Contraseña"
-                    @bind="user.Password" />
-            </div>
-
-            <!-- BUTTON -->
-            <button @onclick="HandleLogin" disabled="@loading">
-                @(loading ? Texto("loading") : Texto("login"))
-            </button>
-
-        </div>
+        </EditForm>
 
         <p class="login-message">@_message</p>
 

@@ -3137,30 +3137,46 @@ thead{
     color: #dc3545;
 }
 
-.modal-backdrop-custom{
-    position:fixed;
-    inset:0;
-    background:rgba(0,0,0,.45);
-    z-index:9999;
+.modal-backdrop-custom {
+    position: fixed;
+    inset: 0;
 
-    display:flex;
-    align-items:center;
-    justify-content:center;
+    background: rgba(0,0,0,.25);
+
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+
+    padding-top: 40px;
+
+    z-index: 9999;
 }
 
-.modal-detalle-headcount{
-    width:90%;
-    max-width:1400px;
-    height:85vh;
-
-    background:white;
-    border-radius:12px;
-
-    overflow:hidden;
-
-    display:flex;
-    flex-direction:column;
+.blur-background {
+    filter: blur(6px);
+    transition: filter 0.25s ease;
+    pointer-events: none;
+    user-select: none;
 }
+
+.modal-detalle-headcount {
+    background: white;
+    width: 95%;
+    max-width: 1400px;
+
+    max-height: 90vh;
+    height: auto;
+
+    overflow: hidden;
+    border-radius: 16px;
+
+    display: flex;
+    flex-direction: column;
+}
+
 
 .modal-header{
     padding:15px 20px;
@@ -3179,11 +3195,6 @@ thead{
     font-size:20px;
 }
 
-.modal-detalle-headcount .table-responsive{
-    flex:1;
-    overflow:auto;
-    margin-bottom:0;
-}
 
 .filtros {
     display: flex;
@@ -3195,4 +3206,49 @@ thead{
     border-radius: 14px;
 
     box-shadow: 0 4px 12px rgba(0,0,0,.08);
+}
+
+.blur-background {
+    filter: blur(6px);
+    pointer-events: none;
+    user-select: none;
+    transition: filter .2s ease-in-out;
+}
+
+.modal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(0,0,0,.35);
+    backdrop-filter: blur(2px);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    filter: none !important;
+}
+
+.buscador-resultados-card{
+    margin-top:20px;
+    margin-bottom:15px;
+}
+
+.filtros-secundarios{
+    display:flex;
+    gap:15px;
+    flex-wrap:wrap;
+    align-items:end;
+}
+
+.filtros-secundarios .filtro-item{
+    min-width:260px;
+}
+
+.filtros-secundarios .filtro-item label{
+    display:block;
+    margin-bottom:6px;
+    font-weight:600;
+    color:#495057;
 }
