@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace NeoAPI.DTOs.RRHH;
+namespace NeoRH.DTOs;
 
 public class RegistNominaCreateDTO
 {

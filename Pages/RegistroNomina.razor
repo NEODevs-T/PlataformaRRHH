@@ -1,0 +1,1603 @@
+@using NeoRH.DTOs
+@using NeoAPI.DTOs.RRHH
+@using System.Linq
+@using ClosedXML.Excel
+@using PdfSharpCore.Drawing
+@using PdfSharpCore.Pdf
+@using System.IO
+@inject IRRHHApiService ApiService
+@inject IJSRuntime JS
+
+@page "/RegistroNomina"
+
+<link href="css/site.css" rel="stylesheet" />   
+<link href="css/bootstrap/bootstrap.min.css" rel="stylesheet" />
+<script src="js/imprimir.js"></script>
+
+    @if (cargando)
+    {
+        <div class="loading-container">
+
+            <div class="loading-spinner"></div>
+
+            <div class="loading-text">
+                Cargando información del registro de nómina...
+            </div>
+
+        </div>
+    }
+    else
+    {
+            <div class="dashboard-header">
+
+                <div class="header-icon">
+                    <i class="oi oi-task"></i>
+                </div>
+
+                <span>
+                    REGISTRO DE NÓMINA
+                </span>
+
+            </div>
+
+            <p class="page-subtitle">
+                Consulta y administración de registros de nómina.
+            </p>
+
+            <div class="filtros">
+
+                <div class="filtro-item">
+                    <label>Ficha</label>
+                    <input class="input"
+                        @bind="fichaSeleccionada" />
+                </div>
+
+                <div class="filtro-item">
+                    <label>Departamento</label>
+                    <InputSelect class="input"
+                                @bind-Value="departamentoSeleccionado">
+                        <option value="">TODOS</option>
+                        @foreach (var dep in DepartamentosDisponibles)
+                        {
+                            <option value="@dep">@dep</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="filtro-item">
+                    <label>Año</label>
+                    <InputSelect class="input"
+                                @bind-Value="anioSeleccionado">
+                        @foreach (var anio in AniosDisponibles)
+                        {
+                            <option value="@anio">@anio</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="filtro-item">
+                    <label>Período</label>
+                    <InputSelect class="input"
+                                @bind-Value="periodoSeleccionado">
+                        @foreach (var periodo in PeriodosDisponibles)
+                        {
+                            <option value="@periodo">@periodo</option>
+                        }
+                    </InputSelect>
+                </div>
+
+                <div class="filtro-item">
+                    <label>Origen</label>
+                    <InputSelect class="input"
+                                @bind-Value="origenSeleccionado">
+                        <option value="Todos">Registro Total</option>
+                        <option value="Mensual">Registro Mensual</option>
+                        <option value="Diaria">Registro Diario</option>
+                        <option value="RegistroNomina">Registro Nómina</option>
+                    </InputSelect>
+                </div>
+
+                <div class="filtro-item acciones-filtro">
+                    <label>&nbsp;</label>
+                    <button class="btn-filtrar"
+                            @onclick="async () => await Buscar()">
+                        Consultar
+                    </button>
+                </div>
+
+                <div class="filtro-item acciones-filtro">
+                    <label>&nbsp;</label>
+                    <button class="btn-success"
+                            @onclick="ExportarExcel">
+                        Exportar Excel
+                    </button>
+                </div>
+
+                <div class="filtro-item acciones-filtro">
+                    <label>&nbsp;</label>
+                    <button class="btn-danger"
+                            @onclick="ExportarPdf">
+                        Exportar PDF
+                    </button>
+                </div>
+
+            </div>
+
+            @if (cargando)
+            {
+                <div class="text-center p-5">
+                    <div class="spinner-border text-success"></div>
+
+                    <div class="mt-3">
+                        Consultando información...
+                    </div>
+                </div>
+            }
+            else
+            {
+            @if (busquedaRealizada)
+            {
+                        <div class="resultado-tabla">
+                            Mostrando @TotalRegistros registros
+                        </div>
+
+                        <div class="table-info-message">
+                            <i class="oi oi-info"></i>
+                            Haga clic sobre Modificar para Editar el registro completo.
+                        </div>
+
+                        <div class="dashboard-card buscador-resultados-card">
+
+                            <div class="filtros-secundarios">
+
+                                <div class="filtro-item">
+                                    <label>Buscar en resultados</label>
+
+                                    <input class="input"
+                                        placeholder="Buscar ficha, nombre o departamento..."
+                                        @bind="filtroTabla"
+                                        @bind:event="oninput" />
+                                </div>
+
+                            </div>
+
+                        </div>
+                        @if (!RegistrosFiltrados.Any())
+                        {
+                            <div class="alert alert-warning mt-3">
+                                No se encontraron registros para los filtros seleccionados.
+                            </div>
+                        }
+                        else
+                        {
+                        <div class="table-responsive">
+                            <table class="table-custom">
+
+                                <thead>
+
+                                <tr>
+
+                                    <th style="width:90px;">Ficha</th>
+                                    <th style="width:220px;">Nombre</th>
+                                    <th style="width:260px;">Departamento</th>
+                                    <th style="width:120px;">Tipo</th>
+                                    <th style="width:90px;">Año</th>
+                                    <th style="width:90px;">Periodo</th>
+                                    <th style="width:320px;">Esquema</th>
+                                    <th style="width:140px;"></th>
+
+                                </tr>
+
+                                </thead>
+
+                                <tbody>
+
+                                @foreach (var item in RegistrosFiltrados)
+                                {
+                                    <tr>
+
+                                        <td>@item.Ficha</td>
+                                        <td class="nombre-cell">@item.Nombre</td>
+                                        <td>@item.Departamento</td>
+
+                                        <td>@item.TipoNomina</td>
+
+                                        <td>@item.Año</td>
+
+                                        <td>@item.Periodo</td>
+
+                                        <td class="esquema-cell">
+                                            <span>@item.DG01</span>
+                                            <span>@item.DG02</span>
+                                            <span>@item.DG03</span>
+                                            <span>@item.DG04</span>
+                                            <span>@item.DG05</span>
+                                            <span>@item.DG06</span>
+                                            <span>@item.DG07</span>
+                                            <span>@item.DG08</span>
+                                            <span>@item.DG09</span>
+                                            <span>@item.DG10</span>
+                                            <span>@item.DG11</span>
+                                            <span>@item.DG12</span>
+                                            <span>@item.DG13</span>
+                                            <span>@item.DG14</span>
+                                            <span>@item.DG15</span>
+                                        </td>
+
+                                            <td class="text-center align-middle">
+                                            @if (origenSeleccionado == "RegistroNomina")
+                                            {
+                                                <button class="btn btn-info btn-sm accion-btn"
+                                                        @onclick="() => VerRegistro(item)">
+                                                    👁 Ver
+                                                </button>
+                                            }
+                                            else
+                                            {
+                                                <button class="btn btn-success btn-sm accion-btn"
+                                                        @onclick="() => VerRegistro(item)">
+                                                    ✏ Modificar
+                                                </button>
+                                            }
+                                        </td>
+
+                                    </tr>
+                                }
+
+                                </tbody>
+
+                                </table>
+
+                            </div>
+                            }
+
+                            @if (TotalPaginas > 1)
+                            {
+                                <div class="d-flex justify-content-between align-items-center mt-3">
+
+                                    <button class="btn btn-outline-secondary"
+                                            @onclick="PaginaAnterior"
+                                            disabled="@(PaginaActual == 1)">
+                                        ← Anterior
+                                    </button>
+
+                                    <span>
+                                        Página @PaginaActual de @TotalPaginas
+                                    </span>
+
+                                    <input type="number"
+                                        min="1"
+                                        max="@TotalPaginas"
+                                        @bind="PaginaActual"
+                                        class="form-control w-auto" />
+
+                                    <button class="btn btn-primary"
+                                            @onclick="async()=> await Buscar(false)">
+                                        Ir
+                                    </button>
+
+                                    <button class="btn btn-outline-secondary"
+                                            @onclick="PaginaSiguiente"
+                                            disabled="@(PaginaActual >= TotalPaginas)">
+                                        Siguiente →
+                                    </button>
+                                </div>
+                            }
+                    }
+                }
+    }
+    @if (mostrarModal && registroSeleccionado != null)
+    {
+        <div class="modal-backdrop-custom">
+            <div class="modal-custom modal-lg">
+
+                <div class="d-flex justify-content-between align-items-center mb-3">
+                    <h4 class="mb-0">
+                        <h4 class="mb-0">
+                            @(origenSeleccionado == "RegistroNomina"
+                                ? "Registro de Nómina"
+                                : registroSeleccionado?.Tpnom == "M"
+                                    ? "Registro (Nómina Mensual)"
+                                    : "Registro (Nómina Diaria)")
+                        </h4>
+                    </h4>
+
+                    <button class="btn-close"
+                            @onclick="CerrarModal">
+                    </button>
+                </div>
+
+                <hr />
+
+                <div class="row mb-3">
+                    <div class="col-md-4">
+                        <label class="fw-bold">Ficha</label>
+                        <input class="form-control"
+                                value="@registroSeleccionado?.Fichnh"
+                                disabled />
+                    </div>
+
+                    <div class="col-md-4">
+                        <label class="fw-bold">Departamento</label>
+                        <input class="form-control"
+                                value="@registroSeleccionado?.Dpthnh"
+                                disabled />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="fw-bold">Año</label>
+                        <input class="form-control"
+                                value="@registroSeleccionado?.Añohnh"
+                                disabled />
+                    </div>
+
+                    <div class="col-md-2">
+                        <label class="fw-bold">Período</label>
+                        <input class="form-control"
+                                value="@registroSeleccionado?.Prdhnh"
+                                disabled />
+                    </div>
+                </div>
+
+                <div class="row g-3">
+
+                    <div class="col-md-3">
+                        <label>DG01</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg01hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg01hh)
+                                && registroSeleccionado.Dg01hh != "P"
+                                && registroSeleccionado.Dg01hh != "F"
+                                && registroSeleccionado.Dg01hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg01hh">
+                                    @registroSeleccionado.Dg01hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG02</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg02hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg02hh)
+                                && registroSeleccionado.Dg02hh != "P"
+                                && registroSeleccionado.Dg02hh != "F"
+                                && registroSeleccionado.Dg02hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg02hh">
+                                    @registroSeleccionado.Dg02hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG03</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg03hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg03hh)
+                                && registroSeleccionado.Dg03hh != "P"
+                                && registroSeleccionado.Dg03hh != "F"
+                                && registroSeleccionado.Dg03hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg03hh">
+                                    @registroSeleccionado.Dg03hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG04</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg04hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg04hh)
+                                && registroSeleccionado.Dg04hh != "P"
+                                && registroSeleccionado.Dg04hh != "F"
+                                && registroSeleccionado.Dg04hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg04hh">
+                                    @registroSeleccionado.Dg04hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG05</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg05hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg05hh)
+                                && registroSeleccionado.Dg05hh != "P"
+                                && registroSeleccionado.Dg05hh != "F"
+                                && registroSeleccionado.Dg05hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg05hh">
+                                    @registroSeleccionado.Dg05hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG06</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg06hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg06hh)
+                                && registroSeleccionado.Dg06hh != "P"
+                                && registroSeleccionado.Dg06hh != "F"
+                                && registroSeleccionado.Dg06hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg06hh">
+                                    @registroSeleccionado.Dg06hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG07</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg07hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg07hh)
+                                && registroSeleccionado.Dg07hh != "P"
+                                && registroSeleccionado.Dg07hh != "F"
+                                && registroSeleccionado.Dg07hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg07hh">
+                                    @registroSeleccionado.Dg07hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    @if (!EsNominaDiaria)
+                    {
+                    <div class="col-md-3">
+                        <label>DG08</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg08hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg08hh)
+                                && registroSeleccionado.Dg08hh != "P"
+                                && registroSeleccionado.Dg08hh != "F"
+                                && registroSeleccionado.Dg08hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg08hh">
+                                    @registroSeleccionado.Dg08hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG09</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg09hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg09hh)
+                                && registroSeleccionado.Dg09hh != "P"
+                                && registroSeleccionado.Dg09hh != "F"
+                                && registroSeleccionado.Dg09hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg09hh">
+                                    @registroSeleccionado.Dg09hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG010</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg010hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg010hh)
+                                && registroSeleccionado.Dg010hh != "P"
+                                && registroSeleccionado.Dg010hh != "F"
+                                && registroSeleccionado.Dg010hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg010hh">
+                                    @registroSeleccionado.Dg010hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG011</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg011hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg011hh)
+                                && registroSeleccionado.Dg011hh != "P"
+                                && registroSeleccionado.Dg011hh != "F"
+                                && registroSeleccionado.Dg011hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg011hh">
+                                    @registroSeleccionado.Dg011hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG012</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg012hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg012hh)
+                                && registroSeleccionado.Dg012hh != "P"
+                                && registroSeleccionado.Dg012hh != "F"
+                                && registroSeleccionado.Dg012hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg012hh">
+                                    @registroSeleccionado.Dg012hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG013</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg013hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg013hh)
+                                && registroSeleccionado.Dg013hh != "P"
+                                && registroSeleccionado.Dg013hh != "F"
+                                && registroSeleccionado.Dg013hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg013hh">
+                                    @registroSeleccionado.Dg013hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG014</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg014hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg014hh)
+                                && registroSeleccionado.Dg014hh != "P"
+                                && registroSeleccionado.Dg014hh != "F"
+                                && registroSeleccionado.Dg014hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg014hh">
+                                    @registroSeleccionado.Dg014hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+
+                    <div class="col-md-3">
+                        <label>DG015</label>
+                        <InputSelect disabled="@(SoloEstado)" class="form-select"
+                                    @bind-Value="registroSeleccionado!.Dg015hh">
+
+                            @if (!string.IsNullOrWhiteSpace(registroSeleccionado.Dg015hh)
+                                && registroSeleccionado.Dg015hh != "P"
+                                && registroSeleccionado.Dg015hh != "F"
+                                && registroSeleccionado.Dg015hh != "R")
+                            {
+                                <option value="@registroSeleccionado.Dg015hh">
+                                    @registroSeleccionado.Dg015hh
+                                </option>
+                            }
+
+                            <option value="P">P</option>
+                            <option value="F">F</option>
+                            <option value="R">R</option>
+                        </InputSelect>
+                    </div>
+                    }
+
+                    <div class="col-md-3">
+                        <label class="fw-bold">Estado</label>
+
+                        <InputCheckbox
+                            @bind-Value="registroSeleccionado.Stareg"
+                            disabled="@soloLectura" />
+
+                        <span class="ms-2">
+                            @(registroSeleccionado.Stareg ? "Activo" : "Inactivo")
+                        </span>
+                    </div>
+
+                </div>
+
+                <div class="mt-4 text-end">
+
+                    @if (!soloLectura)
+                    {
+                        <button class="btn btn-success"
+                                @onclick="GuardarRegistro">
+                            Guardar
+                        </button>
+                    }
+
+                    <button class="btn btn-secondary ms-2"
+                            @onclick="CerrarModal">
+                        Cerrar
+                    </button>
+
+                </div>
+
+            </div>
+        </div>
+    }
+
+
+    @code {
+            private int TotalRegistros = 0;
+            
+            private bool SoloEstado;
+            
+            private int TotalPaginas = 0;
+
+            private int? anioSeleccionado = DateTime.Now.Year;
+
+            private int? periodoSeleccionado = 1;
+
+            private string? departamentoSeleccionado = "";
+
+            private string? fichaSeleccionada = "";
+            //private string? tipoNominaSeleccionado;
+            private string origenSeleccionado = "Todos";
+            private bool cargando = true;
+
+            private int PaginaActual = 1;
+            private int RegistrosPorPagina = 500;
+
+            private List<VRotacionHistDTO> historicosMensual = new();
+
+            private List<PermisosNomDiariaVDTO> historicosDiaria = new();
+
+            private List<RegistNominaDTO> registrosNomina = new();
+
+            private bool mostrarModal = false;
+
+            private RegistNominaCreateDTO? registroSeleccionado;
+
+            private bool busquedaRealizada = false;
+
+            private bool soloLectura;
+
+            private List<string> DepartamentosDisponibles = new();
+
+            private List<MaestroTrabajadorDTO> TrabajadoresActivos = new();
+
+            private List<MaestroTrabajadorReDTO> TrabajadoresRetirados = new();
+
+            private List<RegistroNominaVistaDTO> registrosTotal = new();
+
+            private string filtroTabla = "";
+
+            private string? CodigoDepto =>
+                departamentoSeleccionado?
+                    .Split('-')
+                    .FirstOrDefault()?
+                    .Trim();
+
+            private IEnumerable<VRotacionHistDTO> HistoricosMensualPaginados =>
+                historicosMensual
+                    .Skip((PaginaActual - 1) * RegistrosPorPagina)
+                    .Take(RegistrosPorPagina);
+
+            private IEnumerable<RegistNominaDTO> RegistrosNominaPaginados =>
+                registrosNomina
+                    .Skip((PaginaActual - 1) * RegistrosPorPagina)
+                    .Take(RegistrosPorPagina);
+
+            private void EditarRegistro(RegistNominaDTO registro)
+            {
+                soloLectura = false;
+
+                registroSeleccionado = new RegistNominaCreateDTO
+                {
+                    Ciahnh = registro.Ciahnh ?? string.Empty,
+                    Tpnhnh = registro.Tpnhnh ?? string.Empty,
+                    Añohnh = registro.Añohnh,
+                    Prdhnh = registro.Prdhnh,
+                    Fichnh = registro.Fichnh,
+                    Dpthnh = registro.Dpthnh,
+
+                    Dg01hh = registro.Dg01hh,
+                    Dg02hh = registro.Dg02hh,
+                    Dg03hh = registro.Dg03hh,
+                    Dg04hh = registro.Dg04hh,
+                    Dg05hh = registro.Dg05hh,
+                    Dg06hh = registro.Dg06hh,
+                    Dg07hh = registro.Dg07hh,
+                    Dg08hh = registro.Dg08hh,
+                    Dg09hh = registro.Dg09hh,
+                    Dg010hh = registro.Dg010hh,
+                    Dg011hh = registro.Dg011hh,
+                    Dg012hh = registro.Dg012hh,
+                    Dg013hh = registro.Dg013hh,
+                    Dg014hh = registro.Dg014hh,
+                    Dg015hh = registro.Dg015hh,
+
+                    Tpnom = registro.Tpnom
+                };
+
+                mostrarModal = true;
+            }
+
+            private void CerrarModal()
+            {
+                mostrarModal = false;
+                registroSeleccionado = null;
+            }
+        
+        private bool EsNominaDiaria =>
+            registroSeleccionado?.Tpnom == "D";
+
+        private async Task Buscar(bool reiniciarPagina = true)
+        {
+            if (reiniciarPagina)
+                PaginaActual = 1;
+
+            cargando = true;
+
+            registrosTotal.Clear();
+            historicosMensual.Clear();
+            historicosDiaria.Clear();
+            registrosNomina.Clear();
+
+            TotalRegistros = 0;
+            TotalPaginas = 0;
+
+            try
+            {
+                if (origenSeleccionado == "Diaria")
+                {
+                    if (anioSeleccionado == null || periodoSeleccionado == null)
+                    {
+                        await JS.InvokeVoidAsync(
+                            "alert",
+                            "Debe indicar Año y Período.");
+
+                        return;
+                    }
+                }
+
+                switch (origenSeleccionado)
+                {
+                    case "Todos":
+
+                        registrosTotal = new();
+
+                        var responseMensualTodos =
+                            await ApiService.GetRotacionHistorico(
+                                anioSeleccionado ?? DateTime.Now.Year,
+                                fichaSeleccionada,
+                                CodigoDepto,
+                                periodoSeleccionado,
+                                1,
+                                500);
+
+                        historicosMensual =
+                            responseMensualTodos.Data ?? new();
+
+                        var responseDiariaTodos =
+                            await ApiService.GetPermisosNomDiariaV(
+                                anioSeleccionado ?? DateTime.Now.Year,
+                                periodoSeleccionado ?? 1,
+                                fichaSeleccionada,
+                                CodigoDepto);
+
+                        historicosDiaria =
+                            responseDiariaTodos.Data ?? new();
+
+                        registrosTotal.AddRange(
+                            historicosMensual.Select(x => new RegistroNominaVistaDTO
+                            {
+                                TipoNomina = "MENSUAL",
+                                Ciahnh = x.Ciahnh,
+                                Tpnhnh = x.Tpnhnh,
+                                Ficha = x.Fichnh,
+                                Nombre = ObtenerNombreCompleto(x.Fichnh),
+                                Departamento = ObtenerDepartamentoCompleto(x.Dpthnh),
+                                Año = Convert.ToInt32(x.Añohnh),
+                                Periodo = Convert.ToInt32(x.Prdhnh),
+
+                                DG01 = x.Dg01hh,
+                                DG02 = x.Dg02hh,
+                                DG03 = x.Dg03hh,
+                                DG04 = x.Dg04hh,
+                                DG05 = x.Dg05hh,
+                                DG06 = x.Dg06hh,
+                                DG07 = x.Dg07hh,
+                                DG08 = x.Dg08hh,
+                                DG09 = x.Dg09hh,
+                                DG10 = x.Dg10hh,
+                                DG11 = x.Dg11hh,
+                                DG12 = x.Dg12hh,
+                                DG13 = x.Dg13hh,
+                                DG14 = x.Dg14hh,
+                                DG15 = x.Dg15hh
+                            }));
+
+                        registrosTotal.AddRange(
+                            historicosDiaria.Select(x => new RegistroNominaVistaDTO
+                            {
+                                TipoNomina = "DIARIA",
+                                Ciahnh = x.Ciahnh,
+                                Tpnhnh = x.Tpnhnh,
+                                Ficha = x.Fichnh,
+                                Nombre = ObtenerNombreCompleto(x.Fichnh),
+                                Departamento = ObtenerDepartamentoCompleto(x.Dpthnh),
+                                Año = Convert.ToInt32(x.Añohnh),
+                                Periodo = Convert.ToInt32(x.Prdhnh),
+
+                                DG01 = x.Dg01hh,
+                                DG02 = x.Dg02hh,
+                                DG03 = x.Dg03hh,
+                                DG04 = x.Dg04hh,
+                                DG05 = x.Dg05hh,
+                                DG06 = x.Dg06hh,
+                                DG07 = x.Dg07hh
+                            }));
+
+                            TotalRegistros = registrosTotal.Count;
+
+                        break;
+
+                    case "Mensual":
+
+                        var responseMensual =
+                            await ApiService.GetRotacionHistorico(
+                                anioSeleccionado ?? DateTime.Now.Year,
+                                fichaSeleccionada,
+                                CodigoDepto,
+                                periodoSeleccionado,
+                                PaginaActual,
+                                RegistrosPorPagina);
+
+                        historicosMensual =
+                            responseMensual.Data ?? new List<VRotacionHistDTO>();
+
+                        registrosTotal = historicosMensual
+                            .Select(x => new RegistroNominaVistaDTO
+                            {
+                                Ciahnh = x.Ciahnh,
+                                Tpnhnh = x.Tpnhnh,
+
+                                TipoNomina = "MENSUAL",
+                                Ficha = x.Fichnh,
+                                Nombre = ObtenerNombreCompleto(x.Fichnh),
+                                Departamento = ObtenerDepartamentoCompleto(x.Dpthnh),
+
+                                Año = Convert.ToInt32(x.Añohnh),
+                                Periodo = Convert.ToInt32(x.Prdhnh),
+
+                                DG01 = x.Dg01hh,
+                                DG02 = x.Dg02hh,
+                                DG03 = x.Dg03hh,
+                                DG04 = x.Dg04hh,
+                                DG05 = x.Dg05hh,
+                                DG06 = x.Dg06hh,
+                                DG07 = x.Dg07hh,
+                                DG08 = x.Dg08hh,
+                                DG09 = x.Dg09hh,
+                                DG10 = x.Dg10hh,
+                                DG11 = x.Dg11hh,
+                                DG12 = x.Dg12hh,
+                                DG13 = x.Dg13hh,
+                                DG14 = x.Dg14hh,
+                                DG15 = x.Dg15hh
+                            })
+                            .ToList();
+
+                        TotalRegistros = registrosTotal.Count;
+
+                        TotalRegistros = historicosMensual.Count;
+
+                        break;
+
+                    case "Diaria":
+
+                        var responseDiaria =
+                            await ApiService.GetPermisosNomDiariaV(
+                                anioSeleccionado ?? DateTime.Now.Year,
+                                periodoSeleccionado ?? 1,
+                                fichaSeleccionada,
+                                CodigoDepto);
+
+                        historicosDiaria =
+                            responseDiaria.Data ?? new();
+
+                        registrosTotal = historicosDiaria
+                            .Select(x => new RegistroNominaVistaDTO
+                            {
+                                Ciahnh = x.Ciahnh,
+                                Tpnhnh = x.Tpnhnh,
+
+                                TipoNomina = "DIARIA",
+                                Ficha = x.Fichnh,
+                                Nombre = ObtenerNombreCompleto(x.Fichnh),
+                                Departamento = ObtenerDepartamentoCompleto(x.Dpthnh),
+
+                                Año = Convert.ToInt32(x.Añohnh),
+                                Periodo = Convert.ToInt32(x.Prdhnh),
+
+                                DG01 = x.Dg01hh,
+                                DG02 = x.Dg02hh,
+                                DG03 = x.Dg03hh,
+                                DG04 = x.Dg04hh,
+                                DG05 = x.Dg05hh,
+                                DG06 = x.Dg06hh,
+                                DG07 = x.Dg07hh
+                            })
+                                .ToList();
+
+                            TotalRegistros = registrosTotal.Count;
+
+                        TotalRegistros = historicosDiaria.Count;
+
+                        break;
+
+                    case "RegistroNomina":
+
+                        var responseNomina =
+                            await ApiService.GetRegistrosNomina(
+                                anioSeleccionado,
+                                periodoSeleccionado,
+                                fichaSeleccionada,
+                                CodigoDepto);
+
+                        registrosNomina = responseNomina.Data;
+
+                        TotalRegistros = responseNomina.TotalRegistros;
+                        TotalPaginas = responseNomina.TotalPaginas;
+
+                        registrosTotal = registrosNomina
+                            .Select(x => new RegistroNominaVistaDTO
+                            {
+                                Ciahnh = x.Ciahnh,
+                                Tpnhnh = x.Tpnhnh,
+                                TipoNomina = x.Tpnom == "M" ? "MENSUAL" : "DIARIA",
+
+                                Ficha = x.Fichnh,
+                                Nombre = ObtenerNombreCompleto(x.Fichnh),
+                                Departamento = ObtenerDepartamentoCompleto(x.Dpthnh),
+
+                                Año = x.Añohnh,
+                                Periodo = x.Prdhnh,
+
+                                DG01 = x.Dg01hh,
+                                DG02 = x.Dg02hh,
+                                DG03 = x.Dg03hh,
+                                DG04 = x.Dg04hh,
+                                DG05 = x.Dg05hh,
+                                DG06 = x.Dg06hh,
+                                DG07 = x.Dg07hh,
+                                DG08 = x.Dg08hh ?? string.Empty,
+                                DG09 = x.Dg09hh ?? string.Empty,
+                                DG10 = x.Dg010hh ?? string.Empty,
+                                DG11 = x.Dg011hh ?? string.Empty,
+                                DG12 = x.Dg012hh ?? string.Empty,
+                                DG13 = x.Dg013hh ?? string.Empty,
+                                DG14 = x.Dg014hh ?? string.Empty,
+                                DG15 = x.Dg015hh ?? string.Empty,
+                                Stareg = x.Stareg
+                            })
+                            .ToList();
+
+                        TotalRegistros = registrosTotal.Count;
+
+                        break;
+                }
+
+                busquedaRealizada = true;
+            }
+            finally
+            {
+                cargando = false;
+
+                await InvokeAsync(StateHasChanged);
+            }        
+        }
+
+        private void VerRegistro(RegistroNominaVistaDTO item)
+        {
+            Console.WriteLine("ENTRO AL CLICK");
+
+            if (origenSeleccionado == "RegistroNomina")
+            {
+                // Solo cambiar estado
+                soloLectura = false;
+                SoloEstado = true;
+            }
+            else
+            {
+                // Crear registro desde Mensual, Diaria o Total
+                soloLectura = false;
+                SoloEstado = false;
+            }
+
+            registroSeleccionado = new RegistNominaCreateDTO
+            {
+                Ciahnh = item.Ciahnh ?? string.Empty,
+                Tpnhnh = item.Tpnhnh ?? string.Empty,
+                Fichnh = item.Ficha,
+                Dpthnh = (item.Departamento ?? "")
+                    .Split('-')
+                    .FirstOrDefault()?
+                    .Trim() ?? string.Empty,
+
+                Añohnh = item.Año,
+                Prdhnh = item.Periodo,
+
+                Dg01hh = item.DG01,
+                Dg02hh = item.DG02,
+                Dg03hh = item.DG03,
+                Dg04hh = item.DG04,
+                Dg05hh = item.DG05,
+                Dg06hh = item.DG06,
+                Dg07hh = item.DG07,
+                Dg08hh = item.DG08,
+                Dg09hh = item.DG09,
+                Dg010hh = item.DG10,
+                Dg011hh = item.DG11,
+                Dg012hh = item.DG12,
+                Dg013hh = item.DG13,
+                Dg014hh = item.DG14,
+                Dg015hh = item.DG15,
+
+                Tpnom = item.TipoNomina == "MENSUAL" ? "M" : "D",
+                Stareg = item.Stareg
+            };
+
+            mostrarModal = true;
+            StateHasChanged();
+        }
+
+            private async Task PaginaAnterior()
+            {
+                if (PaginaActual > 1)
+                {
+                    PaginaActual--;
+                    await Buscar(false);
+                }
+            }
+
+            private async Task PaginaSiguiente()
+            {
+                if (PaginaActual < TotalPaginas)
+                {
+                    PaginaActual++;
+                    await Buscar(false);
+                }
+            }
+
+            private string ObtenerDepartamentoCompleto(string? codigo)
+            {
+                codigo = codigo?.Trim() ?? "";
+
+                if (Departamentos.TryGetValue(codigo, out var nombre))
+                    return $"{codigo} - {nombre}";
+
+                return codigo;
+            }
+
+            private IEnumerable<RegistroNominaVistaDTO> RegistrosFiltrados =>
+            registrosTotal.Where(x =>
+                string.IsNullOrWhiteSpace(filtroTabla)
+                || (x.Ficha ?? "").Contains(filtroTabla, StringComparison.OrdinalIgnoreCase)
+                || (x.Nombre ?? "").Contains(filtroTabla, StringComparison.OrdinalIgnoreCase)
+                || (x.Departamento ?? "").Contains(filtroTabla, StringComparison.OrdinalIgnoreCase));
+
+            private void EditarHistorico(VRotacionHistDTO item)
+            {
+
+                soloLectura = false;
+
+                registroSeleccionado = new RegistNominaCreateDTO
+                {
+                    Ciahnh = item.Ciahnh,
+                    Tpnhnh = item.Tpnhnh,
+                    Añohnh = Convert.ToInt32(item.Añohnh),
+                    Prdhnh = Convert.ToInt32(item.Prdhnh),
+                    Fichnh = item.Fichnh,
+                    Dpthnh = item.Dpthnh,
+
+                    Dg01hh = item.Dg01hh,
+                    Dg02hh = item.Dg02hh,
+                    Dg03hh = item.Dg03hh,
+                    Dg04hh = item.Dg04hh,
+                    Dg05hh = item.Dg05hh,
+                    Dg06hh = item.Dg06hh,
+                    Dg07hh = item.Dg07hh,
+                    Dg08hh = item.Dg08hh,
+                    Dg09hh = item.Dg09hh,
+
+                    Dg010hh = item.Dg10hh,
+                    Dg011hh = item.Dg11hh,
+                    Dg012hh = item.Dg12hh,
+                    Dg013hh = item.Dg13hh,
+                    Dg014hh = item.Dg14hh,
+                    Dg015hh = item.Dg15hh,
+
+                    Tpnom = "M"
+                };
+
+                mostrarModal = true;
+            }
+
+            private List<int> AniosDisponibles = new()
+            {
+                2024,
+                2025,
+                2026
+            };
+
+            
+
+            private List<int> PeriodosDisponibles =
+                Enumerable.Range(1, 53).ToList();
+
+            private void EditarHistoricoDiaria(PermisosNomDiariaVDTO item)
+            {
+                soloLectura = false;
+                registroSeleccionado = new RegistNominaCreateDTO
+                {
+                    Ciahnh = item.Ciahnh ?? string.Empty,
+                    Tpnhnh = item.Tpnhnh ?? string.Empty,
+                    Añohnh = Convert.ToInt32(item.Añohnh),
+                    Prdhnh = Convert.ToInt32(item.Prdhnh),
+                    Fichnh = item.Fichnh,
+                    Dpthnh = item.Dpthnh,
+
+                    Dg01hh = item.Dg01hh,
+                    Dg02hh = item.Dg02hh,
+                    Dg03hh = item.Dg03hh,
+                    Dg04hh = item.Dg04hh,
+                    Dg05hh = item.Dg05hh,
+                    Dg06hh = item.Dg06hh,
+                    Dg07hh = item.Dg07hh,
+
+                    Dg08hh = "",
+                    Dg09hh = "",
+                    Dg010hh = "",
+                    Dg011hh = "",
+                    Dg012hh = "",
+                    Dg013hh = "",
+                    Dg014hh = "",
+                    Dg015hh = "",
+
+                    Tpnom = "D"
+                };
+
+                mostrarModal = true;
+            }
+
+            private string ObtenerNombreCompleto(string? ficha)
+            {
+                ficha = (ficha ?? "").Trim();
+
+                var activo = TrabajadoresActivos.FirstOrDefault(x =>
+                    (x.Codfic ?? "").Trim() == ficha);
+
+                if (activo != null)
+                {
+                    return
+                        $"{activo.Nomfi1} {activo.Nomfi2} {activo.Apefi1} {activo.Apefi2}"
+                            .Replace("  ", " ")
+                            .Trim();
+                }
+
+                var retirado = TrabajadoresRetirados.FirstOrDefault(x =>
+                    (x.Codfic ?? "").Trim() == ficha);
+
+                if (retirado != null)
+                {
+                    return
+                        $"{retirado.Nomfi1} {retirado.Nomfi2} {retirado.Apefi1} {retirado.Apefi2}"
+                            .Replace("  ", " ")
+                            .Trim();
+                }
+
+                return "";
+            }
+
+            private async Task GuardarRegistro()
+            {
+                if (registroSeleccionado == null)
+                return;
+
+                var dto = new RegistNominaCreateDTO
+                {
+                    Ciahnh = registroSeleccionado.Ciahnh,
+                    Tpnhnh = registroSeleccionado.Tpnhnh,
+                    Añohnh = registroSeleccionado.Añohnh,
+                    Prdhnh = registroSeleccionado.Prdhnh,
+                    Fichnh = registroSeleccionado.Fichnh,
+                    Dpthnh = registroSeleccionado.Dpthnh?
+                                    .Split('-')
+                                    .FirstOrDefault()?
+                                    .Trim()
+                                    ?? string.Empty,
+                    Dg01hh = registroSeleccionado.Dg01hh,
+                    Dg02hh = registroSeleccionado.Dg02hh,
+                    Dg03hh = registroSeleccionado.Dg03hh,
+                    Dg04hh = registroSeleccionado.Dg04hh,
+                    Dg05hh = registroSeleccionado.Dg05hh,
+                    Dg06hh = registroSeleccionado.Dg06hh,
+                    Dg07hh = registroSeleccionado.Dg07hh,
+                    Dg08hh = registroSeleccionado.Dg08hh,
+                    Dg09hh = registroSeleccionado.Dg09hh,
+                    Dg010hh = registroSeleccionado.Dg010hh,
+                    Dg011hh = registroSeleccionado.Dg011hh,
+                    Dg012hh = registroSeleccionado.Dg012hh,
+                    Dg013hh = registroSeleccionado.Dg013hh,
+                    Dg014hh = registroSeleccionado.Dg014hh,
+                    Dg015hh = registroSeleccionado.Dg015hh,
+
+                    Tpnom = registroSeleccionado.Tpnom,
+                    Stareg = registroSeleccionado.Stareg
+                };
+
+                if (registroSeleccionado == null)
+                    return;
+
+                if (registroSeleccionado.Añohnh <= 0)
+                {
+                    await JS.InvokeVoidAsync(
+                        "alert",
+                        "Debe indicar un año válido.");
+                    return;
+                }
+
+                if (registroSeleccionado.Prdhnh <= 0)
+                {
+                    await JS.InvokeVoidAsync(
+                        "alert",
+                        "Debe indicar un período válido.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(
+                        registroSeleccionado.Fichnh))
+                {
+                    await JS.InvokeVoidAsync(
+                        "alert",
+                        "Debe indicar una ficha.");
+                    return;
+                }
+
+                if (string.IsNullOrWhiteSpace(
+                        registroSeleccionado.Dpthnh))
+                {
+                    await JS.InvokeVoidAsync(
+                        "alert",
+                        "Debe indicar un departamento.");
+                    return;
+                }
+
+                try
+                {
+                    bool resultado;
+
+                    if (origenSeleccionado == "RegistroNomina")
+                    {
+                        resultado = await ApiService.CambiarEstadoRegistroNomina(
+                            dto.Fichnh,
+                            dto.Añohnh,
+                            dto.Prdhnh,
+                            dto.Tpnom,
+                            dto.Stareg);
+                    }
+                    else
+                    {
+                        resultado = await ApiService.CreateRegistroNomina(dto);
+                    }
+
+                    if (!resultado)
+                    {
+                        await JS.InvokeVoidAsync(
+                            "alert",
+                            "No se pudo guardar el registro.");
+
+                        return;
+                    }
+
+                    await JS.InvokeVoidAsync(
+                        "alert",
+                        "Registro guardado correctamente.");
+                }
+                catch (Exception ex)
+                {
+                    Console.WriteLine(ex);
+
+                    await JS.InvokeVoidAsync(
+                        "alert",
+                        ex.Message);
+                }
+
+                mostrarModal = false;
+
+                await Buscar();
+            }
+
+            protected override async Task OnInitializedAsync()
+            {
+                try
+                {
+                    TrabajadoresActivos =
+                        await ApiService.GetMaestroTrabajadores()
+                        ?? new();
+
+                    TrabajadoresRetirados =
+                        await ApiService.GetMaestroTrabajadoresRe()
+                        ?? new();
+
+                    DepartamentosDisponibles = Departamentos
+                        .OrderBy(x => x.Value)
+                        .Select(x => $"{x.Key} - {x.Value}")
+                        .ToList();
+                }
+                finally
+                {
+                    cargando = false;
+                }
+            }
+
+            private readonly Dictionary<string, string> Departamentos = new()
+            {
+                // DIRECCION GENERAL Y FINANZAS
+                { "101000", "DIRECCION GENERAL" },
+                { "102000", "DIRECCION DE FINANZAS" },
+                { "102100", "CONTRALORIA" },
+                { "102101", "CONTABILIDAD" },
+                { "102102", "PLANEACION FINANCIERA Y COSTOS" },
+                { "102103", "PLANILLA/NOMINA" },
+                { "102200", "AUDITORIA" },
+                { "102300", "TESORERIA" },
+                { "102301", "CARTERA/CREDITO Y COBRANZA" },
+                { "102400", "TECNOLOGIA DE INFORMACION" },
+                { "102500", "JURIDICO Y CUMPLIMIENTO" },
+
+                // RRHH
+                { "103000", "DIRECCION DE RRHH" },
+                { "103200", "DESARROLLO DE TALENTOS" },
+                { "103300", "ADMINISTRACION DE PERSONAL" },
+
+                // AREAS ADICIONALES
+                { "1201", "GERENCIA DE FINANZAS" },
+
+                // COMERCIAL
+                { "200000", "DIRECCION COMERCIAL" },
+                { "2001", "VENTAS" },
+                { "211002", "ADMINISTRACION DE VENTAS" },
+                { "211003", "VENTAS ZONA 1" },
+                { "211004", "VENTAS ZONA 2" },
+                { "211005", "VENTAS ZONA 3" },
+                { "211006", "VENTAS ZONA 4" },
+                { "211007", "VENTAS ZONA 5" },
+                { "211008", "VENTAS ZONA 6" },
+                { "211009", "VENTAS ZONA 7" },
+                { "211010", "VENTAS ZONA 8" },
+                { "211102", "CADENAS NACIONALES" },
+                { "211301", "DISTRIBUIDOR AFH" },
+                { "221000", "DIR. CONSUMMER & SHOPPER MARKE" },
+                { "221202", "MERCADEO MARCAS COMERCIALES" },
+
+                // DISTRIBUCION
+                { "212000", "GERENCIA DE DISTRIBUCION" },
+                { "212101", "BODEGAS DE PT DESPACHO 1" },
+                { "212102", "BODEGAS DE PT DESPACHO 2" },
+                { "212103", "BODEGAS DE PT DESPACHO 3" },
+                { "212104", "BODEGAS DE PT DESPACHO 4" },
+                { "212105", "BODEGAS DE PT DESPACHO 5" },
+                { "212109", "BODEGAS DE PT DESPACHO 9" },
+                { "2301", "DESPACHO" },
+
+                // PRODUCCION
+                { "300000", "GERENCIA DE PRODUCCION Y MANUFACTURA" },
+                { "300001", "GCIA. DE PRODUC. Y MANUFACTURA" },
+                { "3001", "GERENCIA DE PLANTA" },
+
+                { "311001", "PROY. PLANTA PULPA Y DESTINT." },
+                { "311002", "PRODUCCION PLANTA DE PULPA" },
+
+                { "312000", "PREPARACION DE PASTA" },
+                { "312101", "PLANTA DESTINTADO 1" },
+                { "312301", "WET LAP 1" },
+                { "312302", "WET LAP 2" },
+
+                { "313000", "GERENCIA DE MOLINOS" },
+                { "313103", "MOLINO 3" },
+                { "313105", "MOLINO 5" },
+                { "313106", "MOLINO 6" },
+                { "313301", "RECTIFICADO DE CUCHILLAS" },
+
+                { "314001", "GERENCIA DE CONVERSION FAB 1" },
+                { "314101", "PERFORADORA 1" },
+                { "314102", "PERFORADORA 2" },
+                { "314103", "PERFORADORA 3" },
+                { "314105", "PERFORADORA 5" },
+                { "314106", "PERFORADORA 6" },
+                { "314107", "PERFORADORA 7" },
+                { "314108", "PERFORADORA 8" },
+
+                { "314201", "PLEGADORA 1" },
+                { "314202", "PLEGADORA 2" },
+                { "314203", "PLEGADORA 3" },
+                { "314205", "PLEGADORA 5" },
+
+                { "314406", "ASEO Y MANEJO DE BROKE" },
+                { "314407", "GASTOS GENER. HIGIE. Y TOALLAS" },
+                { "314408", "GASTOS GENERALES SERVILLETAS" },
+
+                // MANTENIMIENTO Y SERVICIOS INDUSTRIALES
+                { "3101", "MANTENIMIENTO" },
+                { "321000", "GCIA. DE SERV. INDUST/MTTO." },
+                { "321001", "AUTOMATIZACION" },
+                { "321002", "PREVENTIVO/PREDICTIVO" },
+                { "321003", "MANTENIMIENTO PLANTA PULPA" },
+                { "321005", "MANTENIMIENTO MOLINOS" },
+                { "321006", "MANTENIMIENTO CONVERSION FAB 1" },
+                { "321010", "PLANIFICACION DE PLANTA" },
+                { "321011", "MANTENIMIENTO AUTOMOTRIZ" },
+                { "321012", "MANTENIMIENTO INDUSTRIAL" },
+                { "321013", "SERV. INDUST. INFRAESTRUCTURA" },
+                { "321014", "URBANIZACION" },
+
+                { "322000", "GERENCIA DE PROYECTOS" },
+
+                // CALIDAD Y AMBIENTE
+                { "323000", "GERENCIA DE CALIDAD Y AMBIENTE" },
+                { "323101", "CONTROL DE CALIDAD FAB1" },
+                { "323200", "GESTION AMBIENTAL" },
+                { "323300", "SISTEMA DE GESTION INTEGRADO" },
+                { "323400", "LABORATORIO" },
+
+                // MEJORA CONTINUA
+                { "325001", "MEJORAMIENTO CONTINUO" },
+                { "325002", "ORGANIZACION Y METODOS" },
+
+                // RRLL / SEGURIDAD
+                { "326000", "RELACIONES LABORALES" },
+                { "326001", "SEGURIDAD INDUSTRIAL" },
+                { "326002", "SALUD EN EL TRABAJO" },
+                { "326003", "PROTECCION DE PLANTA" },
+                { "326004", "SERVICIOS AL PERSONAL" },
+
+                // ENERGIA
+                { "331000", "GCIA. DE GENERACION DE ENERGIA" },
+                { "331002", "GENERACION DE ENERGIA" },
+                { "332001", "CALDERAS" },
+
+                { "3392", "CONTROL DE PROCESOS" },
+                { "3411", "LOGISTICA" },
+
+                { "3602", "COMPRAS" },
+                { "3605", "ALMACEN" },
+
+                { "3701", "GERENCIA/ PLANTA (PROT AMBIENT)" },
+                { "3702", "LABORATORIO DE CALIDAD" },
+
+                { "3801", "GERENCIA DE RECURSOS HUMANOS" },
+                { "3804", "SEGURIDAD INDUSTRIAL" },
+                { "3806", "FACILITY" },
+
+                // MATERIALES
+                { "401000", "GERENCIA DE COMPRAS" },
+                { "402000", "GERENCIA DE PLANIFICACION" },
+
+                { "403101", "BODEGAS DE MATERIA PRIMA FAB1" },
+                { "403201", "BODEGAS DE EMP. E INSUMOS FAB1" },
+                { "403301", "BODEGAS DE SEMIELABORADO FAB1" },
+                { "403401", "BODEGAS DE QUIMICOS FAB1" },
+                { "403501", "BODEGAS DE REPUESTOS FAB1" },
+
+                { "404001", "GERENCIA DE TRANSPORTE IMP/EXP" },
+                { "404002", "TRANSPORTE INTERNO" }
+            };
+
+            private void ExportarExcel()
+            {
+            }
+
+            private void ExportarPdf()
+            {
+            }
+
+        public class RegistroNominaVistaDTO
+        {
+            public string TipoNomina { get; set; } = "";
+            public string Ficha { get; set; } = "";
+            public string Nombre { get; set; } = "";
+            public string Departamento { get; set; } = "";
+            public int Año { get; set; }
+            public int Periodo { get; set; }
+
+            public string DG01 { get; set; } = "";
+            public string DG02 { get; set; } = "";
+            public string DG03 { get; set; } = "";
+            public string DG04 { get; set; } = "";
+            public string DG05 { get; set; } = "";
+            public string DG06 { get; set; } = "";
+            public string DG07 { get; set; } = "";
+            public string DG08 { get; set; } = "";
+            public string DG09 { get; set; } = "";
+            public string DG10 { get; set; } = "";
+            public string DG11 { get; set; } = "";
+            public string DG12 { get; set; } = "";
+            public string DG13 { get; set; } = "";
+            public string DG14 { get; set; } = "";
+            public string DG15 { get; set; } = "";
+            public string? Ciahnh { get; set; }
+            public string? Tpnhnh { get; set; }
+            public bool Stareg { get; set; }
+        }
+    }

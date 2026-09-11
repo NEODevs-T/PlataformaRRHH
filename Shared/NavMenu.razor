@@ -52,6 +52,7 @@
         </NavLink>
 
         }
+
         @if (esAdmin || esRRHH || esFinanzas || esSalud)
         {
 
@@ -60,6 +61,16 @@
                 class="nav-item">
             <i class="oi oi-calendar"></i>
             <span>Ausencias</span>
+        </NavLink>
+
+        }
+        @if (esAdmin || esRRHH || esFinanzas)
+        {
+
+        <NavLink href="RegistroNomina"
+            class="nav-item">
+            <i class="oi oi-document"></i>
+            <span>Registro Nómina</span>
         </NavLink>
 
         }

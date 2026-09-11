@@ -1085,6 +1085,7 @@ body {
 /* HISTORICO APARTADO */
 .table-custom td {
     font-size: 13px;
+    vertical-align:middle;
 }
 
 .table-custom td:nth-child(5) {
@@ -3251,4 +3252,23 @@ thead{
     margin-bottom:6px;
     font-weight:600;
     color:#495057;
+}
+
+.modal-backdrop-custom{
+    position:fixed;
+    inset:0;
+    background:rgba(0,0,0,.5);
+    z-index:9999;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+}
+
+.modal-custom{
+    background:white;
+    width:90%;
+    max-width:1200px;
+    border-radius:10px;
+    padding:20px;
 }
