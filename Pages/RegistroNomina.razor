@@ -4,7 +4,9 @@
 @using ClosedXML.Excel
 @using PdfSharpCore.Drawing
 @using PdfSharpCore.Pdf
+@using PdfSharpCore
 @using System.IO
+@using System.Globalization 
 @inject IRRHHApiService ApiService
 @inject IJSRuntime JS
 
@@ -89,11 +91,33 @@
                 <div class="filtro-item">
                     <label>Origen</label>
                     <InputSelect class="input"
-                                @bind-Value="origenSeleccionado">
+                            @bind-Value="origenSeleccionado"
+                            @bind-Value:after="ActualizarPeriodo">
                         <option value="Todos">Registro Total</option>
                         <option value="Mensual">Registro Mensual</option>
                         <option value="Diaria">Registro Diario</option>
                         <option value="RegistroNomina">Registro Nómina</option>
+                    </InputSelect>
+                </div>
+
+                <div class="filtro-item">
+                    <label>Compañía</label>
+
+                    <InputSelect class="input"
+                                @bind-Value="companiaSeleccionada">
+
+                        @if (origenSeleccionado == "Diaria")
+                        {
+                            <option value="10">PAVECA</option>
+                        }
+                        else
+                        {
+                            <option value="">TODAS</option>
+                            <option value="10">PAVECA</option>
+                            <option value="23">CHEMPRO</option>
+                            <option value="24">DEFORSA</option>
+                        }
+
                     </InputSelect>
                 </div>
 
@@ -106,19 +130,29 @@
                 </div>
 
                 <div class="filtro-item acciones-filtro">
+
                     <label>&nbsp;</label>
+
                     <button class="btn-success"
                             @onclick="ExportarExcel">
+
                         Exportar Excel
+
                     </button>
+
                 </div>
 
                 <div class="filtro-item acciones-filtro">
+
                     <label>&nbsp;</label>
+
                     <button class="btn-danger"
                             @onclick="ExportarPdf">
+
                         Exportar PDF
+
                     </button>
+
                 </div>
 
             </div>
@@ -143,7 +177,7 @@
 
                         <div class="table-info-message">
                             <i class="oi oi-info"></i>
-                            Haga clic sobre Modificar para Editar el registro completo.
+                            Haga clic sobre Modificar o Ver para Editar el registro completo.
                         </div>
 
                         <div class="dashboard-card buscador-resultados-card">
@@ -184,6 +218,10 @@
                                     <th style="width:90px;">Año</th>
                                     <th style="width:90px;">Periodo</th>
                                     <th style="width:320px;">Esquema</th>
+                                    @if (origenConsultado == "RegistroNomina")
+                                    {
+                                        <th style="width:120px;">Estado</th>
+                                    }
                                     <th style="width:140px;"></th>
 
                                 </tr>
@@ -223,9 +261,25 @@
                                             <span>@item.DG14</span>
                                             <span>@item.DG15</span>
                                         </td>
-
+                                        @if (origenConsultado == "RegistroNomina")
+                                        {
+                                            <td>
+                                                @if (item.Stareg)
+                                                {
+                                                    <span class="badge bg-success">
+                                                        Activo
+                                                    </span>
+                                                }
+                                                else
+                                                {
+                                                    <span class="badge bg-danger">
+                                                        Inactivo
+                                                    </span>
+                                                }
+                                            </td>
+                                        }
                                             <td class="text-center align-middle">
-                                            @if (origenSeleccionado == "RegistroNomina")
+                                            @if (origenConsultado == "RegistroNomina")
                                             {
                                                 <button class="btn btn-info btn-sm accion-btn"
                                                         @onclick="() => VerRegistro(item)">
@@ -251,7 +305,7 @@
                             </div>
                             }
 
-                            @if (TotalPaginas > 1)
+                            @if (TotalPaginas > 0)
                             {
                                 <div class="d-flex justify-content-between align-items-center mt-3">
 
@@ -294,7 +348,7 @@
                 <div class="d-flex justify-content-between align-items-center mb-3">
                     <h4 class="mb-0">
                         <h4 class="mb-0">
-                            @(origenSeleccionado == "RegistroNomina"
+                            @(origenConsultado == "RegistroNomina"
                                 ? "Registro de Nómina"
                                 : registroSeleccionado?.Tpnom == "M"
                                     ? "Registro (Nómina Mensual)"
@@ -716,6 +770,8 @@
             private int PaginaActual = 1;
             private int RegistrosPorPagina = 500;
 
+            private string origenConsultado = "Todos";
+
             private List<VRotacionHistDTO> historicosMensual = new();
 
             private List<PermisosNomDiariaVDTO> historicosDiaria = new();
@@ -729,6 +785,8 @@
             private bool busquedaRealizada = false;
 
             private bool soloLectura;
+
+            private string companiaSeleccionada = "10";
 
             private List<string> DepartamentosDisponibles = new();
 
@@ -800,6 +858,57 @@
         private bool EsNominaDiaria =>
             registroSeleccionado?.Tpnom == "D";
 
+        private int ObtenerPeriodoDiarioActual()
+        {
+            var inicioPeriodo = new DateTime(2025, 12, 29);
+
+            var diasTranscurridos =
+                (DateTime.Today - inicioPeriodo).Days;
+
+            return (diasTranscurridos / 7) + 1;
+        }
+
+        private int ObtenerPeriodoMensualActual()
+        {
+            var mes = DateTime.Today.Month;
+
+            var periodo = ((mes - 1) * 2) + 1;
+
+            if (DateTime.Today.Day >= 16)
+                periodo++;
+
+            return periodo;
+        }
+
+
+        private List<int> PeriodosDisponibles
+        {
+            get
+            {
+                var añoActual = DateTime.Now.Year;
+
+                if (anioSeleccionado != añoActual)
+                {
+                    return Enumerable.Range(1, 53).ToList();
+                }
+
+                return origenSeleccionado switch
+                {
+                    "Mensual" => Enumerable.Range(1, ObtenerPeriodoMensualActual()).ToList(),
+
+                    "Diaria" => Enumerable.Range(1, ObtenerPeriodoDiarioActual()).ToList(),
+
+                    _ => Enumerable.Range(
+                        1,
+                        Math.Max(
+                            ObtenerPeriodoMensualActual(),
+                            ObtenerPeriodoDiarioActual()))
+                        .ToList()
+                };
+            }
+        }
+
+
         private async Task Buscar(bool reiniciarPagina = true)
         {
             if (reiniciarPagina)
@@ -837,12 +946,13 @@
 
                         var responseMensualTodos =
                             await ApiService.GetRotacionHistorico(
-                                anioSeleccionado ?? DateTime.Now.Year,
-                                fichaSeleccionada,
-                                CodigoDepto,
-                                periodoSeleccionado,
-                                1,
-                                500);
+                                    anioSeleccionado ?? DateTime.Now.Year,
+                                    fichaSeleccionada,
+                                    CodigoDepto,
+                                    periodoSeleccionado,
+                                    companiaSeleccionada,
+                                    PaginaActual,
+                                    RegistrosPorPagina);
 
                         historicosMensual =
                             responseMensualTodos.Data ?? new();
@@ -852,7 +962,9 @@
                                 anioSeleccionado ?? DateTime.Now.Year,
                                 periodoSeleccionado ?? 1,
                                 fichaSeleccionada,
-                                CodigoDepto);
+                                CodigoDepto,
+                                PaginaActual,
+                                RegistrosPorPagina);
 
                         historicosDiaria =
                             responseDiariaTodos.Data ?? new();
@@ -909,6 +1021,11 @@
 
                             TotalRegistros = registrosTotal.Count;
 
+                            TotalPaginas =
+                                (int)Math.Ceiling(
+                                    (double)TotalRegistros /
+                                    RegistrosPorPagina);
+
                         break;
 
                     case "Mensual":
@@ -919,11 +1036,16 @@
                                 fichaSeleccionada,
                                 CodigoDepto,
                                 periodoSeleccionado,
+                                companiaSeleccionada,
                                 PaginaActual,
                                 RegistrosPorPagina);
 
                         historicosMensual =
                             responseMensual.Data ?? new List<VRotacionHistDTO>();
+                        
+                        Console.WriteLine($"Data: {historicosMensual.Count}");
+Console.WriteLine($"TotalRegistros API: {responseMensual.TotalRegistros}");
+Console.WriteLine($"TotalPaginas API: {responseMensual.TotalPaginas}");
 
                         registrosTotal = historicosMensual
                             .Select(x => new RegistroNominaVistaDTO
@@ -957,9 +1079,8 @@
                             })
                             .ToList();
 
-                        TotalRegistros = registrosTotal.Count;
-
-                        TotalRegistros = historicosMensual.Count;
+                            TotalRegistros = responseMensual.TotalRegistros;
+                            TotalPaginas = responseMensual.TotalPaginas;
 
                         break;
 
@@ -970,10 +1091,16 @@
                                 anioSeleccionado ?? DateTime.Now.Year,
                                 periodoSeleccionado ?? 1,
                                 fichaSeleccionada,
-                                CodigoDepto);
+                                CodigoDepto,
+                                PaginaActual,
+                                RegistrosPorPagina);
 
                         historicosDiaria =
                             responseDiaria.Data ?? new();
+
+                        Console.WriteLine($"Data Diaria: {historicosDiaria.Count}");
+                        Console.WriteLine($"TotalRegistros Diaria: {responseDiaria.TotalRegistros}");
+                        Console.WriteLine($"TotalPaginas Diaria: {responseDiaria.TotalPaginas}");
 
                         registrosTotal = historicosDiaria
                             .Select(x => new RegistroNominaVistaDTO
@@ -997,11 +1124,17 @@
                                 DG06 = x.Dg06hh,
                                 DG07 = x.Dg07hh
                             })
-                                .ToList();
+                                .ToList();  
 
-                            TotalRegistros = registrosTotal.Count;
+                        TotalRegistros = responseDiaria.TotalRegistros;
+                        TotalPaginas = responseDiaria.TotalPaginas;
 
                         TotalRegistros = historicosDiaria.Count;
+                        
+                        TotalPaginas =
+                            (int)Math.Ceiling(
+                                (double)TotalRegistros /
+                                RegistrosPorPagina);
 
                         break;
 
@@ -1052,11 +1185,27 @@
                             })
                             .ToList();
 
-                        TotalRegistros = registrosTotal.Count;
-
                         break;
                 }
+                if (origenSeleccionado != "Diaria" &&
+                    !string.IsNullOrWhiteSpace(companiaSeleccionada))
+                {
+                    registrosTotal = registrosTotal
+                        .Where(x => x.Ciahnh?.Trim() == companiaSeleccionada)
+                        .ToList();
 
+                    if (origenSeleccionado == "Todos")
+                    {
+                        TotalRegistros = registrosTotal.Count;
+
+                        TotalPaginas =
+                            (int)Math.Ceiling(
+                                (double)TotalRegistros /
+                                RegistrosPorPagina);
+                    }
+                }
+
+                origenConsultado = origenSeleccionado;
                 busquedaRealizada = true;
             }
             finally
@@ -1071,15 +1220,13 @@
         {
             Console.WriteLine("ENTRO AL CLICK");
 
-            if (origenSeleccionado == "RegistroNomina")
+            if (origenConsultado == "RegistroNomina")
             {
-                // Solo cambiar estado
                 soloLectura = false;
                 SoloEstado = true;
             }
             else
             {
-                // Crear registro desde Mensual, Diaria o Total
                 soloLectura = false;
                 SoloEstado = false;
             }
@@ -1130,6 +1277,27 @@
                 }
             }
 
+            private void ActualizarPeriodo()
+            {
+                var maxPeriodo = PeriodosDisponibles.Max();
+
+                if (periodoSeleccionado > maxPeriodo)
+                    periodoSeleccionado = maxPeriodo;
+
+                switch (origenSeleccionado)
+                {
+                    case "Mensual":
+                    case "Diaria":
+                        companiaSeleccionada = "10";
+                        break;
+
+                    case "Todos":
+                    case "RegistroNomina":
+                        companiaSeleccionada = "";
+                        break;
+                }
+            }
+
             private async Task PaginaSiguiente()
             {
                 if (PaginaActual < TotalPaginas)
@@ -1150,11 +1318,15 @@
             }
 
             private IEnumerable<RegistroNominaVistaDTO> RegistrosFiltrados =>
-            registrosTotal.Where(x =>
-                string.IsNullOrWhiteSpace(filtroTabla)
-                || (x.Ficha ?? "").Contains(filtroTabla, StringComparison.OrdinalIgnoreCase)
-                || (x.Nombre ?? "").Contains(filtroTabla, StringComparison.OrdinalIgnoreCase)
-                || (x.Departamento ?? "").Contains(filtroTabla, StringComparison.OrdinalIgnoreCase));
+                registrosTotal.Where(x =>
+                    string.IsNullOrWhiteSpace(filtroTabla)
+                    || (x.Ficha ?? "")
+                        .Trim()
+                        .Contains(filtroTabla.Trim(), StringComparison.OrdinalIgnoreCase)
+                    || (x.Nombre ?? "")
+                        .Contains(filtroTabla, StringComparison.OrdinalIgnoreCase)
+                    || (x.Departamento ?? "")
+                        .Contains(filtroTabla, StringComparison.OrdinalIgnoreCase));
 
             private void EditarHistorico(VRotacionHistDTO item)
             {
@@ -1199,11 +1371,6 @@
                 2025,
                 2026
             };
-
-            
-
-            private List<int> PeriodosDisponibles =
-                Enumerable.Range(1, 53).ToList();
 
             private void EditarHistoricoDiaria(PermisosNomDiariaVDTO item)
             {
@@ -1413,164 +1580,403 @@
 
             private readonly Dictionary<string, string> Departamentos = new()
             {
-                // DIRECCION GENERAL Y FINANZAS
-                { "101000", "DIRECCION GENERAL" },
-                { "102000", "DIRECCION DE FINANZAS" },
-                { "102100", "CONTRALORIA" },
-                { "102101", "CONTABILIDAD" },
-                { "102102", "PLANEACION FINANCIERA Y COSTOS" },
-                { "102103", "PLANILLA/NOMINA" },
-                { "102200", "AUDITORIA" },
-                { "102300", "TESORERIA" },
-                { "102301", "CARTERA/CREDITO Y COBRANZA" },
-                { "102400", "TECNOLOGIA DE INFORMACION" },
-                { "102500", "JURIDICO Y CUMPLIMIENTO" },
+            // DIRECCION GENERAL Y FINANZAS
+            { "101000", "DIRECCION GENERAL" },
+            { "102000", "DIRECCION DE FINANZAS" },
+            { "102100", "CONTRALORIA" },
+            { "102101", "CONTABILIDAD" },
+            { "102102", "PLANEACION FINANCIERA Y COSTOS" },
+            { "102103", "PLANILLA/NOMINA" },
+            { "102200", "AUDITORIA" },
+            { "102300", "TESORERIA" },
+            { "102301", "CARTERA/CREDITO Y COBRANZA" },
+            { "102400", "TECNOLOGIA DE INFORMACION" },
+            { "102500", "JURIDICO Y CUMPLIMIENTO" },
 
-                // RRHH
-                { "103000", "DIRECCION DE RRHH" },
-                { "103200", "DESARROLLO DE TALENTOS" },
-                { "103300", "ADMINISTRACION DE PERSONAL" },
+            // RRHH
+            { "103000", "DIRECCION DE RRHH" },
+            { "103200", "DESARROLLO DE TALENTOS" },
+            { "103300", "ADMINISTRACION DE PERSONAL" },
 
-                // AREAS ADICIONALES
-                { "1201", "GERENCIA DE FINANZAS" },
+            // AREAS ADICIONALES
+            { "1201", "GERENCIA DE FINANZAS" },
 
-                // COMERCIAL
-                { "200000", "DIRECCION COMERCIAL" },
-                { "2001", "VENTAS" },
-                { "211002", "ADMINISTRACION DE VENTAS" },
-                { "211003", "VENTAS ZONA 1" },
-                { "211004", "VENTAS ZONA 2" },
-                { "211005", "VENTAS ZONA 3" },
-                { "211006", "VENTAS ZONA 4" },
-                { "211007", "VENTAS ZONA 5" },
-                { "211008", "VENTAS ZONA 6" },
-                { "211009", "VENTAS ZONA 7" },
-                { "211010", "VENTAS ZONA 8" },
-                { "211102", "CADENAS NACIONALES" },
-                { "211301", "DISTRIBUIDOR AFH" },
-                { "221000", "DIR. CONSUMMER & SHOPPER MARKE" },
-                { "221202", "MERCADEO MARCAS COMERCIALES" },
+            // COMERCIAL
+            { "200000", "DIRECCION COMERCIAL" },
+            { "2001", "VENTAS" },
+            { "211002", "ADMINISTRACION DE VENTAS" },
+            { "211003", "VENTAS ZONA 1" },
+            { "211004", "VENTAS ZONA 2" },
+            { "211005", "VENTAS ZONA 3" },
+            { "211006", "VENTAS ZONA 4" },
+            { "211007", "VENTAS ZONA 5" },
+            { "211008", "VENTAS ZONA 6" },
+            { "211009", "VENTAS ZONA 7" },
+            { "211010", "VENTAS ZONA 8" },
+            { "211102", "CADENAS NACIONALES" },
+            { "211301", "DISTRIBUIDOR AFH" },
+            { "221000", "DIR. CONSUMMER & SHOPPER MARKE" },
+            { "221202", "MERCADEO MARCAS COMERCIALES" },
 
-                // DISTRIBUCION
-                { "212000", "GERENCIA DE DISTRIBUCION" },
-                { "212101", "BODEGAS DE PT DESPACHO 1" },
-                { "212102", "BODEGAS DE PT DESPACHO 2" },
-                { "212103", "BODEGAS DE PT DESPACHO 3" },
-                { "212104", "BODEGAS DE PT DESPACHO 4" },
-                { "212105", "BODEGAS DE PT DESPACHO 5" },
-                { "212109", "BODEGAS DE PT DESPACHO 9" },
-                { "2301", "DESPACHO" },
+            // DISTRIBUCION
+            { "212000", "GERENCIA DE DISTRIBUCION" },
+            { "212101", "BODEGAS DE PT DESPACHO 1" },
+            { "212102", "BODEGAS DE PT DESPACHO 2" },
+            { "212103", "BODEGAS DE PT DESPACHO 3" },
+            { "212104", "BODEGAS DE PT DESPACHO 4" },
+            { "212105", "BODEGAS DE PT DESPACHO 5" },
+            { "212109", "BODEGAS DE PT DESPACHO 9" },
+            { "2301", "DESPACHO" },
 
-                // PRODUCCION
-                { "300000", "GERENCIA DE PRODUCCION Y MANUFACTURA" },
-                { "300001", "GCIA. DE PRODUC. Y MANUFACTURA" },
-                { "3001", "GERENCIA DE PLANTA" },
+            // PRODUCCION
+            { "300000", "GERENCIA DE PRODUCCION Y MANUFACTURA" },
+            { "300001", "GCIA. DE PRODUC. Y MANUFACTURA" },
+            { "3001", "GERENCIA DE PLANTA" },
 
-                { "311001", "PROY. PLANTA PULPA Y DESTINT." },
-                { "311002", "PRODUCCION PLANTA DE PULPA" },
+            { "311001", "PROY. PLANTA PULPA Y DESTINT." },
+            { "311002", "PRODUCCION PLANTA DE PULPA" },
 
-                { "312000", "PREPARACION DE PASTA" },
-                { "312101", "PLANTA DESTINTADO 1" },
-                { "312301", "WET LAP 1" },
-                { "312302", "WET LAP 2" },
+            { "312000", "PREPARACION DE PASTA" },
+            { "312101", "PLANTA DESTINTADO 1" },
+            { "312301", "WET LAP 1" },
+            { "312302", "WET LAP 2" },
 
-                { "313000", "GERENCIA DE MOLINOS" },
-                { "313103", "MOLINO 3" },
-                { "313105", "MOLINO 5" },
-                { "313106", "MOLINO 6" },
-                { "313301", "RECTIFICADO DE CUCHILLAS" },
+            { "313000", "GERENCIA DE MOLINOS" },
+            { "313103", "MOLINO 3" },
+            { "313105", "MOLINO 5" },
+            { "313106", "MOLINO 6" },
+            { "313301", "RECTIFICADO DE CUCHILLAS" },
 
-                { "314001", "GERENCIA DE CONVERSION FAB 1" },
-                { "314101", "PERFORADORA 1" },
-                { "314102", "PERFORADORA 2" },
-                { "314103", "PERFORADORA 3" },
-                { "314105", "PERFORADORA 5" },
-                { "314106", "PERFORADORA 6" },
-                { "314107", "PERFORADORA 7" },
-                { "314108", "PERFORADORA 8" },
+            { "314001", "GERENCIA DE CONVERSION FAB 1" },
+            { "314101", "PERFORADORA 1" },
+            { "314102", "PERFORADORA 2" },
+            { "314103", "PERFORADORA 3" },
+            { "314105", "PERFORADORA 5" },
+            { "314106", "PERFORADORA 6" },
+            { "314107", "PERFORADORA 7" },
+            { "314108", "PERFORADORA 8" },
 
-                { "314201", "PLEGADORA 1" },
-                { "314202", "PLEGADORA 2" },
-                { "314203", "PLEGADORA 3" },
-                { "314205", "PLEGADORA 5" },
+            { "314201", "PLEGADORA 1" },
+            { "314202", "PLEGADORA 2" },
+            { "314203", "PLEGADORA 3" },
+            { "314205", "PLEGADORA 5" },
 
-                { "314406", "ASEO Y MANEJO DE BROKE" },
-                { "314407", "GASTOS GENER. HIGIE. Y TOALLAS" },
-                { "314408", "GASTOS GENERALES SERVILLETAS" },
+            { "314406", "ASEO Y MANEJO DE BROKE" },
+            { "314407", "GASTOS GENER. HIGIE. Y TOALLAS" },
+            { "314408", "GASTOS GENERALES SERVILLETAS" },
 
-                // MANTENIMIENTO Y SERVICIOS INDUSTRIALES
-                { "3101", "MANTENIMIENTO" },
-                { "321000", "GCIA. DE SERV. INDUST/MTTO." },
-                { "321001", "AUTOMATIZACION" },
-                { "321002", "PREVENTIVO/PREDICTIVO" },
-                { "321003", "MANTENIMIENTO PLANTA PULPA" },
-                { "321005", "MANTENIMIENTO MOLINOS" },
-                { "321006", "MANTENIMIENTO CONVERSION FAB 1" },
-                { "321010", "PLANIFICACION DE PLANTA" },
-                { "321011", "MANTENIMIENTO AUTOMOTRIZ" },
-                { "321012", "MANTENIMIENTO INDUSTRIAL" },
-                { "321013", "SERV. INDUST. INFRAESTRUCTURA" },
-                { "321014", "URBANIZACION" },
+            // MANTENIMIENTO Y SERVICIOS INDUSTRIALES
+            { "3101", "MANTENIMIENTO" },
+            { "321000", "GCIA. DE SERV. INDUST/MTTO." },
+            { "321001", "AUTOMATIZACION" },
+            { "321002", "PREVENTIVO/PREDICTIVO" },
+            { "321003", "MANTENIMIENTO PLANTA PULPA" },
+            { "321005", "MANTENIMIENTO MOLINOS" },
+            { "321006", "MANTENIMIENTO CONVERSION FAB 1" },
+            { "321010", "PLANIFICACION DE PLANTA" },
+            { "321011", "MANTENIMIENTO AUTOMOTRIZ" },
+            { "321012", "MANTENIMIENTO INDUSTRIAL" },
+            { "321013", "SERV. INDUST. INFRAESTRUCTURA" },
+            { "321014", "URBANIZACION" },
 
-                { "322000", "GERENCIA DE PROYECTOS" },
+            { "322000", "GERENCIA DE PROYECTOS" },
 
-                // CALIDAD Y AMBIENTE
-                { "323000", "GERENCIA DE CALIDAD Y AMBIENTE" },
-                { "323101", "CONTROL DE CALIDAD FAB1" },
-                { "323200", "GESTION AMBIENTAL" },
-                { "323300", "SISTEMA DE GESTION INTEGRADO" },
-                { "323400", "LABORATORIO" },
+            // CALIDAD Y AMBIENTE
+            { "323000", "GERENCIA DE CALIDAD Y AMBIENTE" },
+            { "323101", "CONTROL DE CALIDAD FAB1" },
+            { "323200", "GESTION AMBIENTAL" },
+            { "323300", "SISTEMA DE GESTION INTEGRADO" },
+            { "323400", "LABORATORIO" },
 
-                // MEJORA CONTINUA
-                { "325001", "MEJORAMIENTO CONTINUO" },
-                { "325002", "ORGANIZACION Y METODOS" },
+            // MEJORA CONTINUA
+            { "325001", "MEJORAMIENTO CONTINUO" },
+            { "325002", "ORGANIZACION Y METODOS" },
 
-                // RRLL / SEGURIDAD
-                { "326000", "RELACIONES LABORALES" },
-                { "326001", "SEGURIDAD INDUSTRIAL" },
-                { "326002", "SALUD EN EL TRABAJO" },
-                { "326003", "PROTECCION DE PLANTA" },
-                { "326004", "SERVICIOS AL PERSONAL" },
+            // RRLL / SEGURIDAD
+            { "326000", "RELACIONES LABORALES" },
+            { "326001", "SEGURIDAD INDUSTRIAL" },
+            { "326002", "SALUD EN EL TRABAJO" },
+            { "326003", "PROTECCION DE PLANTA" },
+            { "326004", "SERVICIOS AL PERSONAL" },
 
-                // ENERGIA
-                { "331000", "GCIA. DE GENERACION DE ENERGIA" },
-                { "331002", "GENERACION DE ENERGIA" },
-                { "332001", "CALDERAS" },
+            // ENERGIA
+            { "331000", "GCIA. DE GENERACION DE ENERGIA" },
+            { "331002", "GENERACION DE ENERGIA" },
+            { "332001", "CALDERAS" },
 
-                { "3392", "CONTROL DE PROCESOS" },
-                { "3411", "LOGISTICA" },
+            { "3392", "CONTROL DE PROCESOS" },
+            { "3411", "LOGISTICA" },
 
-                { "3602", "COMPRAS" },
-                { "3605", "ALMACEN" },
+            { "3602", "COMPRAS" },
+            { "3605", "ALMACEN" },
 
-                { "3701", "GERENCIA/ PLANTA (PROT AMBIENT)" },
-                { "3702", "LABORATORIO DE CALIDAD" },
+            { "3701", "GERENCIA/ PLANTA (PROT AMBIENT)" },
+            { "3702", "LABORATORIO DE CALIDAD" },
 
-                { "3801", "GERENCIA DE RECURSOS HUMANOS" },
-                { "3804", "SEGURIDAD INDUSTRIAL" },
-                { "3806", "FACILITY" },
+            { "3801", "GERENCIA DE RECURSOS HUMANOS" },
+            { "3804", "SEGURIDAD INDUSTRIAL" },
+            { "3806", "FACILITY" },
 
-                // MATERIALES
-                { "401000", "GERENCIA DE COMPRAS" },
-                { "402000", "GERENCIA DE PLANIFICACION" },
+            // MATERIALES
+            { "401000", "GERENCIA DE COMPRAS" },
+            { "402000", "GERENCIA DE PLANIFICACION" },
 
-                { "403101", "BODEGAS DE MATERIA PRIMA FAB1" },
-                { "403201", "BODEGAS DE EMP. E INSUMOS FAB1" },
-                { "403301", "BODEGAS DE SEMIELABORADO FAB1" },
-                { "403401", "BODEGAS DE QUIMICOS FAB1" },
-                { "403501", "BODEGAS DE REPUESTOS FAB1" },
+            { "403101", "BODEGAS DE MATERIA PRIMA FAB1" },
+            { "403201", "BODEGAS DE EMP. E INSUMOS FAB1" },
+            { "403301", "BODEGAS DE SEMIELABORADO FAB1" },
+            { "403401", "BODEGAS DE QUIMICOS FAB1" },
+            { "403501", "BODEGAS DE REPUESTOS FAB1" },
 
-                { "404001", "GERENCIA DE TRANSPORTE IMP/EXP" },
-                { "404002", "TRANSPORTE INTERNO" }
-            };
+            { "404001", "GERENCIA DE TRANSPORTE IMP/EXP" },
+            { "404002", "TRANSPORTE INTERNO" },
 
-            private void ExportarExcel()
+            // DEFORSA
+            { "501000", "ADMINISTRACION FORESTAL" },
+            { "501001", "INVESTIGACION" },
+            { "501002", "VIVERO" },
+            { "501003", "CUIDOS CULTURALES" },
+            { "501004", "COSECHA FORESTAL" },
+            { "501006", "PROTEC. Y CONTROL DE PERDIDAS" },
+            { "501007", "CUIDOS CULTURALES CAÑO BENITO" },
+
+            { "502000", "ADMINISTRACION AGROPECUARIA" },
+            { "503002", "ASERRADERO" },
+
+            // CHEMPRO
+            { "601001", "PRODUCCION HIDROGENO" },
+            { "602001", "PLANTA DE OSMOSIS" },
+            { "603001", "PROD. PEROXIDO DE HIDROGENO" },
+            { "604001", "DILUCION PEROXIDO DE HIDROGENO" }
+        };
+
+            private async Task ExportarExcel()
+        {
+            Console.WriteLine("ENTRO EXCEL");
+            if (!registrosTotal.Any())
+                return;
+
+            try
             {
-            }
+                using var workbook = new XLWorkbook();
 
-            private void ExportarPdf()
-            {
+                var ws = workbook.Worksheets.Add("RegistroNomina");
+
+                ws.Cell(1, 1).Value = "Ficha";
+                ws.Cell(1, 2).Value = "Nombre";
+                ws.Cell(1, 3).Value = "Departamento";
+                ws.Cell(1, 4).Value = "Tipo Nómina";
+                ws.Cell(1, 5).Value = "Año";
+                ws.Cell(1, 6).Value = "Periodo";
+                ws.Cell(1, 7).Value = "Esquema";
+                ws.Cell(1, 8).Value = "Estado";
+
+                var header = ws.Range(1, 1, 1, 8);
+
+                header.Style.Font.Bold = true;
+                header.Style.Fill.BackgroundColor = XLColor.DarkGreen;
+                header.Style.Font.FontColor = XLColor.White;
+
+                int fila = 2;
+
+                foreach (var item in RegistrosFiltrados)
+                {
+                    string esquema =
+                        $"{item.DG01}{item.DG02}{item.DG03}{item.DG04}{item.DG05}" +
+                        $"{item.DG06}{item.DG07}{item.DG08}{item.DG09}{item.DG10}" +
+                        $"{item.DG11}{item.DG12}{item.DG13}{item.DG14}{item.DG15}";
+
+                    ws.Cell(fila, 1).Value = item.Ficha;
+                    ws.Cell(fila, 2).Value = item.Nombre;
+                    ws.Cell(fila, 3).Value = item.Departamento;
+                    ws.Cell(fila, 4).Value = item.TipoNomina;
+                    ws.Cell(fila, 5).Value = item.Año;
+                    ws.Cell(fila, 6).Value = item.Periodo;
+                    ws.Cell(fila, 7).Value = esquema;
+                    ws.Cell(fila, 8).Value = item.Stareg ? "Activo" : "Inactivo";
+
+                    fila++;
+                }
+
+                ws.Columns().AdjustToContents();
+
+                using var ms = new MemoryStream();
+
+                workbook.SaveAs(ms);
+
+                var archivo = Convert.ToBase64String(ms.ToArray());
+
+                await JS.InvokeVoidAsync(
+                    "downloadFile",
+                    $"RegistroNomina_{DateTime.Now:yyyyMMddHHmmss}.xlsx",
+                    archivo);
             }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error Excel: {ex.Message}");
+            }
+        }
+
+        private string Recortar(string? valor, int longitud)
+        {
+            if (string.IsNullOrWhiteSpace(valor))
+                return "";
+
+            return valor.Length <= longitud
+                ? valor
+                : valor[..longitud] + "...";
+        }
+
+            private async Task ExportarPdf()
+        {
+            Console.WriteLine("ENTRO PDF");
+            if (!RegistrosFiltrados.Any())
+                return;
+
+            try
+            {
+                PdfDocument document = new();
+
+                PdfPage page = document.AddPage();
+
+                page.Orientation = PageOrientation.Landscape;
+                page.Size = PdfSharpCore.PageSize.A4;
+
+                XGraphics gfx = XGraphics.FromPdfPage(page);
+
+                XFont titulo = new("Arial", 16, XFontStyle.Bold);
+                XFont header = new("Arial", 8, XFontStyle.Bold);
+                XFont body = new("Arial", 8, XFontStyle.Regular);
+
+                var colorCorporativo =
+                    XColor.FromArgb(0, 120, 83);
+
+                double y = 25;
+
+                gfx.DrawRectangle(
+                    new XSolidBrush(colorCorporativo),
+                    20,
+                    20,
+                    780,
+                    35);
+
+                gfx.DrawString(
+                    "REGISTRO DE NOMINA",
+                    titulo,
+                    XBrushes.White,
+                    new XRect(20, 20, 780, 35),
+                    XStringFormats.Center);
+
+                y = 75;
+
+                gfx.DrawString(
+                    $"Origen: {origenConsultado}",
+                    body,
+                    XBrushes.Black,
+                    30,
+                    y);
+
+                gfx.DrawString(
+                    $"Registros: {RegistrosFiltrados.Count()}",
+                    body,
+                    XBrushes.Black,
+                    250,
+                    y);
+
+                y += 25;
+
+                gfx.DrawRectangle(
+                    new XSolidBrush(colorCorporativo),
+                    20,
+                    y,
+                    780,
+                    20);
+
+                gfx.DrawString("Ficha", header, XBrushes.White, 25, y + 14);
+                gfx.DrawString("Nombre", header, XBrushes.White, 80, y + 14);
+                gfx.DrawString("Departamento", header, XBrushes.White, 220, y + 14);
+                gfx.DrawString("Tipo", header, XBrushes.White, 460, y + 14);
+                gfx.DrawString("Año", header, XBrushes.White, 530, y + 14);
+                gfx.DrawString("Periodo", header, XBrushes.White, 580, y + 14);
+                gfx.DrawString("Estado", header, XBrushes.White, 650, y + 14);
+
+                y += 28;
+
+                foreach (var item in RegistrosFiltrados)
+                {
+                    if (y > page.Height - 40)
+                    {
+                        page = document.AddPage();
+                        page.Orientation = PageOrientation.Landscape;
+
+                        gfx = XGraphics.FromPdfPage(page);
+
+                        y = 30;
+                    }
+
+                    gfx.DrawString(item.Ficha ?? "", body, XBrushes.Black, 25, y);
+
+                    gfx.DrawString(
+                        Recortar(item.Nombre, 25),
+                        body,
+                        XBrushes.Black,
+                        80,
+                        y);
+
+                    gfx.DrawString(
+                        Recortar(item.Departamento, 35),
+                        body,
+                        XBrushes.Black,
+                        220,
+                        y);
+
+                    gfx.DrawString(
+                        item.TipoNomina,
+                        body,
+                        XBrushes.Black,
+                        460,
+                        y);
+
+                    gfx.DrawString(
+                        item.Año.ToString(),
+                        body,
+                        XBrushes.Black,
+                        530,
+                        y);
+
+                    gfx.DrawString(
+                        item.Periodo.ToString(),
+                        body,
+                        XBrushes.Black,
+                        580,
+                        y);
+
+                    gfx.DrawString(
+                        item.Stareg ? "Activo" : "Inactivo",
+                        body,
+                        XBrushes.Black,
+                        650,
+                        y);
+
+                    y += 18;
+                }
+
+                using var stream = new MemoryStream();
+
+                document.Save(stream, false);
+
+                var archivo =
+                    Convert.ToBase64String(stream.ToArray());
+
+                await JS.InvokeVoidAsync(
+                    "downloadFile",
+                    $"RegistroNomina_{DateTime.Now:yyyyMMddHHmmss}.pdf",
+                    archivo);
+            }
+            catch (Exception ex)
+            {
+                Console.WriteLine($"Error PDF: {ex.Message}");
+            }
+        }
 
         public class RegistroNominaVistaDTO
         {

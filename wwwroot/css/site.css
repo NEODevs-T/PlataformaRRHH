@@ -3272,3 +3272,250 @@ thead{
     border-radius:10px;
     padding:20px;
 }
+
+/* =========================
+   ENCABEZADO ROTACIÓN
+   ========================= */
+
+.rotacion-titulo-container {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+    margin: 15px 0 10px 0;
+}
+
+.rotacion-titulo {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.rotacion-titulo h3 {
+    margin: 0;
+    color: #082c63;
+    font-size: 1.9rem;
+    font-weight: 700;
+    line-height: 1.1;
+}
+
+.rotacion-titulo small {
+    display: block;
+    margin-top: 2px;
+    font-size: .95rem;
+}
+
+.meta-rotacion-header {
+    background: #f5f7fa;
+    border-radius: 10px;
+    padding: 10px 15px;
+    text-align: center;
+    min-width: 110px;
+    box-shadow: 0 2px 4px rgba(0,0,0,.05);
+}
+
+.meta-rotacion-header small {
+    display: block;
+    color: #6c757d;
+    font-size: .85rem;
+    margin-bottom: 2px;
+}
+
+.meta-rotacion-header strong {
+    color: #00875a;
+    font-size: 1.4rem;
+    font-weight: 700;
+}
+
+/* =====================================
+   ROTACION - FORZAR COLORES
+===================================== */
+
+.table-custom tbody tr.fila-rotacion td.rotacion-verde,
+.table-custom tbody tr.fila-rotacion:hover td.rotacion-verde,
+.table-custom tbody tr.fila-rotacion td.rotacion-verde:hover {
+    color: #198754 !important;
+    font-weight: 700 !important;
+}
+
+.table-custom tbody tr.fila-rotacion td.rotacion-roja,
+.table-custom tbody tr.fila-rotacion:hover td.rotacion-roja,
+.table-custom tbody tr.fila-rotacion td.rotacion-roja:hover {
+    color: #dc3545 !important;
+    font-weight: 700 !important;
+}
+
+/* Evita que el hover de la tabla cambie los colores */
+.table-custom tbody tr.fila-rotacion:hover td {
+    background: inherit !important;
+}
+
+.table-custom tbody tr.fila-rotacion:hover td.rotacion-verde {
+    color: #198754 !important;
+}
+
+.table-custom tbody tr.fila-rotacion:hover td.rotacion-roja {
+    color: #dc3545 !important;
+}
+
+/* =========================
+   TABLA ROTACION
+   ========================= */
+
+.fila-total-headcount,
+.fila-total-headcount:hover {
+    background: #00845e !important;
+}
+
+.fila-total-headcount td,
+.fila-total-headcount td *,
+.fila-total-headcount:hover td,
+.fila-total-headcount:hover td * {
+    background: #00845e !important;
+    color: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+
+/* =========================
+   SEPARADOR
+   ========================= */
+
+.rotacion-divider {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    margin: 25px 0 18px 0;
+}
+
+.rotacion-divider::before,
+.rotacion-divider::after {
+    content: "";
+    flex: 1;
+    height: 2px;
+    background: #dfe5ea;
+}
+
+.rotacion-divider span {
+    background: #f4f6f9;
+    padding: 0 12px;
+
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+
+    color: #00845e;
+}
+/* =====================================
+   TABLAS ROTACION
+===================================== */
+
+.tabla-rotacion {
+    width: 100%;
+    table-layout: fixed;
+}
+
+.tabla-rotacion th:first-child,
+.tabla-rotacion td:first-child {
+    width: 130px;
+    min-width: 130px;
+    max-width: 130px;
+    font-weight: 700;
+}
+
+/* =====================================
+   FILA TOTAL
+===================================== */
+
+tr.fila-total-headcount,
+tr.fila-total-headcount:hover {
+    background: #00845e !important;
+}
+
+tr.fila-total-headcount td,
+tr.fila-total-headcount td:first-child,
+tr.fila-total-headcount td span,
+tr.fila-total-headcount td strong,
+tr.fila-total-headcount td b,
+tr.fila-total-headcount td * {
+    background: #00845e !important;
+    color: #ffffff !important;
+    fill: #ffffff !important;
+    font-weight: 700 !important;
+}
+
+/* =====================================
+   SEPARADOR
+===================================== */
+
+.rotacion-divider {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+
+    width: 100%;
+
+    margin: 18px 0;
+}
+
+.rotacion-divider::before,
+.rotacion-divider::after {
+    content: "";
+    flex: 1;
+    border-top: 2px solid #d9dee3;
+}
+
+.rotacion-divider span {
+    padding: 4px 14px;
+
+    background: #f4f6f9;
+
+    color: #00845e;
+
+    font-size: 13px;
+    font-weight: 700;
+    letter-spacing: 1px;
+}
+
+/* =====================================
+   TABLA INDICADORES
+===================================== */
+
+.rotacion-indicadores-table {
+    margin-top: 0;
+}
+
+.rotacion-indicadores-table table {
+    margin-bottom: 0;
+}
+
+.rotacion-indicadores-table td:first-child {
+    font-weight: 700;
+    color: #082c63;
+}
+
+/* =====================================
+   COLORES ROTACION
+===================================== */
+
+.rotacion-verde {
+    color: #198754 !important;
+    font-weight: 700 !important;
+}
+
+.rotacion-roja {
+    color: #dc3545 !important;
+    font-weight: 700 !important;
+}
+
+.fila-rotacion td {
+    font-weight: 700;
+}
+
+.table-custom tr.fila-total-headcount:hover,
+.table-custom tr.fila-total-headcount:hover td,
+.table-custom tr.fila-total-headcount:hover td * {
+    background: #00845e !important;
+    color: #ffffff !important;
+}

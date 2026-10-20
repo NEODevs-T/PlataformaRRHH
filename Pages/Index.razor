@@ -88,7 +88,11 @@
                 }
                 else
                 {
-                    @($"{rotacionHoy:N2}%")
+                    <span class="@(rotacionPorcentaje >= 1.70
+                        ? "text-success"
+                        : "text-danger")">
+                        @rotacionPorcentaje.ToString("N2")%
+                    </span>
                 }
             </div>
 
@@ -188,6 +192,7 @@
                     Seguimiento de ingresos, retiros y movimientos de personal.
                 </p>
             </div>
+
         }
 
         @if (
@@ -216,6 +221,14 @@
                 <h4>📝 Registro Nómina</h4>
                 <p>
                     Control y modificación de registros procesados por Nómina.
+                </p>
+            </div>
+
+            <div class="modulo-box"
+                @onclick='() => Nav.NavigateTo("rotacion")'>
+                <h4>🔄 Rotación</h4>
+                <p>
+                    Seguimiento de ingresos, retiros y movimientos de personal.
                 </p>
             </div>
         }
@@ -270,7 +283,7 @@
 
     int personalActivo = 0;
     int repososHoy = 0;
-    double rotacionHoy = 0;
+    double rotacionPorcentaje = 0;
 
     bool cargandoKPIs = true;
 
@@ -347,6 +360,12 @@
 
             var egresosMes = trabajadoresRetirados.Count(x =>
             {
+                if (x.Ciafic != "10")
+                    return false;
+
+                if (x.Tpnfic == "2102")
+                    return false;
+
                 if (!x.Fecret.HasValue || x.Fecret <= 0)
                     return false;
 
@@ -356,7 +375,7 @@
                 return periodoRetiro == periodoActual;
             });
 
-            rotacionHoy =
+            rotacionPorcentaje =
                 headCountActual > 0
                     ? Math.Round(
                         ((double)egresosMes / headCountActual) * 100,
@@ -366,7 +385,7 @@
         catch
         {
             personalActivo = 0;
-            rotacionHoy = 0;
+            rotacionPorcentaje = 0;
         }
 
         try

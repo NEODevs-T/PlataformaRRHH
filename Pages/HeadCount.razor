@@ -4,12 +4,11 @@
 
 @inject IRRHHApiService Api
 
-
 <link href="./css/site.css" rel="stylesheet" />
 
-<h2 class="page-title">HeadCount</h2>
+<h2 class="page-title">HeadCount Organizacional</h2>
 
-@if (empleados == null)
+@if (empleados == null || !empleados.Any())
 {
     <p>Cargando...</p>
 }
@@ -17,14 +16,17 @@ else
 {
     <div class="headcount-container">
 
-        <!-- ✅ FILTROS -->
-        <div class="filtro-container headcount-filtros">
+        <!-- FILTROS -->
+        <div class="filtro-container">
 
-            <input placeholder="Buscar empleado..."
-                @bind="filtroTexto" class="input" />
+            <input
+                placeholder="Buscar empleado..."
+                @bind="filtroTexto"
+                class="input" />
 
             <select @bind="departamentoFiltro" class="input">
                 <option value="">Todos los departamentos</option>
+
                 @foreach (var dep in listaDepartamentos)
                 {
                     <option value="@dep">@dep</option>
@@ -33,18 +35,12 @@ else
 
             <select @bind="cargoFiltro" class="input">
                 <option value="">Todos los cargos</option>
-                @foreach (var c in listaCargos)
+
+                @foreach (var cargo in listaCargos)
                 {
-                    <option value="@c">@c</option>
+                    <option value="@cargo">@cargo</option>
                 }
             </select>
-
-            <select @bind="tipoPeriodo" class="input">
-                <option value="mensual">Nómina Mensual</option>
-                <option value="diaria">Nómina Diaria</option>
-            </select>
-
-            <input type="date" @bind="fechaSeleccionada" class="input" />
 
             <button class="btn" @onclick="AplicarFiltro">
                 Filtrar
@@ -52,7 +48,7 @@ else
 
         </div>
 
-        <!-- ✅ KPI -->
+        <!-- KPI -->
         <div class="headcount-cards">
 
             <div class="headcount-card">
@@ -61,14 +57,26 @@ else
             </div>
 
             <div class="headcount-card">
-                <h5>Ingresos del Periodo</h5>
-                <span>@ingresosPeriodo</span>
+                <h5>Departamentos</h5>
+                <span>@totalDepartamentos</span>
+            </div>
+
+            <div class="headcount-card">
+                <h5>Cargos</h5>
+                <span>@totalCargos</span>
+            </div>
+
+            <div class="headcount-card">
+                <h5>Mayor Dotación</h5>
+                <span>@departamentoMayor</span>
             </div>
 
         </div>
 
-        <!-- ✅ GRAFICO -->
-        <h4 style="margin-top:20px;">Headcount por Departamento</h4>
+        <!-- GRAFICO -->
+        <h4 style="margin-top:25px">
+            Distribución por Departamento
+        </h4>
 
         <div class="grafico-container">
 
@@ -77,42 +85,78 @@ else
                 <div class="barra-container">
 
                     <div class="barra"
-                         style="height:@(item.Cantidad * 5)px">
+                         style="height:@(item.Cantidad * 4)px;">
                     </div>
 
                     <span>@item.Departamento</span>
-                    <small>@item.Cantidad</small>
+
+                    <small>
+                        @item.Cantidad
+                        (@item.Porcentaje%)
+                    </small>
 
                 </div>
             }
 
         </div>
 
-        <!-- ✅ TABLA -->
-        <table class="table-custom headcount-table">
+        <!-- TABLA RESUMEN -->
+
+        <table class="table-custom">
 
             <thead>
+
                 <tr>
+                    <th>#</th>
                     <th>Departamento</th>
                     <th>Cantidad</th>
+                    <th>% HeadCount</th>
                 </tr>
+
             </thead>
 
             <tbody>
+
+                @{
+                    int contador = 1;
+                }
+
                 @foreach (var item in resumen)
                 {
                     <tr>
+
+                        <td>@contador</td>
+
                         <td>@item.Departamento</td>
+
                         <td>@item.Cantidad</td>
+
+                        <td>@item.Porcentaje%</td>
+
                     </tr>
+
+                    contador++;
                 }
+
             </tbody>
 
-        </table>
+            <tfoot>
 
-        <div class="headcount-total">
-            Total: @total
-        </div>
+                <tr style="font-weight:bold">
+
+                    <td colspan="2">
+                        TOTAL
+                    </td>
+
+                    <td>@total</td>
+
+                    <td>100%</td>
+
+                </tr>
+
+            </tfoot>
+
+        </table>
 
     </div>
 }
@@ -126,9 +170,6 @@ else
     string departamentoFiltro = "";
     string cargoFiltro = "";
 
-    string tipoPeriodo = "mensual";
-    DateTime? fechaSeleccionada;
-
     List<string?> listaDepartamentos = new();
     List<string?> listaCargos = new();
 
@@ -136,7 +177,10 @@ else
     List<HeadCountViewModel> headcountPorDepartamento = new();
 
     int total = 0;
-    int ingresosPeriodo = 0;
+    int totalDepartamentos = 0;
+    int totalCargos = 0;
+
+    string departamentoMayor = "";
 
     protected override async Task OnInitializedAsync()
     {
@@ -148,118 +192,104 @@ else
             .Select(x => x.Dptfic)
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct()
+            .OrderBy(x => x)
             .ToList();
 
         listaCargos = empleados
             .Select(x => x.Cgofic)
             .Where(x => !string.IsNullOrWhiteSpace(x))
             .Distinct()
+            .OrderBy(x => x)
             .ToList();
 
         AgruparDatos();
         CalcularIndicadores();
     }
 
-    void AplicarFiltro()
+    private void AplicarFiltro()
     {
-        var query = empleados.AsEnumerable();
+        IEnumerable<MaestroTrabajadorDTO> query = empleados;
 
         if (!string.IsNullOrWhiteSpace(filtroTexto))
         {
             query = query.Where(e =>
-                (e.Codfic != null && e.Codfic.Contains(filtroTexto)) ||
-                (e.Nomfi1 != null && e.Nomfi1.Contains(filtroTexto)) ||
-                (e.Apefi1 != null && e.Apefi1.Contains(filtroTexto))
-            );
+                (!string.IsNullOrWhiteSpace(e.Codfic) &&
+                 e.Codfic.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase))
+                ||
+                (!string.IsNullOrWhiteSpace(e.Nomfi1) &&
+                 e.Nomfi1.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase))
+                ||
+                (!string.IsNullOrWhiteSpace(e.Apefi1) &&
+                 e.Apefi1.Contains(filtroTexto, StringComparison.OrdinalIgnoreCase)));
         }
 
         if (!string.IsNullOrWhiteSpace(departamentoFiltro))
-            query = query.Where(e => e.Dptfic == departamentoFiltro);
+        {
+            query = query.Where(x => x.Dptfic == departamentoFiltro);
+        }
 
         if (!string.IsNullOrWhiteSpace(cargoFiltro))
-            query = query.Where(e => e.Cgofic == cargoFiltro);
-
-        // FILTRO FECHA
-        if (fechaSeleccionada.HasValue)
         {
-            if (tipoPeriodo == "diaria")
-            {
-                query = query.Where(e =>
-                {
-                    var f = ConvertirFecha(e.Fecing);
-                    return f.HasValue && f.Value.Date == fechaSeleccionada.Value.Date;
-                });
-            }
-            else
-            {
-                query = query.Where(e =>
-                {
-                    var f = ConvertirFecha(e.Fecing);
-                    return f.HasValue &&
-                        f.Value.Month == fechaSeleccionada.Value.Month &&
-                        f.Value.Year == fechaSeleccionada.Value.Year;
-                });
-            }
+            query = query.Where(x => x.Cgofic == cargoFiltro);
         }
 
         empleadosFiltrados = query.ToList();
 
         AgruparDatos();
         CalcularIndicadores();
+
+        StateHasChanged();
     }
 
-    void AgruparDatos()
+    private void AgruparDatos()
     {
+        total = empleadosFiltrados.Count;
+
         headcountPorDepartamento = empleadosFiltrados
-            .GroupBy(e => e.Dptfic)
+            .GroupBy(x => string.IsNullOrWhiteSpace(x.Dptfic)
+                ? "SIN DEPARTAMENTO"
+                : x.Dptfic)
             .Select(g => new HeadCountViewModel
             {
-                Departamento = g.Key ?? "Sin Departamento",
-                Cantidad = g.Count()
+                Departamento = g.Key,
+                Cantidad = g.Count(),
+                Porcentaje = total > 0
+                    ? Math.Round((decimal)g.Count() * 100 / total, 2)
+                    : 0
             })
             .OrderByDescending(x => x.Cantidad)
+            .Take(10)
             .ToList();
 
         resumen = headcountPorDepartamento;
 
-        total = empleadosFiltrados.Count;
+        departamentoMayor = headcountPorDepartamento.Any()
+            ? headcountPorDepartamento.First().Departamento
+            : "";
     }
 
-    void CalcularIndicadores()
+    private void CalcularIndicadores()
     {
-        ingresosPeriodo = empleadosFiltrados.Count(e =>
-        {
-            var f = ConvertirFecha(e.Fecing);
+        totalDepartamentos = empleadosFiltrados
+            .Select(x => x.Dptfic)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .Count();
 
-            if (!f.HasValue || !fechaSeleccionada.HasValue)
-                return false;
-
-            if (tipoPeriodo == "diaria")
-                return f.Value.Date == fechaSeleccionada.Value.Date;
-
-            return f.Value.Month == fechaSeleccionada.Value.Month &&
-                f.Value.Year == fechaSeleccionada.Value.Year;
-        });
-    }
-
-    DateTime? ConvertirFecha(int? fecha)
-    {
-        if (!fecha.HasValue) return null;
-
-        var s = fecha.Value.ToString();
-
-        if (s.Length != 8) return null;
-
-        return new DateTime(
-            int.Parse(s.Substring(0, 4)),
-            int.Parse(s.Substring(4, 2)),
-            int.Parse(s.Substring(6, 2))
-        );
+        totalCargos = empleadosFiltrados
+            .Select(x => x.Cgofic)
+            .Where(x => !string.IsNullOrWhiteSpace(x))
+            .Distinct()
+            .Count();
     }
 
     public class HeadCountViewModel
     {
         public string Departamento { get; set; } = "";
+
         public int Cantidad { get; set; }
+
+        public decimal Porcentaje { get; set; }
     }
+
 }

@@ -75,6 +75,16 @@
 
         }
 
+        @if (esAdmin || esRRHH)
+        {
+        <!-- ROTACION -->
+        <NavLink href="rotacion" 
+            class="nav-item">
+            <i class="oi oi-random"></i>
+            <span>Rotación</span>
+        </NavLink>
+        }
+
         @if (esAdmin)
         {
         <!-- HISTORICO -->
@@ -89,12 +99,6 @@
                 class="nav-item">
             <i class="oi oi-people"></i>
             <span>HeadCount</span>
-        </NavLink>
-
-        <!-- ROTACION -->
-        <NavLink href="rotacion" class="nav-item">
-            <i class="oi oi-random"></i>
-            <span>Rotación</span>
         </NavLink>
         }
                 </Authorized>

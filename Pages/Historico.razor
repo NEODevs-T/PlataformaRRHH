@@ -3,7 +3,6 @@
 @using NeoRH.DTOs
 @using NeoRH.ViewModels
 
-
 @inject IRRHHApiService Api
 
 <link href="./css/site.css" rel="stylesheet" />
@@ -18,17 +17,17 @@ else
 {
     <div class="headcount-container">
 
-        <!-- ✅ FILTROS -->
+        <!-- FILTROS -->
         <div class="filtro-container">
 
             <input type="number"
-                placeholder="Año"
-                @bind="filtroAnio"
-                class="input" />
+                   placeholder="Año"
+                   @bind="filtroAnio"
+                   class="input" />
 
             <input placeholder="Ficha..."
-                @bind="filtroFicha"
-                class="input" />
+                   @bind="filtroFicha"
+                   class="input" />
 
             <select @bind="filtroTipo" class="input">
                 <option value="">Todos</option>
@@ -42,7 +41,7 @@ else
 
         </div>
 
-        <!-- ✅ TABLA -->
+        <!-- TABLA -->
         <table class="table-custom">
 
             <thead>
@@ -58,18 +57,37 @@ else
             </thead>
 
             <tbody>
-                @foreach (var item in ausenciasFiltradas)
+
+                @if (!ausenciasFiltradas.Any())
                 {
                     <tr>
-                        <td>@item.Ficha</td>
-                        <td>@item.Nombre</td>
-                        <td>@item.Departamento</td>
-                        <td>@item.Cargo</td>
-                        <td>@item.Tipo</td>
-                        <td>@item.Año</td>
-                        <td>@FormatearFecha(item.Fecha)</td>
+                        <td colspan="7" style="text-align:center">
+                            No existen registros.
+                        </td>
                     </tr>
                 }
+                else
+                {
+                    @foreach (var item in ausenciasFiltradas)
+                    {
+                        <tr>
+                            <td>@item.Ficha</td>
+                            <td>@item.Nombre</td>
+                            <td>@item.Departamento</td>
+                            <td>@item.Cargo</td>
+                            <td>
+                                @(item.Tipo == "P"
+                                    ? "Permiso"
+                                    : item.Tipo == "R"
+                                        ? "Reposo"
+                                        : item.Tipo)
+                            </td>
+                            <td>@item.Año</td>
+                            <td>@FormatearFecha(item.Fecha)</td>
+                        </tr>
+                    }
+                }
+
             </tbody>
 
         </table>
@@ -80,8 +98,8 @@ else
 @code {
 
     List<MaestroTrabajadorDTO> empleados = new();
-    List<AusenciaViewModel> ausenciasCombinadas = new();
 
+    List<AusenciaViewModel> ausenciasCombinadas = new();
     List<AusenciaViewModel> ausenciasFiltradas = new();
 
     int? filtroAnio;
@@ -90,33 +108,55 @@ else
 
     protected override async Task OnInitializedAsync()
     {
-        // SE TRAEN LOS EMPLEADOS
         empleados = await Api.GetMaestroTrabajadores();
 
         CombinarDatos();
 
-        ausenciasFiltradas = ausenciasCombinadas;
+        ausenciasFiltradas = ausenciasCombinadas
+            .OrderByDescending(x => x.Año)
+            .ThenByDescending(x => x.Fecha)
+            .ToList();
     }
 
-    void CombinarDatos()
+    private void CombinarDatos()
     {
         ausenciasCombinadas = new List<AusenciaViewModel>();
+
+        // Aquí posteriormente se agregarán:
+        // Permisos
+        // Reposos
+        // Ausencias provenientes de SPI o MyIntelli
+
+        /*
+        ausenciasCombinadas.Add(new AusenciaViewModel
+        {
+            Ficha = "12345",
+            Nombre = "Juan Pérez",
+            Departamento = "Producción",
+            Cargo = "Operador",
+            Tipo = "P",
+            Año = 2025,
+            Fecha = DateTime.Now.ToString("yyyy-MM-dd")
+        });
+        */
     }
 
-    void AplicarFiltros()
+    private void AplicarFiltros()
     {
-        var query = ausenciasCombinadas.AsEnumerable();
+        IEnumerable<AusenciaViewModel> query = ausenciasCombinadas;
 
         if (filtroAnio.HasValue)
         {
-            query = query.Where(x => x.Año == filtroAnio);
+            query = query.Where(x => x.Año == filtroAnio.Value);
         }
 
         if (!string.IsNullOrWhiteSpace(filtroFicha))
         {
             query = query.Where(x =>
-                x.Ficha != null &&
-                x.Ficha.Contains(filtroFicha));
+                !string.IsNullOrWhiteSpace(x.Ficha) &&
+                x.Ficha.Contains(
+                    filtroFicha,
+                    StringComparison.OrdinalIgnoreCase));
         }
 
         if (!string.IsNullOrWhiteSpace(filtroTipo))
@@ -124,14 +164,43 @@ else
             query = query.Where(x => x.Tipo == filtroTipo);
         }
 
-        ausenciasFiltradas = query.ToList();
+        ausenciasFiltradas = query
+            .OrderByDescending(x => x.Año)
+            .ThenByDescending(x => x.Fecha)
+            .ToList();
+
+        StateHasChanged();
     }
 
-    string FormatearFecha(string? fecha)
+    private string FormatearFecha(string? fecha)
     {
-        if (DateTime.TryParse(fecha, out var f))
-            return f.ToString("dd/MM/yyyy");
+        if (string.IsNullOrWhiteSpace(fecha))
+            return "";
 
-        return "";
+        if (DateTime.TryParse(fecha, out var fechaConvertida))
+            return fechaConvertida.ToString("dd/MM/yyyy");
+
+        return fecha;
     }
+
+    public class AusenciaViewModel
+    {
+        public string? Ficha { get; set; }
+
+        public string? Nombre { get; set; }
+
+        public string? Departamento { get; set; }
+
+        public string? Cargo { get; set; }
+
+        public string? Tipo { get; set; } // P = Permiso, R = Reposo
+
+        public int Año { get; set; }
+
+        public string? Fecha { get; set; }
+
+        public string? Origen { get; set; }
+    }
+
 }
+
