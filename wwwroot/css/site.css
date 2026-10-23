@@ -1088,10 +1088,6 @@ body {
     vertical-align:middle;
 }
 
-.table-custom td:nth-child(5) {
-    font-weight: 600;
-}
-
 /* FOOTER LOGIN */
 .login-footer {
     margin-top: 25px;
@@ -2991,7 +2987,7 @@ thead{
     background: rgb(0,120,83);
     color: white;
     padding: 14px 16px;
-    font-weight: 600;
+    /*font-weight: 600;*/
     text-align: left;
     position: sticky;
     top: 0;
@@ -3518,4 +3514,279 @@ tr.fila-total-headcount td * {
 .table-custom tr.fila-total-headcount:hover td * {
     background: #00845e !important;
     color: #ffffff !important;
+}
+
+.btn-rotacion-departamentos{
+    background:#0b7a53;
+    color:white;
+    border:none;
+    padding:12px 24px;
+    border-radius:12px;
+    font-weight:600;
+    display:flex;
+    align-items:center;
+    gap:8px;
+    box-shadow:0 4px 12px rgb(0 0 0 / 15%);
+    transition:.2s;
+}
+
+.btn-rotacion-departamentos:hover{
+    background:#096646;
+    transform:translateY(-2px);
+}
+
+.modal-departamentos{
+    width:95%;
+    max-width:1700px;
+}
+
+.mov-ingreso:hover{
+    color:#15803d;
+}
+
+.mov-egreso:hover{
+    color:#b91c1c;
+}
+
+.mov-cell{
+    display:flex;
+    justify-content:center;
+    align-items:center;
+    gap:12px;
+    white-space:nowrap;
+}
+
+.mov-ingreso{
+    color:#16a34a;
+    font-weight:700;
+    text-decoration:none;
+}
+
+.mov-egreso{
+    color:#dc2626;
+    font-weight:700;
+    text-decoration:none;
+}
+
+.mov-vacio{
+    color:#c7c7c7;
+    font-weight:600;
+}
+
+/* =====================================
+   Tabla de movimientos
+===================================== */
+
+.modal-header-rotacion {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 15px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+.btn-filtro-movimientos {
+    background: #2f3e46;
+    color: white;
+    border: 1px solid #445a64;
+    border-radius: 8px;
+    padding: 8px 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s ease;
+}
+
+.btn-filtro-movimientos:hover {
+    background: #354f52;
+    border-color: #52796f;
+}
+
+.btn-filtro-activo {
+    background: #198754;
+    color: white;
+    border: none;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-filtro-inactivo {
+    background: #f8f9fa;
+    color: #495057;
+    border: 1px solid #ced4da;
+    padding: 8px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+}
+
+.btn-filtro-movimientos:active {
+    transform: translateY(0);
+}
+
+.table-rotacion-departamentos {
+    font-size: 13px;
+}
+
+.table-rotacion-departamentos thead th {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: #007853;
+    color: white;
+}
+
+.table-rotacion-departamentos tbody tr:hover {
+    background: #f3faf7;
+}
+
+.mov-ingreso {
+    color: #198754;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.mov-egreso {
+    color: #dc3545;
+    font-weight: 700;
+    cursor: pointer;
+    text-decoration: none;
+}
+
+.mov-vacio {
+    color: #b6b6b6;
+}
+
+/* =====================================
+   Integrado
+===================================== */
+
+.modal-departamentos td:first-child,
+.modal-departamentos th:first-child {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* MODAL ROTACION DEPARTAMENTOS */
+.modal-departamentos {
+    width: 95%;
+    max-width: 1700px;
+    height: 90vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Contenedor con scroll */
+.modal-departamentos .table-responsive {
+    flex: 1;
+    overflow: auto !important;
+    max-height: calc(90vh - 90px);
+}
+
+/* Encabezados de meses */
+.modal-departamentos thead th {
+    position: sticky;
+    top: 0;
+    z-index: 30;
+    background: #007853 !important;
+    color: white !important;
+}
+
+/* Primera columna (Departamentos) */
+.modal-departamentos th:first-child,
+.modal-departamentos td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 50;
+    min-width: 280px;
+    width: 280px;
+    max-width: 280px;
+
+    background: #f8f9fa !important;
+
+    box-shadow: 4px 0 8px rgba(0,0,0,.08);
+
+    text-align: left;
+    font-weight: 700;
+}
+
+.tabla-rotacion-modal {
+    overflow: auto !important;
+    max-height: 75vh;
+}
+
+.tabla-rotacion-modal table {
+    min-width: max-content;
+}
+
+.modal-departamentos thead th:first-child {
+    position: sticky;
+    left: 0;
+    top: 0;
+
+    z-index: 999;
+
+    background: #007853 !important;
+    color: white !important;
+}
+
+.table-rotacion-departamentos {
+    border-collapse: separate;
+    border-spacing: 0;
+    min-width: max-content;
+}
+
+.detalle-scroll::-webkit-scrollbar{
+    width:10px;
+    height:10px;
+}
+
+.detalle-scroll::-webkit-scrollbar-thumb{
+    background:#00845e;
+    border-radius:20px;
+}
+
+.detalle-scroll::-webkit-scrollbar-track{
+    background:#e9ecef;
+}
+
+/* Modal detalle ingresos-egresos */
+.modal-detalle-headcount{
+    width:95%;
+    max-width:1400px;
+    max-height:90vh;
+
+    display:flex;
+    flex-direction:column;
+
+    overflow:hidden;
+}
+
+/* Área scroll */
+.detalle-scroll{
+    flex:1;
+
+    overflow-y:auto;
+    overflow-x:auto;
+
+    max-height:calc(90vh - 90px);
+}
+
+/* Encabezado fijo */
+.detalle-scroll thead th{
+    position:sticky;
+    top:0;
+
+    z-index:20;
+
+    background:#007853 !important;
+    color:white !important;
 }

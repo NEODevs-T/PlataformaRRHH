@@ -88,7 +88,7 @@
                 }
                 else
                 {
-                    <span class="@(rotacionPorcentaje >= 1.70
+                    <span class="@(rotacionPorcentaje <= 1.70
                         ? "text-success"
                         : "text-danger")">
                         @rotacionPorcentaje.ToString("N2")%
@@ -324,6 +324,18 @@
         "J5233"
     };
 
+    private bool EsPasantePavecaRet(MaestroTrabajadorReDTO x)
+    {
+        return x.Ciafic == "10"
+            && x.Tpnfic == "2102";
+    }
+
+    private bool EsAprendizPavecaRet(MaestroTrabajadorReDTO x)
+    {
+        return x.Ciafic == "10"
+            && x.Cgofic == "000047";
+    }
+
     protected override async Task OnInitializedAsync()
     {   
         try
@@ -340,21 +352,31 @@
 
         try
         {
-            trabajadores = await Api.GetMaestroTrabajadores() ?? new();
-            var personalPaveca = trabajadores
-                .Where(x => x.Fecret == 0) // Activos
-                .Where(x => x.Ciafic == "10") // PAVECA
-                .Where(x => !EsPasantePaveca(x))
-                .Where(x => !EsAprendizPaveca(x))
-                .ToList();
+            personalActivo = trabajadores
+                .Where(x => x.Fecret == 0)
+                .Where(x => x.Ciafic == "10")
+                .Where(x =>
+                    !EsPasantePaveca(x)
+                    && !EsAprendizPaveca(x))
+                .Count();
+
+            trabajadores =
+                await Api.GetMaestroTrabajadores() ?? new();
+
+            personalActivo = trabajadores
+                .Where(x => x.Fecret == 0)
+                .Where(x => x.Ciafic == "10")
+                .Where(x =>
+                    !EsPasantePaveca(x)
+                    && !EsAprendizPaveca(x))
+                .Count();
 
             trabajadoresRetirados =
                 await Api.GetMaestroTrabajadoresRe() ?? new();
 
-            personalActivo = personalPaveca.Count;
-            
             var periodoActual =
-                (DateTime.Now.Year * 100) + DateTime.Now.Month;
+                (DateTime.Now.Year * 100)
+                + DateTime.Now.Month;
 
             var headCountActual = personalActivo;
 
@@ -363,10 +385,11 @@
                 if (x.Ciafic != "10")
                     return false;
 
-                if (x.Tpnfic == "2102")
+                if (EsPasantePavecaRet(x)
+                    || EsAprendizPavecaRet(x))
                     return false;
 
-                if (!x.Fecret.HasValue || x.Fecret <= 0)
+                if (!x.Fecret.HasValue)
                     return false;
 
                 int periodoRetiro =
